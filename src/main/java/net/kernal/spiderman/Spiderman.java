@@ -7,6 +7,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 蜘蛛侠，根据预言之子设定的目标引领蜘蛛大军开展网络世界采集行动。
@@ -23,10 +24,11 @@ public class Spiderman {
 			throw new RuntimeException("少年,请添加一个目标来让蜘蛛侠行动起来!参考：conf.addTarget");
 		
 		this.conf = conf;
+		this.counter = new Counter();
 		int downloadLimit = conf.getProperties().getInt("downloader.limit", 0);
 		if (downloadLimit > 0) {
-			this.counter = new CountDownLatch(downloadLimit);
-		}
+			this.counter.setCountDown(new CountDownLatch(downloadLimit));
+		} 
 		this.singlePool = Executors.newSingleThreadExecutor();
 		int threadSize = this.conf.properties.getInt("threadSize", 1);
 		this.threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(threadSize);
@@ -37,7 +39,6 @@ public class Spiderman {
 	 * @return
 	 */
 	public Spiderman go() {
-		this.conf.reportings.reportStart();
 		this.singlePool.execute(new Runnable() {
 			public void run() {
 				// 将种子添加到任务队列里
@@ -46,6 +47,7 @@ public class Spiderman {
 					conf.taskQueue.put(newTask);
 				}
 				
+				conf.reportings.reportStart();
 				while (true) {
 					while(true) {
 						int coreSize = threadPool.getCorePoolSize();
@@ -84,21 +86,24 @@ public class Spiderman {
 	}
 	
 	public Spiderman stop() {
+		int poolSize = this.threadPool.getPoolSize();
+		int activeCount = this.threadPool.getActiveCount();
+		long completedTaskCount = this.threadPool.getCompletedTaskCount();
 		this.singlePool.shutdownNow();
 		this.threadPool.shutdownNow();
-		this.conf.reportings.reportStop();
+		this.conf.reportings.reportStop(counter, poolSize, activeCount, completedTaskCount);
 		return this;
 	}
 	
 	private ExecutorService singlePool;
 	private ThreadPoolExecutor threadPool;
 	private Conf conf;
-	private CountDownLatch counter;
+	private Counter counter;
 	
 	private void _holding() {
-		if (this.counter != null) {
+		if (this.counter.getCountDown() != null) {
 			try {
-				this.counter.await();
+				this.counter.getCountDown().await();
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -246,6 +251,29 @@ public class Spiderman {
 		
 		public boolean isEmpty() {
 			return this.list.isEmpty();
+		}
+	}
+	
+	public static class Counter {
+		private CountDownLatch countDown;
+		private AtomicLong countUp;
+		public Counter() {
+			this.countUp = new AtomicLong(0);
+		}
+		public Long add() {
+			if (this.countDown != null) {
+				this.countDown.countDown();
+			}
+			return this.countUp.addAndGet(1);
+		}
+		public CountDownLatch getCountDown() {
+			return countDown;
+		}
+		public void setCountDown(CountDownLatch countDown) {
+			this.countDown = countDown;
+		}
+		public AtomicLong getCountUp() {
+			return countUp;
 		}
 	}
 	

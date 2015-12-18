@@ -3,7 +3,6 @@ package net.kernal.spiderman;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 
 /**
  * 蜘蛛侠的蜘蛛大军，战斗力极强
@@ -14,9 +13,9 @@ public class Spider implements Runnable {
 
 	private Spiderman.Conf conf;
 	private Task task;
-	private CountDownLatch counter;
+	private Spiderman.Counter counter;
 	
-	public Spider(Spiderman.Conf conf, Task task, CountDownLatch counter) {
+	public Spider(Spiderman.Conf conf, Task task, Spiderman.Counter counter) {
 		this.conf = conf;
 		this.task = task;
 		this.counter = counter;
@@ -42,8 +41,7 @@ public class Spider implements Runnable {
 			return;
 		}
 		response.setHtml(K.byteToString(response.getBody(), response.getCharset()));
-		if (this.counter != null)
-			this.counter.countDown();
+		this.counter.add();
 		
 		// 匹配目标
 		final List<Target> matchedTargets = this.matchingTargets(request);
@@ -51,7 +49,6 @@ public class Spider implements Runnable {
 		K.foreach(matchedTargets, new K.ForeachCallback<Target>() {
 			@SuppressWarnings("unchecked")
 			public void each(int i, final Target target) {
-				target.configModel(target.getModel());
 				Target.Model model = target.getModel();
 				final Parser parser = model.getParser();
 				if (parser == null) {
@@ -113,11 +110,8 @@ public class Spider implements Runnable {
 	 */
 	public List<Target> matchingTargets(final Downloader.Request request) {
 		final List<Target> matchedTargets = new ArrayList<Target>();
-		K.foreach(this.conf.getTargets().getAll(), new K.ForeachCallback<Target>() {
+		K.foreach(conf.getTargets().getAll(), new K.ForeachCallback<Target>() {
 			public void each(int i, Target target) {
-				if (K.isEmpty(target.getRules().getAll())) {
-					target.configRules(target.getRules());
-				}
 				if (target.matches(request)) {
 					matchedTargets.add(target);
 				}

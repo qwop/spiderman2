@@ -12,6 +12,6 @@ public interface Reporting {
 	
 	public void reportParsedResult(final ParsedResult parsedResult);
 	
-	public void reportStop();
+	public void reportStop(Spiderman.Counter counter, int poolSize, int activeCount, long completedTaskCount);
 	
 }

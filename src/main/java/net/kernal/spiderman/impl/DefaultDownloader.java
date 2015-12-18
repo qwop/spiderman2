@@ -145,7 +145,7 @@ public class DefaultDownloader implements Downloader {
 			byte[] body = EntityUtils.toByteArray(entity);
 			response.setBody(body);
 		} catch (Throwable e) {
-			e.printStackTrace();
+//			e.printStackTrace();
 		} finally {
 		}
 		

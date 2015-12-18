@@ -20,6 +20,9 @@ public class XPathParser extends AbstractParser {
 	
 	public void parse() {
 		TagNode parsedResult = (TagNode)context.getModelParsed();
+		if (parsedResult == null)
+			return;
+		
 		if (xpath.endsWith("/text()")) {
 			xpath = xpath.replace("/text()", "");
 			Object[] nodes = null;

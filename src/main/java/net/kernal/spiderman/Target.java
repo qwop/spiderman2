@@ -15,6 +15,7 @@ public abstract class Target {
 	private Model model;
 	private Rules rules;
 	
+	// TODO 多线程修改问题
 	public abstract void configRules(Rules rules);
 	public abstract void configModel(Model model);
 	

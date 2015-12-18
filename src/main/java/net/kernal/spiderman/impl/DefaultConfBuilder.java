@@ -4,6 +4,7 @@ import net.kernal.spiderman.Properties;
 import net.kernal.spiderman.Spiderman;
 import net.kernal.spiderman.Spiderman.Seeds;
 import net.kernal.spiderman.Spiderman.Targets;
+import net.kernal.spiderman.Target;
 import net.kernal.spiderman.TaskManager;
 
 /**
@@ -19,7 +20,6 @@ public abstract class DefaultConfBuilder implements Spiderman.Conf.Builder {
 		conf = new Spiderman.Conf();
 		conf.setTaskQueue(new TaskManager(new DefaultTaskQueue(), new DefaultTaskQueue()))
 			.setDownloader(new DefaultDownloader(conf.getProperties()))
-//			.setParser(new HtmlCleanerParser())
 			.addReporting(new ConsoleReporting());
 	}
 	/**
@@ -45,6 +45,10 @@ public abstract class DefaultConfBuilder implements Spiderman.Conf.Builder {
 		this.addProperty(conf.getProperties());
 		this.addSeed(conf.getSeeds());
 		this.addTarget(conf.getTargets());
+		for (Target target : conf.getTargets().getAll()) {
+			target.configModel(target.getModel());
+			target.configRules(target.getRules());
+		}
 		return conf;
 	}
 

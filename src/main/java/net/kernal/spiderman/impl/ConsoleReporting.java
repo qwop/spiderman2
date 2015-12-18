@@ -1,14 +1,10 @@
 package net.kernal.spiderman.impl;
 
-import java.util.Date;
-
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.serializer.SerializerFeature;
-
 import net.kernal.spiderman.Downloader.Response;
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Parser.ParsedResult;
 import net.kernal.spiderman.Reporting;
+import net.kernal.spiderman.Spiderman;
 import net.kernal.spiderman.Task;
 
 public class ConsoleReporting implements Reporting {
@@ -21,11 +17,11 @@ public class ConsoleReporting implements Reporting {
 	}
 	
 	public void reportDownload(Response response) {
-		StringBuilder sb = new StringBuilder("[Spiderman][下载网页]:"+K.formatNow()+"\r\n  ["+response.getStatusCode()+"]"+response.getRequest().getUrl());
-		if (K.isNotBlank(response.getLocation())) {
-			sb.append("\r\n  redirect ").append(response.getLocation());
-		}
-		System.out.println(sb.toString());
+//		StringBuilder sb = new StringBuilder("[Spiderman][下载网页]:"+K.formatNow()+"\r\n  ["+response.getStatusCode()+"]"+response.getRequest().getUrl());
+//		if (K.isNotBlank(response.getLocation())) {
+//			sb.append("\r\n  redirect ").append(response.getLocation());
+//		}
+//		System.out.println(sb.toString());
 	}
 
 	public void reportNewTask(Task newTask) {
@@ -33,12 +29,13 @@ public class ConsoleReporting implements Reporting {
 	}
 
 	public void reportParsedResult(ParsedResult parsedResult) {
-		System.err.println("[Spiderman][解析结果]"+K.formatNow()+"\r\n  "+JSON.toJSONString(parsedResult.first(), SerializerFeature.PrettyFormat));
+//		System.err.println("[Spiderman][解析结果]"+K.formatNow()+"\r\n  "+JSON.toJSONString(parsedResult.first(), SerializerFeature.PrettyFormat));
 	}
 	
-	public void reportStop() {
+	public void reportStop(Spiderman.Counter counter, int poolSize, int activeCount, long completedTaskCount) {
 		long cost = System.currentTimeMillis() - this.startAt;
-		System.out.println("[Spiderman][结束]"+K.formatNow()+"\r\n  总共花费时间:"+cost+"ms");
+		String fmt = "[Spiderman][结束]%s\r\n  总共花费时间:%sms \r\n  线程数:%s \r\n  运行中:%s \r\n  已完成:%s \r\n  计数器:%s";
+		System.out.println(String.format(fmt, K.formatNow(), cost, poolSize, activeCount, completedTaskCount, counter.getCountUp().get()));
 	}
 
 }

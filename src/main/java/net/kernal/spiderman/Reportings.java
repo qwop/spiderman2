@@ -49,10 +49,10 @@ public class Reportings implements Reporting{
 		});
 	}
 	
-	public void reportStop() {
+	public void reportStop(final Spiderman.Counter counter, final int poolSize, final int activeCount, final long completedTaskCount) {
 		K.foreach(this.reportings, new K.ForeachCallback<Reporting>() {
 			public void each(int i, Reporting item) {
-				item.reportStop();
+				item.reportStop(counter, poolSize, activeCount, completedTaskCount);
 			}
 		});
 	}
