@@ -58,6 +58,7 @@ public class Spiderman {
 							break;
 						}
 						try {
+							System.out.println("[Spiderman]wait thread");
 							Thread.sleep(conf.getProperties().getLong("waitThread", 1000));
 						} catch (InterruptedException e) {
 						}
@@ -66,6 +67,7 @@ public class Spiderman {
 						Task task = conf.taskQueue.poll();
 						if (task == null) {
 							try {
+								System.out.println("[Spiderman]wait queue");
 								Thread.sleep(conf.getProperties().getLong("waitQueue", 1000));
 							} catch (InterruptedException e) {
 							}
@@ -256,15 +258,26 @@ public class Spiderman {
 	
 	public static class Counter {
 		private CountDownLatch countDown;
-		private AtomicLong countUp;
+		private AtomicLong countDownload;
+		private AtomicLong countQueue;
+		private AtomicLong countTarget;
+		
 		public Counter() {
-			this.countUp = new AtomicLong(0);
+			this.countDownload = new AtomicLong(0);
+			this.countQueue = new AtomicLong(0);
+			this.countTarget = new AtomicLong(0);
 		}
-		public Long add() {
+		public Long addDownload() {
 			if (this.countDown != null) {
 				this.countDown.countDown();
 			}
-			return this.countUp.addAndGet(1);
+			return this.countDownload.addAndGet(1);
+		}
+		public Long addQueue() {
+			return this.countQueue.addAndGet(1);
+		}
+		public Long addTarget() {
+			return this.countTarget.addAndGet(1);
 		}
 		public CountDownLatch getCountDown() {
 			return countDown;
@@ -272,8 +285,14 @@ public class Spiderman {
 		public void setCountDown(CountDownLatch countDown) {
 			this.countDown = countDown;
 		}
-		public AtomicLong getCountUp() {
-			return countUp;
+		public AtomicLong getCountDownload() {
+			return countDownload;
+		}
+		public AtomicLong getCountQueue() {
+			return this.countQueue;
+		}
+		public AtomicLong getCountTarget() {
+			return this.countTarget;
 		}
 	}
 	

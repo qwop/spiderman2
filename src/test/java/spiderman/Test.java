@@ -1,5 +1,7 @@
 package spiderman;
 
+import java.io.File;
+
 import net.kernal.spiderman.Downloader;
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Properties;
@@ -17,12 +19,20 @@ public class Test {
 	public static void main(String[] args) throws InterruptedException {
 		// 构建配置
 		Spiderman.Conf conf = new DefaultConfBuilder(){
-			public void addSeed(Seeds seeds) {
-				// 加入种子链接
-				seeds.add("http://www.baidu.com/s?wd="+K.urlEncode("Spiderman 努力做更好的爬虫"));
+			// 添加种子链接
+			public void addSeed(final Seeds seeds) {
+				K.foreach(K.readLine(new File("src/main/resources/company.csv")), new K.ForeachCallback<String>(){
+					public void each(int i, String line) {
+						if (i > 500) this.breakoff();
+						
+						String company = line.trim().split(",")[0].replace("'", "");
+						seeds.add("http://www.baidu.com/s?wd="+K.urlEncode("\""+company+"\""));
+						System.out.println("company->"+company);
+					}
+				});
 			}
+			// 添加抽取目标
 			public void addTarget(Targets targets) {
-				// 设定目标
 				targets.add(
 					new Target("baidu-list"){
 						public void configRules(Rules rules) {
@@ -46,25 +56,36 @@ public class Test {
 								 .asNewTask();
 						}
 					}
-					, 
-					new Target("baidu-page"){
-						public void configRules(Rules rules) {
-							rules.setPriority(1).add(new Target.Rule(){
-								public boolean matches(Downloader.Request request) {
-									return !request.getUrl().contains("baidu");
-								}
-							});
-						}
-						public void configModel(Model model) {
-							model.addParser(new TextParser());
-						}
-					}
+//					, 
+//					new Target("baidu-page"){
+//						public void configRules(Rules rules) {
+//							rules.setPriority(1).add(new Target.Rule(){
+//								public boolean matches(Downloader.Request request) {
+//									return !request.getUrl().contains("baidu");
+//								}
+//							});
+//						}
+//						public void configModel(Model model) {
+//							model.addParser(new TextParser());
+//						}
+//					}
 				);
 			}
+			// 添加配置属性
 			public void addProperty(Properties p) {
-				p.put("duration", "20s");
-				p.put("threadSize", 50);
-//				p.put("downloader.limit", 50);
+//				p.put("duration", "10s");
+				p.put("threadSize", 100);
+				p.put("downloader.limit", 500);
+				p.put("downloader.connectionRequestTimeout", 100);
+				p.put("downloader.connectTimeout", 500);
+				p.put("downloader.socketTimeout", 10000);
+				p.put("downloader.maxConnTotal", 500);
+				p.put("downloader.maxConnPerRoute", 500);
+				/*
+				 *   总共花费时间:31087ms 
+					  线程池: 总数(150) 运行中(124) 已完成(1884) 
+					  计数器: 已下载(1001) 目标(1503) 当前队列(0)
+				 */
 				// 线程：1    网页：50   时间：116739ms
 				// 线程：50   网页：50   时间：4411ms
 				// 线程：200  网页：50   时间：3542ms   有效 线程池完成406个任务
@@ -78,8 +99,6 @@ public class Test {
 				// 线程：1000 网页：800  时间：9176ms   参数搞错，无效，需重新测试 线程池完成1007个任务，使用线程数量最大191
 				// 线程：200  网页：800  时间：9320ms   参数搞错，无效，需重新测试 线程池完成1115个任务，使用线程数量最大189
 				// 线程：500  网页：
-//				p.put("downloader.redirectsEnabled", true);
-//				p.put("downloader.userAgent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.101 Safari/537.36");
 			}
 		}.build();
 		

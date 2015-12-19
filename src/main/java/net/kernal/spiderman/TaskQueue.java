@@ -20,4 +20,6 @@ public interface TaskQueue {
 	 */
 	public void put(Task task);
 	
+	public long size();
+	
 }

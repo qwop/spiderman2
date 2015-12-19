@@ -23,6 +23,7 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.util.EntityUtils;
@@ -44,12 +45,13 @@ public class DefaultDownloader implements Downloader {
 	            .setExpectContinueEnabled(false)
 	            .setRedirectsEnabled(props.getBoolean("downloader.redirectsEnabled", false))
 	            .setCircularRedirectsAllowed(props.getBoolean("downloader.circularRedirectsAllowed", false))
+	            .setStaleConnectionCheckEnabled(true)
 	            // 设置从连接池获取连接的超时时间
-	            .setConnectionRequestTimeout(props.getInt("downloader.connectionRequestTimeout", 1000))
+	            .setConnectionRequestTimeout(props.getInt("downloader.connectionRequestTimeout", 100))
 	            // 设置连接远端服务器的超时时间
-	            .setConnectTimeout(props.getInt("downloader.connectTimeout", 1000))
+	            .setConnectTimeout(props.getInt("downloader.connectTimeout", 500))
 	            // 设置从远端服务器上传输数据回来的超时时间
-	            .setSocketTimeout(props.getInt("downloader.socketTimeout", 10000))
+	            .setSocketTimeout(props.getInt("downloader.socketTimeout", 5000))
 	            .setTargetPreferredAuthSchemes(Arrays.asList(AuthSchemes.NTLM, AuthSchemes.DIGEST))
 	            .setProxyPreferredAuthSchemes(Arrays.asList(AuthSchemes.BASIC));
 		
@@ -63,6 +65,9 @@ public class DefaultDownloader implements Downloader {
 		this.httpClient = HttpClients.custom()
 				.setUserAgent(props.getString("downloader.userAgent", "Spiderman[http://git.oschina.net/l-weiwei/Spiderman2]"))
 				.setDefaultCookieStore(cookieStore)
+				.setRetryHandler(new DefaultHttpRequestRetryHandler(0, false))
+				.setMaxConnTotal(props.getInt("downloader.maxConnTotal", 1000))
+				.setMaxConnPerRoute(props.getInt("downloader.maxConnPerRoute", 500))
 				.build();
 	}
 	
@@ -113,9 +118,10 @@ public class DefaultDownloader implements Downloader {
 			}
 		});
 		final Response response = new Response(request);
+		HttpResponse resp = null;
 		try {
 			HttpClientContext ctx = HttpClientContext.create();
-			HttpResponse resp = this.httpClient.execute(req, ctx);
+			resp = this.httpClient.execute(req, ctx);
 			// get status
 			StatusLine statusLine = resp.getStatusLine();
 			int statusCode = statusLine.getStatusCode();
@@ -144,10 +150,18 @@ public class DefaultDownloader implements Downloader {
 			// body
 			byte[] body = EntityUtils.toByteArray(entity);
 			response.setBody(body);
+			resp = null;
 		} catch (Throwable e) {
-//			e.printStackTrace();
-		} finally {
-		}
+			e.printStackTrace();
+		} finally {  
+            try {  
+                if (resp != null) {  
+                    resp.getEntity().getContent().close();  
+                }  
+            } catch (Throwable e) {  
+//            	e.printStackTrace();
+            } 
+        }  
 		
 		return response;
 	}

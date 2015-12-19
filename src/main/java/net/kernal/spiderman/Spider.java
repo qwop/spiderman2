@@ -41,7 +41,11 @@ public class Spider implements Runnable {
 			return;
 		}
 		response.setHtml(K.byteToString(response.getBody(), response.getCharset()));
-		this.counter.add();
+		if (K.isBlank(response.getHtml())) {
+			return;
+		}
+		
+		this.counter.addDownload();
 		
 		// 匹配目标
 		final List<Target> matchedTargets = this.matchingTargets(request);
@@ -54,7 +58,7 @@ public class Spider implements Runnable {
 				if (parser == null) {
 					throw new RuntimeException("请为Target["+target.getName()+"].Model设置解析器，比如model.addParser");
 				}
-				
+				counter.addTarget();
 				Parser.ParserContext context = new Parser.ParserContext(target, response);
 				parser.parse(context);
 				

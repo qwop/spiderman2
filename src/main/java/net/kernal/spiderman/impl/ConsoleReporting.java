@@ -1,5 +1,8 @@
 package net.kernal.spiderman.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
+
 import net.kernal.spiderman.Downloader.Response;
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Parser.ParsedResult;
@@ -34,8 +37,8 @@ public class ConsoleReporting implements Reporting {
 	
 	public void reportStop(Spiderman.Counter counter, int poolSize, int activeCount, long completedTaskCount) {
 		long cost = System.currentTimeMillis() - this.startAt;
-		String fmt = "[Spiderman][结束]%s\r\n  总共花费时间:%sms \r\n  线程数:%s \r\n  运行中:%s \r\n  已完成:%s \r\n  计数器:%s";
-		System.out.println(String.format(fmt, K.formatNow(), cost, poolSize, activeCount, completedTaskCount, counter.getCountUp().get()));
+		String fmt = "[Spiderman][结束]%s\r\n  总共花费时间:%sms \r\n  线程池: 总数(%s) 运行中(%s) 已完成(%s) \r\n  计数器: 已下载(%s) 目标(%s) 当前队列(%s) ";
+		System.out.println(String.format(fmt, K.formatNow(), cost, poolSize, activeCount, completedTaskCount, counter.getCountDownload().get(), counter.getCountTarget().get(), counter.getCountQueue().get()));
 	}
 
 }

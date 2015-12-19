@@ -1,5 +1,10 @@
 package net.kernal.spiderman;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
@@ -263,11 +268,13 @@ public class K {
 			if (p > 0) {
 				builder.append(":").append(p);
 			}
-			for (String u : url.split("/")) {
-				if (K.isBlank(u) || "/".equals(u)) continue;
-				builder.append("/").append(u);
-			}
+			builder.append(url);
 			return builder.toString();
+//			for (String u : url.split("/")) {
+//				if (K.isBlank(u) || "/".equals(u)) continue;
+//				builder.append("/").append(u);
+//			}
+//			return builder.toString();
 		} catch (MalformedURLException e) {
 			return url;
 		}
@@ -328,5 +335,30 @@ public class K {
     	SimpleDateFormat sdf = new SimpleDateFormat(format);
     	return sdf.format(time);
     }
-    
+    public static List<String> readLine(File f) {
+		return readLine(f, "utf-8");
+	}
+	
+	public static List<String> readLine(File f, String charset) {
+		List<String> result = new ArrayList<String>();
+		BufferedReader reader = null;
+		try {
+			reader = new BufferedReader(new InputStreamReader(new FileInputStream(f), charset));
+			String line = null;
+			while ((line = reader.readLine()) != null)
+				result.add(line);
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (reader != null) {
+				try {
+					reader.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+
+		return result;
+	}
 }

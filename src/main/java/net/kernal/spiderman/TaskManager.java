@@ -35,5 +35,7 @@ public class TaskManager implements TaskQueue {
 		else 
 			this.secondaryTaskQueue.put(task);
 	}
-	
+	public long size() {
+		return this.primaryTaskQueue.size() + this.secondaryTaskQueue.size();
+	}
 }

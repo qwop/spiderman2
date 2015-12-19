@@ -22,4 +22,8 @@ public class DefaultTaskQueue implements TaskQueue {
 		}
 	}
 	
+	public long size() {
+		return this.queue.size();
+	}
+	
 }
