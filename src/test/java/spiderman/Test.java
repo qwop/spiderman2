@@ -1,6 +1,7 @@
 package spiderman;
 
-import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import net.kernal.spiderman.Downloader;
 import net.kernal.spiderman.K;
@@ -12,24 +13,18 @@ import net.kernal.spiderman.Target;
 import net.kernal.spiderman.impl.DefaultConfBuilder;
 import net.kernal.spiderman.impl.HtmlCleanerParser;
 import net.kernal.spiderman.impl.TextParser;
-import net.kernal.spiderman.impl.XPathParser;
+import net.kernal.spiderman.parser.CustomParser;
 
 public class Test {
-
+	
 	public static void main(String[] args) throws InterruptedException {
 		// 构建配置
 		Spiderman.Conf conf = new DefaultConfBuilder(){
 			// 添加种子链接
 			public void addSeed(final Seeds seeds) {
-				K.foreach(K.readLine(new File("src/main/resources/company.csv")), new K.ForeachCallback<String>(){
-					public void each(int i, String line) {
-						if (i > 500) this.breakoff();
-						
-						String company = line.trim().split(",")[0].replace("'", "");
-						seeds.add("http://www.baidu.com/s?wd="+K.urlEncode("\""+company+"\""));
-						System.out.println("company->"+company);
-					}
-				});
+				String encodedName = K.urlEncode("\"蜘蛛侠\"");
+				seeds.add("http://www.baidu.com/s?wd="+encodedName);
+				seeds.add("http://news.baidu.com/ns?word="+encodedName+"&pn=0&ct=1&tn=news&ie=utf-8&bt=0&et=0");
 			}
 			// 添加抽取目标
 			public void addTarget(Targets targets) {
@@ -41,8 +36,16 @@ public class Test {
 						public void configModel(Model model) {
 							model.addParser(new HtmlCleanerParser());
 							model.addField("page_url")
-								 .addParser(new XPathParser("//div[@id='page']//a[@href]", "href"))
-								 .asNewTask();
+								 .addParser(new HtmlCleanerParser.FieldPaser("//div[@id='page']//a[@href]", "href"))
+								 .addParser(new CustomParser() {
+									public ParsedResult parse(ParsedResult prevResult) {
+										List<String> newValues = new ArrayList<String>();
+										for (Object url : prevResult.all()) {
+											newValues.add(K.resolveUrl("http://www.baidu.com", (String)url));
+										}
+										return ParsedResult.fromList(newValues);
+									}
+								}).asNewTask();
 						}
 					}, 
 					new Target("baidu-detail"){
@@ -52,53 +55,62 @@ public class Test {
 						public void configModel(Model model) {
 							model.addParser(new HtmlCleanerParser());
 							model.addField("target_urls")
-								 .addParser(new XPathParser("//div[@id='content_left']//div[@class='result c-container ']//h3//a[@href]", "href"))
+								 .addParser(new HtmlCleanerParser.FieldPaser("//div[@id='content_left']//div[@class='result c-container ']//h3//a[@href]", "href"))
 								 .asNewTask();
 						}
 					}
-//					, 
-//					new Target("baidu-page"){
-//						public void configRules(Rules rules) {
-//							rules.setPriority(1).add(new Target.Rule(){
-//								public boolean matches(Downloader.Request request) {
-//									return !request.getUrl().contains("baidu");
-//								}
-//							});
-//						}
-//						public void configModel(Model model) {
-//							model.addParser(new TextParser());
-//						}
-//					}
+					,
+					new Target("baidu-news-list"){
+						public void configRules(Rules rules) {
+							rules.addRegexRule("http://news\\.baidu\\.com/ns\\?word\\=.*&pn\\=0&ct\\=1&tn\\=news&ie\\=utf\\-8&bt\\=0&et\\=0");// URL规则
+						}
+						public void configModel(Model model) {
+							model.addParser(new HtmlCleanerParser());
+							model.addField("page_url")
+								 .addParser(new HtmlCleanerParser.FieldPaser("//p[@id='page']//a[@href]", "href"))
+								 .addParser(new CustomParser() {
+									 public ParsedResult parse(ParsedResult prevResult) {
+										 List<String> newValues = new ArrayList<String>();
+										 for (Object url : prevResult.all()) {
+											 newValues.add(K.resolveUrl("http://news.baidu.com", (String)url));
+										 }
+										 return ParsedResult.fromList(newValues);
+									  }
+								  })
+								 .asNewTask();
+						}
+					}, 
+					new Target("baidu-news-detail"){
+						public void configRules(Rules rules) {
+							rules.addRegexRule("http://news\\.baidu\\.com/ns\\?word\\=.*&pn\\=\\d+&ct\\=1&tn\\=news&ie\\=utf-8&bt\\=0&et\\=0");// URL规则
+						}
+						public void configModel(Model model) {
+							model.addParser(new HtmlCleanerParser());
+							model.addField("target_urls")
+								 .addParser(new HtmlCleanerParser.FieldPaser("//div[@id='content_left']//div[@class='result']//h3//a[@href]", "href"))
+								 .asNewTask();
+						}
+					}
+					, 
+					new Target("baidu-page"){
+						public void configRules(Rules rules) {
+							rules.setPriority(1).add(new Target.Rule(){
+								public boolean matches(Downloader.Request request) {
+									return !request.getUrl().contains("baidu");
+								}
+							});
+						}
+						public void configModel(Model model) {
+							model.addParser(new TextParser());
+						}
+					}
 				);
 			}
 			// 添加配置属性
 			public void addProperty(Properties p) {
-//				p.put("duration", "10s");
-				p.put("threadSize", 100);
-				p.put("downloader.limit", 500);
-				p.put("downloader.connectionRequestTimeout", 100);
-				p.put("downloader.connectTimeout", 500);
-				p.put("downloader.socketTimeout", 10000);
-				p.put("downloader.maxConnTotal", 500);
-				p.put("downloader.maxConnPerRoute", 500);
-				/*
-				 *   总共花费时间:31087ms 
-					  线程池: 总数(150) 运行中(124) 已完成(1884) 
-					  计数器: 已下载(1001) 目标(1503) 当前队列(0)
-				 */
-				// 线程：1    网页：50   时间：116739ms
-				// 线程：50   网页：50   时间：4411ms
-				// 线程：200  网页：50   时间：3542ms   有效 线程池完成406个任务
-				// 线程：100  网页：100  时间：6378ms   有效 线程池完成358个任务
-				// 线程：500  网页：100  时间：4962ms   有效 线程池完成823个任务
-				// 线程：200  网页：200  时间：8562ms   有效
-				// 线程：500  网页：200  时间：9817ms   参数搞错，无效，需重新测试
-				// 线程：500  网页：400  时间：9396ms   参数搞错，无效，需重新测试
-				// 线程：500  网页：500  时间：9294ms   参数搞错，无效，需重新测试
-				// 线程：500  网页：800  时间：9627ms   参数搞错，无效，需重新测试
-				// 线程：1000 网页：800  时间：9176ms   参数搞错，无效，需重新测试 线程池完成1007个任务，使用线程数量最大191
-				// 线程：200  网页：800  时间：9320ms   参数搞错，无效，需重新测试 线程池完成1115个任务，使用线程数量最大189
-				// 线程：500  网页：
+//				p.put("duration", "30s");// 持续时间，到达该时间后蜘蛛侠会停止活动回到你的身边哦～
+				p.put("threadSize", 5);//线程池大小
+				p.put("downloader.limit", 50);//下载网页数量限制，达到该数量后蜘蛛侠会停止活动回到你的身边哦～
 			}
 		}.build();
 		

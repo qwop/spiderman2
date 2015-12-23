@@ -1,6 +1,6 @@
 package net.kernal.spiderman;
 
-import net.kernal.spiderman.Parser.ParsedResult;
+import net.kernal.spiderman.parser.Parser;
 
 public interface Reporting {
 
@@ -10,7 +10,7 @@ public interface Reporting {
 	
 	public void reportNewTask(final Task newTask);
 	
-	public void reportParsedResult(final ParsedResult parsedResult);
+	public void reportParsedResult(final Parser.ParsedResult parsedResult);
 	
 	public void reportStop(Spiderman.Counter counter, int poolSize, int activeCount, long completedTaskCount);
 	

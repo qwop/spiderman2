@@ -3,7 +3,7 @@ package net.kernal.spiderman;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.kernal.spiderman.Parser.ParsedResult;
+import net.kernal.spiderman.parser.Parser;
 
 public class Reportings implements Reporting{
 
@@ -41,10 +41,10 @@ public class Reportings implements Reporting{
 		});
 	}
 	
-	public void reportParsedResult(final ParsedResult parsedResult) {
+	public void reportParsedResult(final Parser.ParsedResult parsedModels) {
 		K.foreach(this.reportings, new K.ForeachCallback<Reporting>() {
 			public void each(int i, Reporting item) {
-				item.reportParsedResult(parsedResult);
+				item.reportParsedResult(parsedModels);
 			}
 		});
 	}

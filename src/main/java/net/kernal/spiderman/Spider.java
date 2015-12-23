@@ -1,8 +1,12 @@
 package net.kernal.spiderman;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+
+import net.kernal.spiderman.parser.FieldParser;
+import net.kernal.spiderman.parser.ModelParser;
+import net.kernal.spiderman.parser.Parser;
+import net.kernal.spiderman.parser.Parser.ParsedResult;
 
 /**
  * 蜘蛛侠的蜘蛛大军，战斗力极强
@@ -51,58 +55,81 @@ public class Spider implements Runnable {
 		final List<Target> matchedTargets = this.matchingTargets(request);
 		// 解析目标
 		K.foreach(matchedTargets, new K.ForeachCallback<Target>() {
-			@SuppressWarnings("unchecked")
 			public void each(int i, final Target target) {
 				Target.Model model = target.getModel();
-				final Parser parser = model.getParser();
-				if (parser == null) {
+				final ModelParser modelParser = model.getParser();
+				if (modelParser == null) {
 					throw new RuntimeException("请为Target["+target.getName()+"].Model设置解析器，比如model.addParser");
 				}
+				modelParser.setResponse(response);
 				counter.addTarget();
-				Parser.ParserContext context = new Parser.ParserContext(target, response);
-				parser.parse(context);
-				
+				final ParsedResult modelParsedResult = modelParser.parse();
+				if (modelParsedResult == null || K.isEmpty(modelParsedResult.all())) {
+					return;
+				}
+				ParsedResult parsedResult = modelParsedResult;
 				List<Target.Model.Field> fields = model.getFields();
 				if (K.isNotEmpty(fields)) {
+					final List<Parser.Model> parsedModels = new ArrayList<Parser.Model>();
+					
 					if (model.isArray()) {
-						Object parsed = context.getModelParsed();
-						for (Object _parsed : (Object[])parsed) {
-							context.setModelParsed(_parsed);
-							Parser.Model parsedModel = new Parser.Model();
+						for (Object _parsed : modelParsedResult.all()) {
+							Parser.Model _parsedModel = new Parser.Model();
 							for (Target.Model.Field f : fields) {
-								f.getParser().parse(context);
-								parsedModel.put(f.getName(), context.getFieldParsed());
+								ParsedResult _parsedResult = new ParsedResult(_parsed);
+								for (FieldParser p : f.getParsers()) {
+									p.setModelParser(modelParser);
+									p.setPrevParserResult(_parsedResult);
+									_parsedResult = p.parse();
+								}
+								if (_parsedResult == null || K.isEmpty(_parsedResult.all())) {
+									continue;
+								}
+								_parsedModel.put(f.getName(), _parsedResult.all().toArray(new Object[]{}));
 							}
-							context.getParsedModels().add(parsedModel);
+							parsedModels.add(_parsedModel);
 						}
 					} else {
-						Parser.Model parsedModel = new Parser.Model();
+						Parser.Model _parsedModel = new Parser.Model();
 						for (Target.Model.Field f : fields) {
-							Parser p = f.getParser();
-							p.parse(context);
-							Object parsed = context.getFieldParsed();
+							ParsedResult _parsedResult = new ParsedResult(modelParsedResult.first());
+							for (FieldParser p : f.getParsers()) {
+								p.setModelParser(modelParser);
+								p.setPrevParserResult(_parsedResult);
+								_parsedResult = p.parse();
+							}
+							if (_parsedResult == null || K.isEmpty(_parsedResult.all())) {
+								continue;
+							}
+							
 							if (f.isForNewTask()) {
 								List<String> urls = new ArrayList<String>();
-								if (parsed instanceof Collection) {
-									urls.addAll((Collection<String>)parsed);
-								} else {
-									urls.add((String)parsed);
-								}
+//								if (f.isArray()) {
+									for (Object val : _parsedResult.all()) {
+										urls.add((String)val);
+									}
+//								} else {
+//									urls.add((String)_parsedResult.first());
+//								}
 								final String httpMethod = f.getProperties().getString("httpMethod", K.HTTP_GET);
 								for(String url : urls) {
 									// 创建任务进入队列
 									putTheNewTaskToQueue(url, httpMethod);
 								}
 							}
-							parsedModel.put(f.getName(), context.getFieldParsed());
+							_parsedModel.put(f.getName(), _parsedResult.all().toArray(new Object[]{}));
 						}
-						context.getParsedModels().add(parsedModel);
+						parsedModels.add(_parsedModel);
+					}
+					if (K.isNotEmpty(parsedModels)) {
+						parsedResult = ParsedResult.fromList(parsedModels);
 					}
 				}
 				
 				// 报告解析结果
-				final Parser.ParsedResult parsedResult = new Parser.ParsedResult(response, target, context.getParsedModels());
-				conf.getReportings().reportParsedResult(parsedResult);
+				if (parsedResult != null && K.isNotEmpty(parsedResult.all())) {
+					conf.getReportings().reportParsedResult(parsedResult);
+				}
 			}
 		});
 	}
@@ -130,7 +157,8 @@ public class Spider implements Runnable {
 	 */
 	public void putTheNewTaskToQueue(String url, String httpMethod) {
 		if (K.isALLNull(url)) return;
-		String resolveUrl = K.resolveUrl(task.getRequest().getUrl(), url);
+//		String resolveUrl = K.resolveUrl(task.getRequest().getUrl(), url);
+		String resolveUrl = url;
 		Task newTask = null;
 		Downloader.Request request = new Downloader.Request(resolveUrl, httpMethod);
 		List<Target> matchedTargets = this.matchingTargets(request);

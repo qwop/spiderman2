@@ -75,7 +75,10 @@ public class Spiderman {
 						}
 						
 //						System.out.println("execute spider for task->" + pTask.getRequest().getUrl());
-						threadPool.execute(new Spider(conf, task, counter));
+						try {
+							threadPool.execute(new Spider(conf, task, counter));
+						} catch (java.util.concurrent.RejectedExecutionException e) {
+						}
 						
 						break;
 					}

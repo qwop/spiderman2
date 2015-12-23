@@ -13,7 +13,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
 import org.apache.http.client.CookieStore;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.AuthSchemes;
 import org.apache.http.client.config.CookieSpecs;
 import org.apache.http.client.config.RequestConfig;
@@ -21,11 +20,15 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.BasicCookieStore;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.DefaultHttpRequestRetryHandler;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.cookie.BasicClientCookie;
+import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.util.EntityUtils;
 
 import net.kernal.spiderman.Downloader;
@@ -35,7 +38,8 @@ import net.kernal.spiderman.Properties;
 public class DefaultDownloader implements Downloader {
 
 	private RequestConfig defaultRequestConfig;
-	private HttpClient httpClient;
+	private CloseableHttpClient httpClient;
+	private CloseableHttpAsyncClient httpAsyncClient;
 	private CookieStore cookieStore;  
 	private Map<String, String> headers;
 	
@@ -45,11 +49,10 @@ public class DefaultDownloader implements Downloader {
 	            .setExpectContinueEnabled(false)
 	            .setRedirectsEnabled(props.getBoolean("downloader.redirectsEnabled", false))
 	            .setCircularRedirectsAllowed(props.getBoolean("downloader.circularRedirectsAllowed", false))
-	            .setStaleConnectionCheckEnabled(true)
 	            // 设置从连接池获取连接的超时时间
-	            .setConnectionRequestTimeout(props.getInt("downloader.connectionRequestTimeout", 100))
+	            .setConnectionRequestTimeout(props.getInt("downloader.connectionRequestTimeout", 1000))
 	            // 设置连接远端服务器的超时时间
-	            .setConnectTimeout(props.getInt("downloader.connectTimeout", 500))
+	            .setConnectTimeout(props.getInt("downloader.connectTimeout", 2000))
 	            // 设置从远端服务器上传输数据回来的超时时间
 	            .setSocketTimeout(props.getInt("downloader.socketTimeout", 5000))
 	            .setTargetPreferredAuthSchemes(Arrays.asList(AuthSchemes.NTLM, AuthSchemes.DIGEST))
@@ -62,7 +65,16 @@ public class DefaultDownloader implements Downloader {
 		this.cookieStore = new BasicCookieStore();
 		this.headers = new HashMap<String, String>();
 	    this.defaultRequestConfig = builder.build();
-		this.httpClient = HttpClients.custom()
+//	    HttpAsyncClientBuilder hacb = HttpAsyncClients.custom();
+	    HttpClientBuilder hcb = HttpClients.custom();
+//		this.httpAsyncClient = hacb
+//				.setUserAgent(props.getString("downloader.userAgent", "Spiderman[http://git.oschina.net/l-weiwei/Spiderman2]"))
+//				.setDefaultCookieStore(cookieStore)
+//				.setMaxConnTotal(props.getInt("downloader.maxConnTotal", 1000))
+//				.setMaxConnPerRoute(props.getInt("downloader.maxConnPerRoute", 500))
+//				.build();
+		
+		this.httpClient = hcb
 				.setUserAgent(props.getString("downloader.userAgent", "Spiderman[http://git.oschina.net/l-weiwei/Spiderman2]"))
 				.setDefaultCookieStore(cookieStore)
 				.setRetryHandler(new DefaultHttpRequestRetryHandler(0, false))
@@ -90,7 +102,6 @@ public class DefaultDownloader implements Downloader {
 		this.cookieStore.addCookie(cookie);
 		return this;
 	}
-
 	public Response download(Request request) {
 		String method = request.getMethod();
 		String url = request.getUrl();
@@ -164,6 +175,86 @@ public class DefaultDownloader implements Downloader {
         }  
 		
 		return response;
+	}
+	
+	public void download(final Request request, final Callback callback) {
+		String method = request.getMethod();
+		String url = request.getUrl();
+		final HttpRequestBase req;
+		if (K.HTTP_POST.equals(method)) {
+			req = new HttpPost(url);
+		} else {
+			req = new HttpGet(url);
+		}
+		
+		RequestConfig reqCfg = buildRequestConfig(request);
+		req.setConfig(reqCfg);
+		for (Iterator<Entry<String, String>> it = this.headers.entrySet().iterator(); it.hasNext(); ) {
+			Entry<String, String> e = it.next();
+			req.addHeader(e.getKey(), e.getValue());
+		}
+		K.foreach(request.getHeaders(), new K.ForeachCallback<Downloader.Header>() {
+			public void each(int i, Downloader.Header item) {
+				req.addHeader(item.getName(), item.getValue());
+			}
+		});
+		K.foreach(request.getCookies(), new K.ForeachCallback<Downloader.Cookie>() {
+			public void each(int i, Downloader.Cookie item) {
+				keepCookie(item);
+			}
+		});
+		final HttpClientContext ctx = HttpClientContext.create();
+		this.httpAsyncClient.start();
+		this.httpAsyncClient.execute(req, ctx, new FutureCallback<HttpResponse>(){
+			public void completed(HttpResponse resp) {
+				Response response = new Response(request);
+				// get status
+				StatusLine statusLine = resp.getStatusLine();
+				int statusCode = statusLine.getStatusCode();
+				String statusDesc = statusLine.getReasonPhrase();
+				response.setStatusCode(statusCode);
+				response.setStatusDesc(statusDesc);
+				// cookies
+				CookieStore cs = ctx.getCookieStore();
+				for (org.apache.http.cookie.Cookie c : cs.getCookies()) {
+					Cookie nc = new Cookie(c.getName(), c.getValue(), c.getDomain(), c.getPath(), c.getExpiryDate(), c.isSecure());
+					keepCookie(nc);
+				}
+				
+				// get redirect location
+				org.apache.http.Header locationHeader = resp.getFirstHeader("Location");
+				if (locationHeader != null && (statusCode == HttpStatus.SC_MOVED_PERMANENTLY || statusCode == HttpStatus.SC_MOVED_TEMPORARILY)) 
+					response.setLocation(locationHeader.getValue());
+				
+			    // entity
+				HttpEntity entity = resp.getEntity();
+				// content type and charset
+				ContentType contentType = ContentType.getOrDefault(entity);
+				Charset charset = contentType.getCharset();
+				response.setCharset(charset == null ? null : charset.name());
+				response.setMimeType(contentType.getMimeType());
+				// body
+				try {
+					byte[] body = EntityUtils.toByteArray(entity);
+					response.setBody(body);
+					resp = null;
+				} catch (Throwable e) {
+				}  try {  
+	                if (resp != null) {  
+	                    resp.getEntity().getContent().close();  
+	                }  
+	            } catch (Throwable e) {  
+//	            	e.printStackTrace();
+	            } 
+				
+				callback.completed(response);
+			}
+			public void failed(Exception ex) {
+				ex.printStackTrace();
+			}
+			public void cancelled() {
+			}
+		});
 	}
 
 	private RequestConfig buildRequestConfig(Request request) {

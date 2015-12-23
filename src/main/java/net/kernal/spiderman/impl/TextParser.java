@@ -6,27 +6,43 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import net.kernal.spiderman.AbstractParser;
+import net.kernal.spiderman.Downloader.Response;
 import net.kernal.spiderman.K;
+import net.kernal.spiderman.parser.ModelParser;
 
 /**
  * 网页正文内容解析器
  * @author 赖伟威 l.weiwei@163.com 2015-12-18
  *
  */
-public class TextParser extends AbstractParser {
+public class TextParser extends ModelParser {
 	
-	public void parse() {
-		String html = context.getResponse().getHtml();
+	private ParsedResult parsedResult;
+	public ParsedResult getParsedResult() {
+		return this.parsedResult;
+	}
+	
+	public TextParser() {
+		this(null);
+	}
+	public TextParser(Response response) {
+		super(response);
+	}
+
+	public ParsedResult parse() {
+		String html = response.getHtml();
 		Model model = new Model();
 		TextExtractor te = new TextExtractor();
 		te.extractHTML(html);
 		String title = te.getTitle();
 		String text = te.getText();
+		model.put("url", response.getRequest().getUrl());
 		model.put("title", K.trim(title));
 		model.put("text", K.trim(text));
+		model.put("html", html);
 		
-		context.getParsedModels().add(model);
+		this.parsedResult = new ParsedResult(model);
+		return this.parsedResult;
 	}
 	
 	/**

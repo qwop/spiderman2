@@ -3,6 +3,9 @@ package net.kernal.spiderman;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.kernal.spiderman.parser.FieldParser;
+import net.kernal.spiderman.parser.ModelParser;
+
 public abstract class Target {
 
 	public Target(String name) {
@@ -122,17 +125,17 @@ public abstract class Target {
 	
 	public static class Model {
 		private boolean isArray;
-		private Parser parser;
+		private ModelParser parser;
 		private List<Field> fields;
 		
 		public Model() {
 			this.fields = new ArrayList<Field>();
 		}
-		public Model addParser(Parser parser) {
+		public Model addParser(ModelParser parser) {
 			this.parser = parser;
 			return this;
 		}
-		public Parser getParser() {
+		public ModelParser getParser() {
 			return this.parser;
 		}
 		public List<Field> getFields() {
@@ -177,12 +180,10 @@ public abstract class Target {
 			private boolean isArray;
 			private boolean isForNewTask;
 			private Properties properties;
-			private Parser firstParser;
-			private Parser tailParser;
+			private List<FieldParser> parsers;
 			public Field(String name) {
 				this.name = name;
-				this.firstParser = new AbstractParser() { public void parse() {} };
-				this.tailParser = this.firstParser;
+				this.parsers = new ArrayList<FieldParser>();
 				this.properties = new Properties();
 			}
 			public boolean isArray() {
@@ -235,17 +236,16 @@ public abstract class Target {
 //				this.parsers.add(new RegexParser(regex));
 //				return this;
 //			}
-			public Field addParser(Parser parser) {
-				this.tailParser.setNextParser(parser);
-				this.tailParser = parser;
+			public Field addParser(FieldParser parser) {
+				this.parsers.add(parser);
 				return this;
 			}
 			
 			public String getName() {
 				return name;
 			}
-			public Parser getParser() {
-				return firstParser;
+			public List<FieldParser> getParsers() {
+				return this.parsers;
 			}
 
 //			public static interface Parser {

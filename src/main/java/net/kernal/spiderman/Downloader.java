@@ -27,11 +27,23 @@ public interface Downloader {
 	public Downloader keepCookie(Cookie cookie);
 	
 	/**
-	 * 执行HTTP请求，下载网页内容
+	 * 异步下载网页内容
 	 * @param request http请求
+	 * @param callback 完成下载后的回调函数
 	 * @return 返回http响应
 	 */
+	public void download(Request request, Callback callback);
+	
+	/**
+	 * 同步下载网络内容
+	 * @param request
+	 * @return
+	 */
 	public Response download(Request request);
+	
+	public static interface Callback {
+		public void completed(Response response);
+	}
 	
 	public static class Header {
 		private String name;
