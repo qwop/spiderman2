@@ -60,7 +60,7 @@ public class XMLConfBuilder implements Conf.Builder {
 		return this;
 	}
 	
-	public XMLConfBuilder setProperty(String key, Object value){
+	public XMLConfBuilder set(String key, Object value){
 		this.conf.getProperties().put(key, value);
 		return this;
 	}

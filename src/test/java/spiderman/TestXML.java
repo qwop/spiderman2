@@ -26,10 +26,10 @@ public class TestXML {
 						model.addParser(new TextParser());// 目标解析规则，这里直接用通用的正文抽取器解析
 					}
 				})
-				.setProperty("duration", "10s")//持续时间
-				.setProperty("downloader.threadSize", 20)//下载线程数量
-				.setProperty("parser.threadSize", 10)//解析线程数量
-//				.setProperty("parsedLimit", 10)//解析网页数量上限，达到后将会自动结束行动
+				.set("duration", "10s")//持续时间
+				.set("downloader.threadSize", 20)//下载线程数量
+				.set("parser.threadSize", 10)//解析线程数量
+//				.set("parsedLimit", 10)//解析网页数量上限，达到后将会自动结束行动
 				.build();
 		
 		new Spiderman(conf).go();//别忘记看控制台信息哦，结束之后会有统计信息的,查看关键词"[结束]"(去掉双引号来查找)
