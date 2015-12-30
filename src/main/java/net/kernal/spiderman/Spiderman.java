@@ -8,6 +8,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.logging.Logger;
+
+import javax.script.ScriptEngine;
+
+import net.kernal.spiderman.downloader.Downloader;
+import net.kernal.spiderman.queue.TaskQueue;
+import net.kernal.spiderman.reporting.Reporting;
+import net.kernal.spiderman.reporting.Reportings;
 
 /**
  * 蜘蛛侠，根据预言之子设定的目标引领蜘蛛大军开展网络世界采集行动。
@@ -16,6 +24,8 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class Spiderman {
 
+	public static final Logger logger = Logger.getLogger(Spiderman.class.getName());
+	
 	public Spiderman(Conf conf) {
 		if (conf.seeds.isEmpty()) 
 			throw new RuntimeException("少年,请添加一个种子来让蜘蛛侠行动起来!参考：conf.addSeed");
@@ -25,13 +35,23 @@ public class Spiderman {
 		
 		this.conf = conf;
 		this.counter = new Counter();
-		int downloadLimit = conf.getProperties().getInt("downloader.limit", 0);
-		if (downloadLimit > 0) {
-			this.counter.setCountDown(new CountDownLatch(downloadLimit));
+		int parsedLimit = conf.properties.getInt("parsedLimit", 0);
+		if (parsedLimit > 0) {
+			this.counter.setCountDown(new CountDownLatch(parsedLimit));
 		} 
 		this.singlePool = Executors.newSingleThreadExecutor();
-		int threadSize = this.conf.properties.getInt("threadSize", 1);
+		final int threadSize = this.conf.properties.getInt("threadSize", 1);
 		this.threadPool = (ThreadPoolExecutor) Executors.newFixedThreadPool(threadSize);
+		// JAVA8爽!
+		if (conf.scriptEngine != null) {
+			this.conf.targets.all().forEach((target) -> {
+				target.getModel().getFields().forEach((field) -> {
+					field.getParsers().forEach((parser) -> {
+						parser.setScriptEngine(conf.scriptEngine);
+					});
+				});
+			});
+		}
 	}
 	
 	/**
@@ -42,11 +62,13 @@ public class Spiderman {
 		this.singlePool.execute(new Runnable() {
 			public void run() {
 				// 将种子添加到任务队列里
-				for (Downloader.Request seed : conf.seeds.getAll()) {
+				conf.seeds.all().forEach((seed) -> {
 					Task newTask = new Task(seed, 0);
 					conf.taskQueue.put(newTask);
-				}
-				
+					// 队列计数+1
+					counter.queuePlus();
+				});
+				// 状态报告: 行动开始了
 				conf.reportings.reportStart();
 				while (true) {
 					while(true) {
@@ -58,8 +80,9 @@ public class Spiderman {
 							break;
 						}
 						try {
-							System.out.println("[Spiderman]wait thread");
-							Thread.sleep(conf.getProperties().getLong("waitThread", 1000));
+							long seconds = K.convertToSeconds(conf.getProperties().getString("waitThread", "1s")).longValue();
+							logger.info("线程池负载已满，将等待"+seconds+"秒再尝试申请线程资源");
+							Thread.sleep(seconds*1000L);
 						} catch (InterruptedException e) {
 						}
 					}
@@ -67,14 +90,14 @@ public class Spiderman {
 						Task task = conf.taskQueue.poll();
 						if (task == null) {
 							try {
-								System.out.println("[Spiderman]wait queue");
-								Thread.sleep(conf.getProperties().getLong("waitQueue", 1000));
+								long seconds = K.convertToSeconds(conf.getProperties().getString("waitQueue", "1s")).longValue();
+								logger.info("队列已无任务可分配，将等待"+seconds+"秒再尝试申领任务");
+								Thread.sleep(seconds*1000L);
 							} catch (InterruptedException e) {
 							}
 							continue;
 						}
 						
-//						System.out.println("execute spider for task->" + pTask.getRequest().getUrl());
 						try {
 							threadPool.execute(new Spider(conf, task, counter));
 						} catch (java.util.concurrent.RejectedExecutionException e) {
@@ -156,9 +179,10 @@ public class Spiderman {
 		private Downloader downloader;
 		private Reportings reportings;
 		private TaskQueue taskQueue;
+		private ScriptEngine scriptEngine;
 		
 		public static interface Builder {
-			public Conf build();
+			public Conf build() throws Exception;
 		}
 		
 		public Conf addSeed(String url) {
@@ -193,6 +217,10 @@ public class Spiderman {
 			this.reportings.add(reporting);
 			return this;
 		}
+		public Conf setScriptEngine(ScriptEngine scriptEngine) {
+			this.scriptEngine = scriptEngine;
+			return this;
+		}
 		public Seeds getSeeds() {
 			return seeds;
 		}
@@ -218,6 +246,9 @@ public class Spiderman {
 		public Seeds() {
 			this.requests = new ArrayList<Downloader.Request>();
 		}
+		public List<Downloader.Request> all() {
+			return this.getAll();
+		}
 		public List<Downloader.Request> getAll(){
 			return this.requests;
 		}
@@ -240,7 +271,7 @@ public class Spiderman {
 			this.list = new ArrayList<Target>();
 		}
 		
-		public List<Target> getAll() {
+		public List<Target> all() {
 			return this.list;
 		}
 		
@@ -264,23 +295,28 @@ public class Spiderman {
 		private AtomicLong countDownload;
 		private AtomicLong countQueue;
 		private AtomicLong countTarget;
+		private AtomicLong countParsed;
 		
 		public Counter() {
 			this.countDownload = new AtomicLong(0);
 			this.countQueue = new AtomicLong(0);
 			this.countTarget = new AtomicLong(0);
+			this.countParsed = new AtomicLong(0);
 		}
-		public Long addDownload() {
+		public Long downloadPlus() {
+			return this.countDownload.addAndGet(1);
+		}
+		public Long queuePlus() {
+			return this.countQueue.addAndGet(1);
+		}
+		public Long targetPlus() {
+			return this.countTarget.addAndGet(1);
+		}
+		public Long parsedPlus() {
 			if (this.countDown != null) {
 				this.countDown.countDown();
 			}
-			return this.countDownload.addAndGet(1);
-		}
-		public Long addQueue() {
-			return this.countQueue.addAndGet(1);
-		}
-		public Long addTarget() {
-			return this.countTarget.addAndGet(1);
+			return this.countParsed.addAndGet(1);
 		}
 		public CountDownLatch getCountDown() {
 			return countDown;
@@ -296,6 +332,9 @@ public class Spiderman {
 		}
 		public AtomicLong getCountTarget() {
 			return this.countTarget;
+		}
+		public AtomicLong getCountParsed() {
+			return this.countParsed;
 		}
 	}
 	

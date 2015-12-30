@@ -11,6 +11,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
+import java.nio.charset.IllegalCharsetNameException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -67,6 +68,16 @@ public class K {
 	 */
 	public final static boolean isNotValidCharset(String charsetName) {
 		return !isValidCharset(charsetName);
+	}
+	
+	public final static String getCharsetName(String charsetName) {
+		if (K.isBlank(charsetName)) return null;
+		try {
+			return Charset.forName(charsetName).name();
+		} catch (IllegalCharsetNameException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 	
 	public final static String byteToString(byte[] byteData) {
@@ -270,11 +281,6 @@ public class K {
 			}
 			builder.append(url);
 			return builder.toString();
-//			for (String u : url.split("/")) {
-//				if (K.isBlank(u) || "/".equals(u)) continue;
-//				builder.append("/").append(u);
-//			}
-//			return builder.toString();
 		} catch (MalformedURLException e) {
 			return url;
 		}
@@ -361,4 +367,27 @@ public class K {
 
 		return result;
 	}
+	
+	public static String readFile(File f) {
+		return readFile(f, null);
+	}
+	
+	public static String readFile(File file,String charset) {
+		StringBuilder lines = new StringBuilder();
+		K.readLine(file, charset).forEach(line -> {
+			if (lines.length() > 0) lines.append("\r\n");
+			lines.append(line);
+		});
+		return lines.toString();
+	}
+	
+	@SuppressWarnings("unchecked")
+	public final static <T> Class<T> loadClass(final String className) {
+		try {
+			return (Class<T>) Thread.currentThread().getContextClassLoader().loadClass(className);
+		} catch (ClassNotFoundException e) {
+			return null;
+		}
+	}
+	
 }

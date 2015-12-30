@@ -3,135 +3,93 @@ package net.kernal.spiderman;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.kernal.spiderman.parser.FieldParser;
-import net.kernal.spiderman.parser.ModelParser;
-import net.kernal.spiderman.parser.Parser;
+import net.kernal.spiderman.Spiderman.Conf;
+import net.kernal.spiderman.Spiderman.Counter;
+import net.kernal.spiderman.downloader.Downloader;
 import net.kernal.spiderman.parser.Parser.ParsedResult;
 
 /**
- * 蜘蛛侠的蜘蛛大军，战斗力极强
+ * 蜘蛛侠的蜘蛛大军
  * @author 赖伟威 l.weiwei@163.com 2015-12-10
  *
  */
 public class Spider implements Runnable {
 
-	private Spiderman.Conf conf;
+	/**
+	 * 配置对象
+	 */
+	private Conf conf;
+	/**
+	 * 任务
+	 */
 	private Task task;
-	private Spiderman.Counter counter;
-	
-	public Spider(Spiderman.Conf conf, Task task, Spiderman.Counter counter) {
+	/**
+	 * 计数器
+	 */
+	private Counter counter;
+
+	public Spider(Conf conf, Task task, Counter counter) {
 		this.conf = conf;
 		this.task = task;
 		this.counter = counter;
 	}
 	
 	public void run() {
+		// 从任务包里拿到请求对象
 		final Downloader.Request request = this.task.getRequest();
-		// 从网页下载内容
+		// 将请求丢给下载器进行下载
 		final Downloader.Response response = this.conf.getDownloader().download(request);
 		if (response == null) {
 			return;
 		}
-		this.conf.getReportings().reportDownload(response);
-		// 处理重定向任务
+		// 下载计数＋1
+		this.counter.downloadPlus();
+		// 处理重定向
 		final int statusCode = response.getStatusCode();
 		final String location = response.getLocation();
 		if (K.isNotBlank(location) && K.isIn(statusCode, 301, 302)) {
-			// 重定向，创建新任务
-			this.putTheNewTaskToQueue(location, K.HTTP_GET);
+			this.putTheNewTaskToQueue(K.HTTP_GET, location);
 			return ;
 		}
-		if (200 != statusCode) {
-			return;
-		}
-		response.setHtml(K.byteToString(response.getBody(), response.getCharset()));
-		if (K.isBlank(response.getHtml())) {
+		if (response.getBody() == null || response.getBody().length == 0) {
 			return;
 		}
 		
-		this.counter.addDownload();
-		
+		// 处理响应体文本编码问题
+		String charsetName = K.getCharsetName(response.getCharset());
+		if (K.isBlank(charsetName)) {
+			charsetName = getCharsetFromBodyStr(response.getBodyStr());
+		}
+		if (K.isNotBlank(charsetName)) {
+			response.setCharset(charsetName);
+		}
+		// 获取响应体文本内容
+		final String bodyStr = K.byteToString(response.getBody(), charsetName); 
+		// 若内容为空，结束任务
+		if (K.isBlank(bodyStr)) {
+			return;
+		}
+		response.setBodyStr(bodyStr);
+		// 报告下载事件
+		this.conf.getReportings().reportDownload(response);
 		// 匹配目标
 		final List<Target> matchedTargets = this.matchingTargets(request);
 		// 解析目标
-		K.foreach(matchedTargets, new K.ForeachCallback<Target>() {
-			public void each(int i, final Target target) {
-				Target.Model model = target.getModel();
-				final ModelParser modelParser = model.getParser();
-				if (modelParser == null) {
-					throw new RuntimeException("请为Target["+target.getName()+"].Model设置解析器，比如model.addParser");
-				}
-				modelParser.setResponse(response);
-				counter.addTarget();
-				final ParsedResult modelParsedResult = modelParser.parse();
-				if (modelParsedResult == null || K.isEmpty(modelParsedResult.all())) {
-					return;
-				}
-				ParsedResult parsedResult = modelParsedResult;
-				List<Target.Model.Field> fields = model.getFields();
-				if (K.isNotEmpty(fields)) {
-					final List<Parser.Model> parsedModels = new ArrayList<Parser.Model>();
-					
-					if (model.isArray()) {
-						for (Object _parsed : modelParsedResult.all()) {
-							Parser.Model _parsedModel = new Parser.Model();
-							for (Target.Model.Field f : fields) {
-								ParsedResult _parsedResult = new ParsedResult(_parsed);
-								for (FieldParser p : f.getParsers()) {
-									p.setModelParser(modelParser);
-									p.setPrevParserResult(_parsedResult);
-									_parsedResult = p.parse();
-								}
-								if (_parsedResult == null || K.isEmpty(_parsedResult.all())) {
-									continue;
-								}
-								_parsedModel.put(f.getName(), _parsedResult.all().toArray(new Object[]{}));
-							}
-							parsedModels.add(_parsedModel);
-						}
-					} else {
-						Parser.Model _parsedModel = new Parser.Model();
-						for (Target.Model.Field f : fields) {
-							ParsedResult _parsedResult = new ParsedResult(modelParsedResult.first());
-							for (FieldParser p : f.getParsers()) {
-								p.setModelParser(modelParser);
-								p.setPrevParserResult(_parsedResult);
-								_parsedResult = p.parse();
-							}
-							if (_parsedResult == null || K.isEmpty(_parsedResult.all())) {
-								continue;
-							}
-							
-							if (f.isForNewTask()) {
-								List<String> urls = new ArrayList<String>();
-//								if (f.isArray()) {
-									for (Object val : _parsedResult.all()) {
-										urls.add((String)val);
-									}
-//								} else {
-//									urls.add((String)_parsedResult.first());
-//								}
-								final String httpMethod = f.getProperties().getString("httpMethod", K.HTTP_GET);
-								for(String url : urls) {
-									// 创建任务进入队列
-									putTheNewTaskToQueue(url, httpMethod);
-								}
-							}
-							_parsedModel.put(f.getName(), _parsedResult.all().toArray(new Object[]{}));
-						}
-						parsedModels.add(_parsedModel);
-					}
-					if (K.isNotEmpty(parsedModels)) {
-						parsedResult = ParsedResult.fromList(parsedModels);
-					}
-				}
-				
+		for (Target target : matchedTargets) {
+			final ParsedResult parsedResult = target.parse(response);
+			if (parsedResult != null && K.isNotEmpty(parsedResult.all())) {
+				// 解析结果计数＋1
+				this.counter.parsedPlus();
 				// 报告解析结果
-				if (parsedResult != null && K.isNotEmpty(parsedResult.all())) {
-					conf.getReportings().reportParsedResult(parsedResult);
+				this.conf.getReportings().reportParsedResult(parsedResult);
+				// 若字段配置为新任务来使用，则将它的解析结果(URL地址列表)作为新任务放入队列
+				if (K.isNotEmpty(parsedResult.getUrlsForNewTask())) {
+					for (String[] arr : parsedResult.getUrlsForNewTask()) {
+						putTheNewTaskToQueue(arr[0], arr[1]);
+					}
 				}
 			}
-		});
+		}
 	}
 	
 	/**
@@ -139,12 +97,14 @@ public class Spider implements Runnable {
 	 * @param task 需要匹配的任务
 	 * @return 符合匹配的目标配置
 	 */
-	public List<Target> matchingTargets(final Downloader.Request request) {
+	private List<Target> matchingTargets(final Downloader.Request request) {
 		final List<Target> matchedTargets = new ArrayList<Target>();
-		K.foreach(conf.getTargets().getAll(), new K.ForeachCallback<Target>() {
+		K.foreach(conf.getTargets().all(), new K.ForeachCallback<Target>() {
 			public void each(int i, Target target) {
 				if (target.matches(request)) {
 					matchedTargets.add(target);
+					// 目标计数＋1
+					counter.targetPlus();
 				}
 			}
 		});
@@ -155,12 +115,13 @@ public class Spider implements Runnable {
 	 * 将新任务放入队列
 	 * @param newTask 任务
 	 */
-	public void putTheNewTaskToQueue(String url, String httpMethod) {
-		if (K.isALLNull(url)) return;
-//		String resolveUrl = K.resolveUrl(task.getRequest().getUrl(), url);
-		String resolveUrl = url;
+	public void putTheNewTaskToQueue(String httpMethod, String url) {
+		if (K.isBlank(url)) {
+			return;
+		}
+		
 		Task newTask = null;
-		Downloader.Request request = new Downloader.Request(resolveUrl, httpMethod);
+		Downloader.Request request = new Downloader.Request(url, httpMethod);
 		List<Target> matchedTargets = this.matchingTargets(request);
 		if (K.isNotEmpty(matchedTargets)) {
 			Integer p = null;
@@ -172,9 +133,29 @@ public class Spider implements Runnable {
 		} else {
 			newTask = new Task(request, 500);
 		}
-		
 		conf.getTaskQueue().put(newTask);
+		// 队列计数+1
+		counter.queuePlus();
+		// 状态报告: 创建新任务
 		conf.getReportings().reportNewTask(newTask);
 	}
 	
+	private String getCharsetFromBodyStr(final String bodyStr) {
+		if (K.isBlank(bodyStr)) {
+			return null;
+		}
+		
+		String html = bodyStr.trim().toLowerCase();
+		String s1 = K.findOneByRegex(html, "(?=<meta ).*charset=.[^/]*");
+		if (K.isBlank(s1)) {
+			return null;
+		}
+		
+		String s2 = K.findOneByRegex(s1, "(?=charset\\=).[^;/\"']*");
+		if (K.isBlank(s2)) {
+			return null;
+		}
+		String charsetName = s2.replace("charset=", "");
+		return K.getCharsetName(charsetName);
+	}
 }

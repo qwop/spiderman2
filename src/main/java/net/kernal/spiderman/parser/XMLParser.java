@@ -1,4 +1,4 @@
-package net.kernal.spiderman.impl;
+package net.kernal.spiderman.parser;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -19,15 +19,12 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import net.kernal.spiderman.Downloader;
 import net.kernal.spiderman.K;
-import net.kernal.spiderman.parser.FieldParser;
-import net.kernal.spiderman.parser.ModelParser;
-import net.kernal.spiderman.parser.XPathFieldParser;
-import net.kernal.spiderman.parser.XPathModelParser;
+import net.kernal.spiderman.downloader.Downloader;
 
-public class XMLParser extends XPathModelParser {
+public class XMLParser extends ModelParser {
 
+	private String xpath;
 	private ParsedResult parsedResult;
 	public ParsedResult getParsedResult() {
 		return this.parsedResult;
@@ -37,10 +34,19 @@ public class XMLParser extends XPathModelParser {
     private XPath xpathObject = null;
 	
 	public XMLParser(String xpath) {
-		super(null, xpath);
+		super(null);
+		this.xpath = xpath;
+	}
+	public XMLParser(ModelParser prevParser) {
+		super(null, prevParser);
+	}
+	public XMLParser(String xpath, ModelParser prevParser) {
+		super(null, prevParser);
+		this.xpath = xpath;
 	}
 	public XMLParser(String xpath, File xml) {
-		super(null, xpath);
+		super(null);
+		this.xpath = xpath;
 		try {
 			this.init(new FileInputStream(xml));
 		} catch (FileNotFoundException e) {
@@ -48,9 +54,20 @@ public class XMLParser extends XPathModelParser {
 		}
 	}
 	
+	public XMLParser(String xpath, InputStream inputstream) {
+		super(null);
+		this.xpath = xpath;
+		this.init(inputstream);
+	}
+	
 	public XMLParser(Downloader.Response response, String xpath) {
-		super(response, xpath);
+		super(response);
+		this.xpath = xpath;
 		this.init(new ByteArrayInputStream(super.response.getBody()));
+	}
+	
+	public String getXPath() {
+		return this.xpath;
 	}
 	
 	private void init(InputStream inputStream) {
@@ -65,15 +82,32 @@ public class XMLParser extends XPathModelParser {
 		}
 	}
 	
+	public XPath getXPathObject() {
+		XMLParser parser = (XMLParser)this.prevParser;
+		XPath xpathObject = parser == null ? this.xpathObject : parser.xpathObject;
+		return xpathObject;
+	}
+	
+	public Object getInputSource() {
+		XMLParser parser = (XMLParser)this.prevParser;
+		Object inputSource = this.prevParsedResult == null ? parser == null ? null : parser.getParsedResult().first() : this.prevParsedResult.first();
+        if (inputSource == null) {
+        	inputSource = doc;
+        }
+        return inputSource;
+	}
+	
 	public ParsedResult parse() {
+		Object inputSource = getInputSource();
         if (K.isBlank(xpath)) {
-        	this.parsedResult = new ParsedResult(doc);
+        	this.parsedResult = new ParsedResult(inputSource);
         	return this.parsedResult;
         }
+        XPath xpathObject = getXPathObject();
         
 		Object nodes = null;
 		try {
-			nodes = (NodeList)xpathObject.compile(xpath).evaluate(doc, XPathConstants.NODESET);
+			nodes = (NodeList)xpathObject.compile(xpath).evaluate(inputSource, XPathConstants.NODESET);
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}
@@ -91,30 +125,35 @@ public class XMLParser extends XPathModelParser {
         return this.parsedResult;
 	}
 
-	public static class FieldPaser extends XPathFieldParser {
+	public static class FieldPaser extends FieldParser {
 		
+		private String xpath;
+		private String attr;
 		private ParsedResult parsedResult;
 		public ParsedResult getParsedResult() {
 			return this.parsedResult;
 		}
 		
 		public FieldPaser(String xpath) {
-			super(null, null, xpath, null);
+			super();
+			this.xpath = xpath;
 		}
 		public FieldPaser(String xpath, String attr) {
-			super(null, null, xpath, attr);
+			super();
+			this.xpath = xpath;
+			this.attr = attr;
 		}
 		
 		public ParsedResult parse() {
 			XMLParser mp = (XMLParser)super.modelParser;
-			XPath xpathObj = mp.xpathObject;
-			Object item = super.prevParsedResult.first();
+			XPath xpathObj = mp.getXPathObject();
+			Object inputSource = mp.getParsedResult().first();//FIXME 有问题！总是取第一个，不可以！
 			
 			if (xpath.endsWith("/text()")) {
 				xpath = xpath.replace("/text()", "");
 				Object nodes = null;
 				try {
-					nodes = (NodeList)xpathObj.compile(xpath).evaluate(item, XPathConstants.NODESET);
+					nodes = (NodeList)xpathObj.compile(xpath).evaluate(inputSource, XPathConstants.NODESET);
 				} catch (Throwable e) {
 					e.printStackTrace();
 				}
@@ -125,15 +164,15 @@ public class XMLParser extends XPathModelParser {
 				
 				List<String> tmpList = new ArrayList<String>();
 				for (int i = 0; i < nodeList.getLength(); i++){
-					Object node = nodeList.item(i);
-					String nodeValue = node.toString();
-					tmpList.add(nodeValue);
+					Node node = nodeList.item(i);
+					String text = node.getTextContent();
+					tmpList.add(text);
 				}
 				this.parsedResult = new ParsedResult(tmpList.toArray(new Object[]{}));
 			} else {
 				Object nodes = null;
 				try {
-					nodes = (NodeList)xpathObj.compile(xpath).evaluate(item, XPathConstants.NODESET);
+					nodes = (NodeList)xpathObj.compile(xpath).evaluate(inputSource, XPathConstants.NODESET);
 				} catch (Throwable e) {
 					e.printStackTrace();
 				}
@@ -162,7 +201,7 @@ public class XMLParser extends XPathModelParser {
 	
 	
 	public static void main(String[] args) {
-		File file = new File("src/main/resources/baidu-web.xml");
+		File file = new File("src/main/resources/baidu-search.xml");
 		ModelParser p = new XMLParser("//targets//target[@name]", file);
 		ParsedResult r = p.parse();
 		for (Object obj : r.all()) {

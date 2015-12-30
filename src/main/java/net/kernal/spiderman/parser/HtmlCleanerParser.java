@@ -1,50 +1,64 @@
-package net.kernal.spiderman.impl;
+package net.kernal.spiderman.parser;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.htmlcleaner.CleanerProperties;
 import org.htmlcleaner.HtmlCleaner;
+import org.htmlcleaner.SimpleXmlSerializer;
 import org.htmlcleaner.TagNode;
+import org.htmlcleaner.XPatherException;
 
-import net.kernal.spiderman.Downloader;
 import net.kernal.spiderman.K;
-import net.kernal.spiderman.parser.FieldParser;
-import net.kernal.spiderman.parser.Parser;
-import net.kernal.spiderman.parser.XPathFieldParser;
-import net.kernal.spiderman.parser.XPathModelParser;
+import net.kernal.spiderman.downloader.Downloader;
 
-public class HtmlCleanerParser extends XPathModelParser {
+/**
+ * 模型解析器，基于HtmlCleaner实现, 且具备XPath解析能力
+ * @author 赖伟威 l.weiwei@163.com 2015-12-10
+ *
+ */
+public class HtmlCleanerParser extends ModelParser {
 
+	private String xpath;
 	private ParsedResult parsedResult;
+	private HtmlCleaner htmlCleaner;
 	
-	private TagNode doc;
+	private TagNode rootNode;
 	public HtmlCleanerParser() {
-		super(null, null);
+		super(null);
 	}
 	public HtmlCleanerParser(String xpath) {
-		super(null, xpath);
+		super(null);
+		this.xpath = xpath;
 	}
 	public HtmlCleanerParser(String html, String xpath) {
-		super(null, xpath);
+		super(null);
+		this.xpath = xpath;
 		this.init(html);
 	}
-	public void setResponse(Downloader.Response response) {
-		this.init(response.getHtml());
+	public ModelParser setResponse(Downloader.Response response) {
+		this.init(response.getBodyStr());
+		return this;
+	}
+	public String getXPath() {
+		return this.xpath;
 	}
 	
 	private void init(final String html) {
 		// 使用HtmlCleaner组件
-		HtmlCleaner cleaner = new HtmlCleaner();
-		cleaner.getProperties().setTreatDeprecatedTagsAsContent(true);
-		this.doc = cleaner.clean(html);
+		this.htmlCleaner = new HtmlCleaner();
+		this.htmlCleaner.getProperties().setTreatDeprecatedTagsAsContent(true);
+		this.rootNode = this.htmlCleaner.clean(html);
 	}
 
 	public ParsedResult parse() {
 		if (K.isBlank(xpath)) {
-			return new ParsedResult(this.doc);
+			return new ParsedResult(this.rootNode);
 		}
 		try {
-			Object[] nodes = this.doc.evaluateXPath(xpath);
+			Object[] nodes = this.rootNode.evaluateXPath(xpath);
 			if (K.isNotEmpty(nodes)) {
 				return new ParsedResult(nodes);
 			}
@@ -54,15 +68,18 @@ public class HtmlCleanerParser extends XPathModelParser {
 		return null;
 	}
 
-	public static class FieldPaser extends XPathFieldParser  {
-
+	public static class FieldPaser extends FieldParser  {
+		private String xpath;
+		private String attr;
 		private ParsedResult parsedResult;
-		
 		public FieldPaser(String xpath) {
-			super(null, null, xpath, null);
+			super();
+			this.xpath = xpath;
 		}
 		public FieldPaser(String xpath, String attr) {
-			super(null, null, xpath, attr);
+			super();
+			this.xpath = xpath;
+			this.attr = attr;
 		}
 		
 		public ParsedResult parse() {
@@ -99,6 +116,24 @@ public class HtmlCleanerParser extends XPathModelParser {
 							tmpList.add(attrVal);
 						}
 						this.parsedResult =  new ParsedResult(tmpList.toArray(new Object[]{}));
+					} else if (super.isSerialize) {
+						final String charset = super.modelParser.getResponse().getCharset();
+						HtmlCleaner cleaner = ((HtmlCleanerParser)super.modelParser).htmlCleaner;
+						StringWriter sw = new StringWriter();
+						CleanerProperties prop = cleaner.getProperties();
+						SimpleXmlSerializer ser = new SimpleXmlSerializer(prop);
+						List<String> tmpList = new ArrayList<String>();
+						for (Object node : nodes){
+							TagNode tagNode = (TagNode)node;
+							try {
+								ser.write(tagNode, sw, charset, true);
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+					    	String out = sw.getBuffer().toString();
+							tmpList.add(out);
+						}
+						this.parsedResult =  new ParsedResult(tmpList.toArray(new Object[]{}));
 					} else {
 						this.parsedResult =  new ParsedResult(nodes);
 					}
@@ -115,10 +150,12 @@ public class HtmlCleanerParser extends XPathModelParser {
 		return this.parsedResult;
 	}
 	
-	public static void main(String[] args) {
-		final String html = "<html><title>Hello</title><targets><target name='vivi' /><target name='linda' /></targets></html>";
-		Parser p1 = new HtmlCleanerParser(html, "//target");
+	public static void main(String[] args) throws XPatherException {
+		String html = "<html><title>Hello</title><targets><target name='vivi' /><target name='linda' /></targets></html>";
+		String xpath = "//target";
+		Parser p1 = new HtmlCleanerParser(html, xpath);
 		final ParsedResult r = p1.parse();
+		System.out.println(r.all());
 		K.foreach(r.all(), new K.ForeachCallback<Object>(){
 			public void each(int i, Object item) {
 				FieldParser p2 = new HtmlCleanerParser.FieldPaser(".", "name");

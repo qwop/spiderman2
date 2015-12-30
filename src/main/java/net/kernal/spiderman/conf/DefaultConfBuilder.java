@@ -1,4 +1,7 @@
-package net.kernal.spiderman.impl;
+package net.kernal.spiderman.conf;
+
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 
 import net.kernal.spiderman.Properties;
 import net.kernal.spiderman.Spiderman;
@@ -6,6 +9,9 @@ import net.kernal.spiderman.Spiderman.Seeds;
 import net.kernal.spiderman.Spiderman.Targets;
 import net.kernal.spiderman.Target;
 import net.kernal.spiderman.TaskManager;
+import net.kernal.spiderman.downloader.DefaultDownloader;
+import net.kernal.spiderman.queue.DefaultTaskQueue;
+import net.kernal.spiderman.reporting.ConsoleReporting;
 
 /**
  * 默认的配置构建器
@@ -14,7 +20,7 @@ import net.kernal.spiderman.TaskManager;
  */
 public abstract class DefaultConfBuilder implements Spiderman.Conf.Builder {
 
-	private Spiderman.Conf conf;
+	protected Spiderman.Conf conf;
 	public DefaultConfBuilder() {
 		super();
 		conf = new Spiderman.Conf();
@@ -43,9 +49,13 @@ public abstract class DefaultConfBuilder implements Spiderman.Conf.Builder {
 	 */
 	public Spiderman.Conf build() {
 		this.addProperty(conf.getProperties());
+		final String engineName = conf.getProperties().getString("scriptEngine", "nashorn");
+		final ScriptEngine scriptEngine = new ScriptEngineManager().getEngineByName(engineName);
+		this.conf.setScriptEngine(scriptEngine);
+		
 		this.addSeed(conf.getSeeds());
 		this.addTarget(conf.getTargets());
-		for (Target target : conf.getTargets().getAll()) {
+		for (Target target : conf.getTargets().all()) {
 			target.configModel(target.getModel());
 			target.configRules(target.getRules());
 		}

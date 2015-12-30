@@ -1,10 +1,13 @@
-package net.kernal.spiderman;
+package net.kernal.spiderman.downloader;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import net.kernal.spiderman.K;
+import net.kernal.spiderman.Properties;
 
 /**
  * 网页下载器
@@ -286,7 +289,9 @@ public interface Downloader {
 		private String location;
 		//------------------------
 		private byte[] body;
-		private String html;// 默认是null
+		private String bodyStr;// 默认是null
+		//------------------------
+		private Throwable exception;
 		
 		public Response addHeader(String name, String value) {
 			List<String> values = this.headers.get(name);
@@ -344,16 +349,23 @@ public interface Downloader {
 			this.location = location;
 		}
 
-		/**
-		 * 默认是null
-		 * @return
-		 */
-		public String getHtml() {
-			return html;
+		public String getBodyStr() {
+			if (bodyStr == null) {
+				bodyStr = new String(this.body);
+			}
+			return bodyStr;
 		}
 
-		public void setHtml(String html) {
-			this.html = html;
+		public void setBodyStr(String bodyStr) {
+			this.bodyStr = bodyStr;
+		}
+
+		public Throwable getException() {
+			return exception;
+		}
+
+		public void setException(Throwable exception) {
+			this.exception = exception;
 		}
 		
 	}

@@ -1,10 +1,9 @@
-package net.kernal.spiderman.impl;
+package net.kernal.spiderman.queue;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import net.kernal.spiderman.Task;
-import net.kernal.spiderman.TaskQueue;
 
 public class DefaultTaskQueue implements TaskQueue {
 	

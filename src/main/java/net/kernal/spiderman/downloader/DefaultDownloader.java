@@ -1,4 +1,4 @@
-package net.kernal.spiderman.impl;
+package net.kernal.spiderman.downloader;
 
 import java.nio.charset.Charset;
 import java.util.Arrays;
@@ -31,10 +31,14 @@ import org.apache.http.impl.cookie.BasicClientCookie;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.util.EntityUtils;
 
-import net.kernal.spiderman.Downloader;
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Properties;
 
+/**
+ * 默认下载器，基于HttpClient实现
+ * @author 赖伟威 l.weiwei@163.com 2015-12-10
+ *
+ */
 public class DefaultDownloader implements Downloader {
 
 	private RequestConfig defaultRequestConfig;
@@ -65,15 +69,7 @@ public class DefaultDownloader implements Downloader {
 		this.cookieStore = new BasicCookieStore();
 		this.headers = new HashMap<String, String>();
 	    this.defaultRequestConfig = builder.build();
-//	    HttpAsyncClientBuilder hacb = HttpAsyncClients.custom();
 	    HttpClientBuilder hcb = HttpClients.custom();
-//		this.httpAsyncClient = hacb
-//				.setUserAgent(props.getString("downloader.userAgent", "Spiderman[http://git.oschina.net/l-weiwei/Spiderman2]"))
-//				.setDefaultCookieStore(cookieStore)
-//				.setMaxConnTotal(props.getInt("downloader.maxConnTotal", 1000))
-//				.setMaxConnPerRoute(props.getInt("downloader.maxConnPerRoute", 500))
-//				.build();
-		
 		this.httpClient = hcb
 				.setUserAgent(props.getString("downloader.userAgent", "Spiderman[http://git.oschina.net/l-weiwei/Spiderman2]"))
 				.setDefaultCookieStore(cookieStore)
@@ -145,7 +141,6 @@ public class DefaultDownloader implements Downloader {
 				Cookie nc = new Cookie(c.getName(), c.getValue(), c.getDomain(), c.getPath(), c.getExpiryDate(), c.isSecure());
 				this.keepCookie(nc);
 			}
-			
 			// get redirect location
 			org.apache.http.Header locationHeader = resp.getFirstHeader("Location");
 			if (locationHeader != null && (statusCode == HttpStatus.SC_MOVED_PERMANENTLY || statusCode == HttpStatus.SC_MOVED_TEMPORARILY)) 
@@ -163,20 +158,23 @@ public class DefaultDownloader implements Downloader {
 			response.setBody(body);
 			resp = null;
 		} catch (Throwable e) {
-			e.printStackTrace();
+			response.setException(e);
 		} finally {  
             try {  
                 if (resp != null) {  
                     resp.getEntity().getContent().close();  
                 }  
             } catch (Throwable e) {  
-//            	e.printStackTrace();
             } 
         }  
 		
 		return response;
 	}
 	
+	/**
+	 * @deprecated 暂时不用
+	 */
+	@Deprecated
 	public void download(final Request request, final Callback callback) {
 		String method = request.getMethod();
 		String url = request.getUrl();

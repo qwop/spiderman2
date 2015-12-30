@@ -1,8 +1,12 @@
-package net.kernal.spiderman;
+package net.kernal.spiderman.reporting;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import net.kernal.spiderman.K;
+import net.kernal.spiderman.Spiderman;
+import net.kernal.spiderman.Task;
+import net.kernal.spiderman.downloader.Downloader;
 import net.kernal.spiderman.parser.Parser;
 
 public class Reportings implements Reporting{
@@ -41,10 +45,10 @@ public class Reportings implements Reporting{
 		});
 	}
 	
-	public void reportParsedResult(final Parser.ParsedResult parsedModels) {
+	public void reportParsedResult(final Parser.ParsedResult parsedResult) {
 		K.foreach(this.reportings, new K.ForeachCallback<Reporting>() {
 			public void each(int i, Reporting item) {
-				item.reportParsedResult(parsedModels);
+				item.reportParsedResult(parsedResult);
 			}
 		});
 	}

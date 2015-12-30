@@ -1,0 +1,45 @@
+#Spiderman2 配置文件
+name: 百度搜索
+date: 2015-12-24
+provider: 赖伟威(l.weiwei@163.com)
+duration: 20s
+threadSize: 10
+limit: 50
+targets: 
+  百度网页分页:
+    rules: 
+      regex: (?=http://www\.baidu\.com/s\?wd\=).[^&;]*
+    model: 
+      fields:
+        page_url: 
+          xpath: //div[@id='page']//a/@href
+  百度网页结果: 
+    rules:
+      prefix: http://www.baidu.com/s?wd=
+    model: 
+      fields: 
+        result_url: 
+          xpath: //div[@id='content_left']//div[@class='result c-container ']//h3//a/@href
+  百度新闻分页: 
+    rules: 
+      regex: http://news\.baidu\.com/ns\?word\=.*&pn\=0&ct\=1&tn\=news&ie\=utf\-8&bt\=0&et\=0
+    model: 
+      fields: 
+        page_url: 
+          xpath: //p[@id='page']//a/@href
+  百度新闻结果: 
+    rules: 
+      regex: http://news\.baidu\.com/ns\?word\=.*&pn\=\d+&ct\=1&tn\=news&ie\=utf\-8&bt\=0&et\=0
+    model: 
+      fields: 
+        result_url: 
+          xpath: //div[@id='content_left']//div[@class='result']//h3//a/@href
+  百度知道分页: 
+    rules: 
+      regex: http://zhidao\.baidu\.com/search\?word\=.*&ie\=utf-8&site\=-1&sites\=0&date\=0&pn\=0
+    model: 
+      fields: 
+        page_url: 
+          xpath: //div[@class='pager']//a/@href
+          
+      

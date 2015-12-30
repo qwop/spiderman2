@@ -1,7 +1,19 @@
 package net.kernal.spiderman;
 
+import net.kernal.spiderman.downloader.Downloader;
+
+/**
+ * 任务包
+ * @author 赖伟威 l.weiwei@163.com 2015-12-10
+ *
+ */
 public class Task {
 
+	/**
+	 * 构造器
+	 * @param request 请求对象
+	 * @param priority 优先级数字，值越小将会更优先被处理
+	 */
 	public Task(Downloader.Request request, int priority) {
 		this.request = request;
 		this.priority = priority;
@@ -11,11 +23,22 @@ public class Task {
 		return true;
 	}
 	
+	/**
+	 * 请求对象
+	 */
 	private Downloader.Request request;
+	/**
+	 * 所属父任务(任务来源,比如来自种子任务，来自某些列表页面任务)
+	 */
 	private Task parent;
+	/**
+	 * 任务深度(跟parent层次有关，后面可做深度控制)
+	 */
 	private int depth;
+	/**
+	 * 优先级数字，值越小将会更优先被处理
+	 */
 	private int priority;
-	private Downloader.Response response;
 	
 	public Downloader.Request getRequest() {
 		return request;
@@ -35,12 +58,6 @@ public class Task {
 	public void setDepth(int depth) {
 		this.depth = depth;
 	}
-	public Downloader.Response getResponse() {
-		return response;
-	}
-	public void setResponse(Downloader.Response response) {
-		this.response = response;
-	}
 
 	public int getPriority() {
 		return priority;
@@ -48,7 +65,7 @@ public class Task {
 
 	@Override
 	public String toString() {
-		return "Task [request=" + request + ", parent=" + parent + ", depth=" + depth +", priority=" + priority + ", response=" + response + "]";
+		return "Task [request=" + request + ", parent=" + parent + ", depth=" + depth +", priority=" + priority + "]";
 	}
 	
 }

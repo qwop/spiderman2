@@ -1,7 +1,15 @@
-package net.kernal.spiderman;
+package net.kernal.spiderman.reporting;
 
+import net.kernal.spiderman.Spiderman;
+import net.kernal.spiderman.Task;
+import net.kernal.spiderman.downloader.Downloader;
 import net.kernal.spiderman.parser.Parser;
 
+/**
+ * 状态报告(类似监听器)
+ * @author 赖伟威 l.weiwei@163.com 2015-12-10
+ *
+ */
 public interface Reporting {
 
 	public void reportStart();

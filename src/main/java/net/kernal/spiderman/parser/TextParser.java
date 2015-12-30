@@ -1,4 +1,4 @@
-package net.kernal.spiderman.impl;
+package net.kernal.spiderman.parser;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -6,9 +6,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import net.kernal.spiderman.Downloader.Response;
 import net.kernal.spiderman.K;
-import net.kernal.spiderman.parser.ModelParser;
+import net.kernal.spiderman.downloader.Downloader.Response;
 
 /**
  * 网页正文内容解析器
@@ -30,7 +29,7 @@ public class TextParser extends ModelParser {
 	}
 
 	public ParsedResult parse() {
-		String html = response.getHtml();
+		String html = response.getBodyStr();
 		Model model = new Model();
 		TextExtractor te = new TextExtractor();
 		te.extractHTML(html);
