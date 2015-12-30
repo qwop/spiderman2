@@ -8,10 +8,10 @@ import net.kernal.spiderman.Spiderman;
 import net.kernal.spiderman.Spiderman.Seeds;
 import net.kernal.spiderman.Spiderman.Targets;
 import net.kernal.spiderman.Target;
-import net.kernal.spiderman.TaskManager;
 import net.kernal.spiderman.downloader.DefaultDownloader;
 import net.kernal.spiderman.queue.DefaultTaskQueue;
 import net.kernal.spiderman.reporting.ConsoleReporting;
+import net.kernal.spiderman.task.TaskManager;
 
 /**
  * 默认的配置构建器
@@ -24,7 +24,8 @@ public abstract class DefaultConfBuilder implements Spiderman.Conf.Builder {
 	public DefaultConfBuilder() {
 		super();
 		conf = new Spiderman.Conf();
-		conf.setTaskQueue(new TaskManager(new DefaultTaskQueue(), new DefaultTaskQueue()))
+		conf.setDownloadTaskQueue(new TaskManager(new DefaultTaskQueue(), new DefaultTaskQueue()))
+			.setParseTaskQueue(new TaskManager(new DefaultTaskQueue(), new DefaultTaskQueue()))
 			.setDownloader(new DefaultDownloader(conf.getProperties()))
 			.addReporting(new ConsoleReporting());
 	}

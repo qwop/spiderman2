@@ -3,7 +3,7 @@ package net.kernal.spiderman.queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import net.kernal.spiderman.Task;
+import net.kernal.spiderman.task.Task;
 
 public class DefaultTaskQueue implements TaskQueue {
 	

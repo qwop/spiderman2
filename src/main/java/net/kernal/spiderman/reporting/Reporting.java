@@ -1,9 +1,9 @@
 package net.kernal.spiderman.reporting;
 
 import net.kernal.spiderman.Spiderman;
-import net.kernal.spiderman.Task;
 import net.kernal.spiderman.downloader.Downloader;
 import net.kernal.spiderman.parser.Parser;
+import net.kernal.spiderman.task.Task;
 
 /**
  * 状态报告(类似监听器)
@@ -20,6 +20,6 @@ public interface Reporting {
 	
 	public void reportParsedResult(final Parser.ParsedResult parsedResult);
 	
-	public void reportStop(Spiderman.Counter counter, int poolSize, int activeCount, long completedTaskCount);
+	public void reportStop(Spiderman.Counter counter);
 	
 }

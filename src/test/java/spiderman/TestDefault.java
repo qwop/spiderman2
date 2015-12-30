@@ -8,8 +8,8 @@ import net.kernal.spiderman.Spiderman.Targets;
 import net.kernal.spiderman.Target;
 import net.kernal.spiderman.conf.DefaultConfBuilder;
 import net.kernal.spiderman.parser.HtmlCleanerParser;
-import net.kernal.spiderman.parser.ScriptTransformParser;
 import net.kernal.spiderman.parser.TextParser;
+import net.kernal.spiderman.parser.TransformParser;
 
 public class TestDefault {
 	
@@ -34,7 +34,11 @@ public class TestDefault {
 						model.addParser(new HtmlCleanerParser());
 						model.addField("pager_url")
 							 .addParser(new HtmlCleanerParser.FieldPaser("//div[@id='page']//a[@href]", "href"))
-							 .addParser(new ScriptTransformParser("'http://www.baidu.com/'+$this"))
+							 .addParser(new TransformParser() {
+								public Object transform(Object oldValue) {
+									return "http://www.baidu.com"+oldValue;
+								}
+							  })
 							 .asNewTask();
 					}
 				});
@@ -59,9 +63,10 @@ public class TestDefault {
 				});
 			}
 			public void addProperty(Properties p) {
-				p.put("threadSize", 50);
-//				p.put("duration", "20s");// 持续时间，超过该时间后将会自动结束，会忽略解析数量多少
-				p.put("parsedLimit", 50);// 只解析50个网页就结束行动
+				p.put("duration", "10s");//持续时间，超过该时间后将会自动结束，会忽略解析数量多少
+				p.put("downloader.threadSize", 20);//下载线程数量
+				p.put("parser.threadSize", 10);//解析线程数量
+//				p.put("parsedLimit", 10);//解析网页数量上限，达到后将会自动结束行动
 			}
 		}.build();
 		

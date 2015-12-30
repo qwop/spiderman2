@@ -1,4 +1,4 @@
-package net.kernal.spiderman;
+package net.kernal.spiderman.task;
 
 import net.kernal.spiderman.queue.TaskQueue;
 
@@ -17,16 +17,6 @@ public class TaskManager implements TaskQueue {
 	 */
 	private TaskQueue secondaryTaskQueue;
 	
-	/**
-	 * 判断是否符合主任务队列规则，若符合，该任务可以优先被处理
-	 * @param task
-	 * @return
-	 */
-	private boolean isPrimary(Task task) {
-		// 优先级小于5的都放到主任务队列
-		return task.getPriority() < 5;
-	}
-	
 	public TaskManager(TaskQueue primaryTaskQueue, TaskQueue secondaryTaskQueue) {
 		this.primaryTaskQueue = primaryTaskQueue;
 		this.secondaryTaskQueue = secondaryTaskQueue;
@@ -38,7 +28,7 @@ public class TaskManager implements TaskQueue {
 	}
 
 	public void put(Task task) {
-		if (isPrimary(task))
+		if (task.getPriority() < 5)
 			this.primaryTaskQueue.put(task);
 		else 
 			this.secondaryTaskQueue.put(task);

@@ -1,6 +1,6 @@
 package net.kernal.spiderman.queue;
 
-import net.kernal.spiderman.Task;
+import net.kernal.spiderman.task.Task;
 
 /**
  * 任务队列接口.

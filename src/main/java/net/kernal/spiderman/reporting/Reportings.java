@@ -5,9 +5,9 @@ import java.util.List;
 
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Spiderman;
-import net.kernal.spiderman.Task;
 import net.kernal.spiderman.downloader.Downloader;
 import net.kernal.spiderman.parser.Parser;
+import net.kernal.spiderman.task.Task;
 
 public class Reportings implements Reporting{
 
@@ -53,10 +53,10 @@ public class Reportings implements Reporting{
 		});
 	}
 	
-	public void reportStop(final Spiderman.Counter counter, final int poolSize, final int activeCount, final long completedTaskCount) {
+	public void reportStop(final Spiderman.Counter counter) {
 		K.foreach(this.reportings, new K.ForeachCallback<Reporting>() {
 			public void each(int i, Reporting item) {
-				item.reportStop(counter, poolSize, activeCount, completedTaskCount);
+				item.reportStop(counter);
 			}
 		});
 	}

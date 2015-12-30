@@ -13,7 +13,6 @@ import net.kernal.spiderman.K;
 import net.kernal.spiderman.Properties;
 import net.kernal.spiderman.Spiderman.Conf;
 import net.kernal.spiderman.Target;
-import net.kernal.spiderman.TaskManager;
 import net.kernal.spiderman.downloader.DefaultDownloader;
 import net.kernal.spiderman.parser.HtmlCleanerParser;
 import net.kernal.spiderman.parser.ModelParser;
@@ -23,6 +22,7 @@ import net.kernal.spiderman.parser.TransformParser;
 import net.kernal.spiderman.parser.XMLParser;
 import net.kernal.spiderman.queue.DefaultTaskQueue;
 import net.kernal.spiderman.reporting.ConsoleReporting;
+import net.kernal.spiderman.task.TaskManager;
 
 /**
  * 此类解析规则比较复杂，建议暂时别太深入去看 :)
@@ -42,7 +42,8 @@ public class XMLConfBuilder implements Conf.Builder {
 		}
 		
 		conf = new Conf();
-		conf.setTaskQueue(new TaskManager(new DefaultTaskQueue(), new DefaultTaskQueue()))
+		conf.setDownloadTaskQueue(new TaskManager(new DefaultTaskQueue(), new DefaultTaskQueue()))
+			.setParseTaskQueue(new TaskManager(new DefaultTaskQueue(), new DefaultTaskQueue()))
 			.setDownloader(new DefaultDownloader(conf.getProperties()))
 			.addReporting(new ConsoleReporting());
 	}
@@ -88,7 +89,7 @@ public class XMLConfBuilder implements Conf.Builder {
 			m.addField("src").addParser(new XMLParser.FieldPaser(".", "src"));
 			Properties script = (Properties)m.parse().first();
 			String scriptSrc = script.getString("src");
-			System.out.println("scriptSrc: "+scriptSrc);
+			//System.out.println("scriptSrc: "+scriptSrc);
 			scriptFiles.add(new File(scriptSrc));
 		});
 		
@@ -107,7 +108,7 @@ public class XMLConfBuilder implements Conf.Builder {
 				if (K.isBlank(seedUrl)) {
 					seedUrl = seed.getString("text");
 				}
-				System.out.println("seed: "+seedUrl);
+				//System.out.println("seed: "+seedUrl);
 				conf.addSeed(K.urlEncode(seedUrl));
 			});
 		}
@@ -123,7 +124,7 @@ public class XMLConfBuilder implements Conf.Builder {
 			m2.addField("parser").addParser(new XMLParser.FieldPaser(".", "parser"));
 			Properties targetCfg = (Properties)m2.parse().first();
 			String targetName = targetCfg.getString("name");
-			System.out.println("taretName: "+targetName);
+			//System.out.println("taretName: "+targetName);
 			final Target target = new Target(targetName){
 				public void configRules(Rules rules) {}
 				public void configModel(Model model) {}
@@ -139,7 +140,7 @@ public class XMLConfBuilder implements Conf.Builder {
 				Properties rule = (Properties)r;
 				String type = rule.getString("type");
 				String value = rule.getString("value");
-				System.out.println("\t"+type+","+value);
+				//System.out.println("\t"+type+","+value);
 				if ("regex".equalsIgnoreCase(type)) {
 					target.getRules().addRegexRule(value);
 				} else if ("!regex".equalsIgnoreCase(type)) {
@@ -168,7 +169,7 @@ public class XMLConfBuilder implements Conf.Builder {
 			Properties model = (Properties)pr2.first();
 			
 			String modelXpath = model.getString("xpath");
-			System.out.println("\t"+modelXpath);
+			//System.out.println("\t"+modelXpath);
 			if (HtmlCleanerParser.class.isAssignableFrom(provider)) {
 				target.getModel().addParser(new HtmlCleanerParser(modelXpath));
 			} else if (XMLParser.class.isAssignableFrom(provider)) {
@@ -190,7 +191,7 @@ public class XMLConfBuilder implements Conf.Builder {
 				
 				String fieldName = field.getString("name");
 				int isForNewTask = field.getInt("isForNewTask");
-				System.out.println("\t\t"+fieldName+","+isForNewTask);
+				//System.out.println("\t\t"+fieldName+","+isForNewTask);
 				
 				Target.Model.Field mField = target.getModel().addField(fieldName).setIsForNewTask(isForNewTask == 1);
 				
@@ -212,7 +213,7 @@ public class XMLConfBuilder implements Conf.Builder {
 					final String regex = parser.getString("regex");
 					String script = parser.getString("script");
 					
-					System.out.println("\t\t\t"+xpath+","+attr+","+regex+","+script);
+					//System.out.println("\t\t\t"+xpath+","+attr+","+regex+","+script);
 					
 					if (K.isNotBlank(xpath)) {
 						if (HtmlCleanerParser.class.isAssignableFrom(provider)) {

@@ -1,22 +1,26 @@
-package net.kernal.spiderman;
+package net.kernal.spiderman.task;
 
 import net.kernal.spiderman.downloader.Downloader;
 
 /**
- * 任务包
+ * 用于下载的任务包
  * @author 赖伟威 l.weiwei@163.com 2015-12-10
  *
  */
-public class Task {
+public class DownloadTask extends Task {
 
 	/**
 	 * 构造器
 	 * @param request 请求对象
 	 * @param priority 优先级数字，值越小将会更优先被处理
 	 */
-	public Task(Downloader.Request request, int priority) {
+	public DownloadTask(Downloader.Request request, int priority) {
+		super(request, priority);
 		this.request = request;
-		this.priority = priority;
+	}
+	
+	public String getType() {
+		return "download";
 	}
 	
 	public boolean isMatchedTarget() {
@@ -30,15 +34,11 @@ public class Task {
 	/**
 	 * 所属父任务(任务来源,比如来自种子任务，来自某些列表页面任务)
 	 */
-	private Task parent;
+	private DownloadTask parent;
 	/**
 	 * 任务深度(跟parent层次有关，后面可做深度控制)
 	 */
 	private int depth;
-	/**
-	 * 优先级数字，值越小将会更优先被处理
-	 */
-	private int priority;
 	
 	public Downloader.Request getRequest() {
 		return request;
@@ -46,10 +46,10 @@ public class Task {
 	public void setRequest(Downloader.Request request) {
 		this.request = request;
 	}
-	public Task getParent() {
+	public DownloadTask getParent() {
 		return parent;
 	}
-	public void setParent(Task parent) {
+	public void setParent(DownloadTask parent) {
 		this.parent = parent;
 	}
 	public int getDepth() {
@@ -57,10 +57,6 @@ public class Task {
 	}
 	public void setDepth(int depth) {
 		this.depth = depth;
-	}
-
-	public int getPriority() {
-		return priority;
 	}
 
 	@Override
