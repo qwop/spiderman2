@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.kernal.spiderman.K;
-import net.kernal.spiderman.Spiderman.Conf;
 import net.kernal.spiderman.Spiderman.Counter;
-import net.kernal.spiderman.Target;
+import net.kernal.spiderman.conf.Conf;
+import net.kernal.spiderman.conf.Target;
 import net.kernal.spiderman.downloader.Downloader;
 import net.kernal.spiderman.task.DownloadTask;
 import net.kernal.spiderman.task.ParseTask;

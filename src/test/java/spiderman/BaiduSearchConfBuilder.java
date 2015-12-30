@@ -2,10 +2,10 @@ package spiderman;
 
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Properties;
-import net.kernal.spiderman.Spiderman.Seeds;
-import net.kernal.spiderman.Spiderman.Targets;
-import net.kernal.spiderman.Target;
 import net.kernal.spiderman.conf.DefaultConfBuilder;
+import net.kernal.spiderman.conf.Seeds;
+import net.kernal.spiderman.conf.Target;
+import net.kernal.spiderman.conf.Targets;
 import net.kernal.spiderman.parser.HtmlCleanerParser;
 import net.kernal.spiderman.parser.ScriptTransformParser;
 import net.kernal.spiderman.parser.TextParser;

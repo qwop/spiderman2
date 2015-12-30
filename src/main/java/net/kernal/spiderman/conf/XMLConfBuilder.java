@@ -11,8 +11,6 @@ import javax.script.ScriptEngineManager;
 
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Properties;
-import net.kernal.spiderman.Spiderman.Conf;
-import net.kernal.spiderman.Target;
 import net.kernal.spiderman.downloader.DefaultDownloader;
 import net.kernal.spiderman.parser.HtmlCleanerParser;
 import net.kernal.spiderman.parser.ModelParser;

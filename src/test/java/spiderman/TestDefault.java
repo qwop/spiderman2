@@ -3,10 +3,11 @@ package spiderman;
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Properties;
 import net.kernal.spiderman.Spiderman;
-import net.kernal.spiderman.Spiderman.Seeds;
-import net.kernal.spiderman.Spiderman.Targets;
-import net.kernal.spiderman.Target;
+import net.kernal.spiderman.conf.Conf;
 import net.kernal.spiderman.conf.DefaultConfBuilder;
+import net.kernal.spiderman.conf.Seeds;
+import net.kernal.spiderman.conf.Target;
+import net.kernal.spiderman.conf.Targets;
 import net.kernal.spiderman.parser.HtmlCleanerParser;
 import net.kernal.spiderman.parser.TextParser;
 import net.kernal.spiderman.parser.TransformParser;
@@ -18,8 +19,8 @@ public class TestDefault {
 	 * 另外一个TestXML例子就使用大部分配置通过XML文件加载，小部分用Java代码处理，看起来会好很多。
 	 */
 	public static void main(String[] args) throws InterruptedException {
-		//Spiderman.Conf conf = new BaiduSearchConfBuilder().build();// 复杂的例子
-		Spiderman.Conf conf = new DefaultConfBuilder() {
+		//Conf conf = new BaiduSearchConfBuilder().build();// 复杂的例子
+		Conf conf = new DefaultConfBuilder() {
 			public void addSeed(Seeds seeds) {
 				// 添加种子
 				seeds.add("http://www.baidu.com/s?wd="+K.urlEncode("\"蜘蛛侠\""));
@@ -63,7 +64,7 @@ public class TestDefault {
 				});
 			}
 			public void addProperty(Properties p) {
-				p.put("duration", "10s");//持续时间，超过该时间后将会自动结束，会忽略解析数量多少
+				p.put("duration", "20s");//持续时间，超过该时间后将会自动结束，会忽略解析数量多少
 				p.put("downloader.threadSize", 20);//下载线程数量
 				p.put("parser.threadSize", 10);//解析线程数量
 //				p.put("parsedLimit", 10);//解析网页数量上限，达到后将会自动结束行动

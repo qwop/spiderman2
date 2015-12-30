@@ -1,8 +1,8 @@
 package net.kernal.spiderman.worker;
 
 import net.kernal.spiderman.K;
-import net.kernal.spiderman.Spiderman.Conf;
 import net.kernal.spiderman.Spiderman.Counter;
+import net.kernal.spiderman.conf.Conf;
 import net.kernal.spiderman.downloader.Downloader;
 import net.kernal.spiderman.task.DownloadTask;
 import net.kernal.spiderman.task.ParseTask;

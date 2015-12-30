@@ -3,9 +3,9 @@ package net.kernal.spiderman.worker;
 import java.util.List;
 
 import net.kernal.spiderman.K;
-import net.kernal.spiderman.Spiderman.Conf;
 import net.kernal.spiderman.Spiderman.Counter;
-import net.kernal.spiderman.Target;
+import net.kernal.spiderman.conf.Conf;
+import net.kernal.spiderman.conf.Target;
 import net.kernal.spiderman.downloader.Downloader;
 import net.kernal.spiderman.parser.Parser.ParsedResult;
 import net.kernal.spiderman.task.ParseTask;

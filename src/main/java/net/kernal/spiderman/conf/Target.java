@@ -1,8 +1,10 @@
-package net.kernal.spiderman;
+package net.kernal.spiderman.conf;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import net.kernal.spiderman.K;
+import net.kernal.spiderman.Properties;
 import net.kernal.spiderman.downloader.Downloader;
 import net.kernal.spiderman.parser.FieldParser;
 import net.kernal.spiderman.parser.ModelParser;
@@ -345,6 +347,5 @@ public abstract class Target {
 	public Rules getRules() {
 		return this.rules;
 	}
-	
 	
 }

@@ -1,8 +1,5 @@
 package net.kernal.spiderman;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -10,12 +7,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
-import javax.script.ScriptEngine;
-
-import net.kernal.spiderman.downloader.Downloader;
-import net.kernal.spiderman.queue.TaskQueue;
-import net.kernal.spiderman.reporting.Reporting;
-import net.kernal.spiderman.reporting.Reportings;
+import net.kernal.spiderman.conf.Conf;
 import net.kernal.spiderman.task.DownloadTask;
 import net.kernal.spiderman.task.ParseTask;
 import net.kernal.spiderman.task.Task;
@@ -32,26 +24,26 @@ public class Spiderman {
 	public static final Logger logger = Logger.getLogger(Spiderman.class.getName());
 	
 	public Spiderman(Conf conf) {
-		if (conf.seeds.isEmpty()) 
+		if (conf.getSeeds().isEmpty()) 
 			throw new RuntimeException("少年,请添加一个种子来让蜘蛛侠行动起来!参考：conf.addSeed");
 		
-		if (conf.targets.isEmpty()) 
+		if (conf.getTargets().isEmpty()) 
 			throw new RuntimeException("少年,请添加一个目标来让蜘蛛侠行动起来!参考：conf.addTarget");
 		
 		this.conf = conf;
 		
 		this.threadsForGo = Executors.newFixedThreadPool(2);
 		
-		final int threadSizeForDownload = this.conf.properties.getInt("downloader.threadSize", 1);
+		final int threadSizeForDownload = this.conf.getProperties().getInt("downloader.threadSize", 1);
 		this.threadsForDownload = (ThreadPoolExecutor) Executors.newFixedThreadPool(threadSizeForDownload);
 		
-		final int threadSizeForParse = this.conf.properties.getInt("parser.threadSize", 1);
+		final int threadSizeForParse = this.conf.getProperties().getInt("parser.threadSize", 1);
 		if (threadSizeForParse > 0) {
 			this.threadsForParse = (ThreadPoolExecutor) Executors.newFixedThreadPool(threadSizeForParse);
 		}
 		
 		this.counter = new Counter();
-		int parsedLimit = conf.properties.getInt("parsedLimit", 0);
+		int parsedLimit = conf.getProperties().getInt("parsedLimit", 0);
 		if (parsedLimit > 0) {
 			this.counter.setCountDown(new CountDownLatch(parsedLimit));
 		} 
@@ -59,11 +51,11 @@ public class Spiderman {
 		counter.setParsePool(new Counter.Threads(threadsForParse));
 		
 		// JAVA8爽!
-		if (conf.scriptEngine != null) {
-			this.conf.targets.all().forEach((target) -> {
+		if (conf.getScriptEngine() != null) {
+			this.conf.getTargets().all().forEach((target) -> {
 				target.getModel().getFields().forEach((field) -> {
 					field.getParsers().forEach((parser) -> {
-						parser.setScriptEngine(conf.scriptEngine);
+						parser.setScriptEngine(conf.getScriptEngine());
 					});
 				});
 			});
@@ -78,14 +70,14 @@ public class Spiderman {
 		this.threadsForGo.execute(new Runnable() {
 			public void run() {
 				// 将种子添加到任务队列里
-				conf.seeds.all().forEach((seed) -> {
+				conf.getSeeds().all().forEach((seed) -> {
 					DownloadTask newTask = new DownloadTask(seed, 0);
 					conf.getDownloadTaskQueue().put(newTask);
 					// 队列计数+1
 					counter.downloadQueuePlus();
 				});
 				// 状态报告: 行动开始了
-				conf.reportings.reportStart();
+				conf.getReportings().reportStart();
 				while (true) {
 					while(true) {
 						int coreSize = threadsForDownload.getCorePoolSize();
@@ -175,7 +167,7 @@ public class Spiderman {
 		this.threadsForDownload.shutdownNow();
 		this.threadsForParse.shutdownNow();
 		
-		this.conf.reportings.reportStop(counter);
+		this.conf.getReportings().reportStop(counter);
 		
 		return this;
 	}
@@ -219,140 +211,6 @@ public class Spiderman {
 				stop();
 				System.exit(-1);
 			}
-		}
-	}
-	
-	public static class Conf {
-		
-		public Conf() {
-			seeds = new Seeds();
-			targets = new Targets();
-			properties = new Properties();
-			reportings = new Reportings();
-		}
-		
-		private Seeds seeds;
-		private Targets targets;
-		private Properties properties;
-		private Downloader downloader;
-		private Reportings reportings;
-		private TaskQueue downloadTaskQueue;
-		private TaskQueue parseTaskQueue;
-		private ScriptEngine scriptEngine;
-		
-		public static interface Builder {
-			public Conf build() throws Exception;
-		}
-		
-		public Conf addSeed(String url) {
-			seeds.add(new Downloader.Request(url));
-			return this;
-		}
-		public Conf addSeed(String url, String httpMethod) {
-			seeds.add(new Downloader.Request(url, httpMethod));
-			return this;
-		}
-		public Conf addSeed(Downloader.Request request) {
-			seeds.add(request);
-			return this;
-		}
-		public Conf addTarget(Target target) {
-			targets.add(target);
-			return this;
-		}
-		public Conf set(String property, Object value) {
-			this.properties.put(property, value);
-			return this;
-		}
-		public Conf setDownloadTaskQueue(TaskQueue taskQueue) {
-			this.downloadTaskQueue = taskQueue;
-			return this;
-		}
-		public Conf setParseTaskQueue(TaskQueue taskQueue) {
-			this.parseTaskQueue = taskQueue;
-			return this;
-		}
-		public Conf setDownloader(Downloader downloader) {
-			this.downloader = downloader;
-			return this;
-		}
-		public Conf addReporting(Reporting reporting) {
-			this.reportings.add(reporting);
-			return this;
-		}
-		public Conf setScriptEngine(ScriptEngine scriptEngine) {
-			this.scriptEngine = scriptEngine;
-			return this;
-		}
-		public Seeds getSeeds() {
-			return seeds;
-		}
-		public Targets getTargets() {
-			return targets;
-		}
-		public Properties getProperties() {
-			return properties;
-		}
-		public Downloader getDownloader() {
-			return downloader;
-		}
-		public Reportings getReportings() {
-			return reportings;
-		}
-		public TaskQueue getDownloadTaskQueue() {
-			return downloadTaskQueue;
-		}
-		public TaskQueue getParseTaskQueue() {
-			return parseTaskQueue;
-		}
-	}
-
-	public static class Seeds {
-		private List<Downloader.Request> requests;
-		public Seeds() {
-			this.requests = new ArrayList<Downloader.Request>();
-		}
-		public List<Downloader.Request> all() {
-			return this.getAll();
-		}
-		public List<Downloader.Request> getAll(){
-			return this.requests;
-		}
-		public boolean isEmpty() {
-			return this.requests.isEmpty();
-		}
-		public Seeds add(Downloader.Request request) {
-			this.requests.add(request);
-			return this;
-		}
-		public Seeds add(String url) {
-			return this.add(new Downloader.Request(url));
-		}
-	}
-	
-	public static class Targets {
-		private List<Target> list;
-		
-		public Targets() {
-			this.list = new ArrayList<Target>();
-		}
-		
-		public List<Target> all() {
-			return this.list;
-		}
-		
-		public Targets add(Target... target) {
-			this.list.addAll(Arrays.asList(target));
-			return this;
-		}
-		
-		public Targets addAll(List<Target> targets) {
-			this.list.addAll(targets);
-			return this;
-		}
-		
-		public boolean isEmpty() {
-			return this.list.isEmpty();
 		}
 	}
 	
