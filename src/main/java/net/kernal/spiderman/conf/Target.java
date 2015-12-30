@@ -202,9 +202,9 @@ public abstract class Target {
 			final List<String[]> urlsForNewTask = new ArrayList<String[]>();
 			// 否则需要逐个模型，逐个字段的去解析
 			final List<Parser.Model> parsedModelsWithFields = new ArrayList<Parser.Model>();
-			for (Object item : modelParsedResult.all()) {
+			modelParsedResult.all().forEach(item -> {
 				Parser.Model modelWithFields = new Parser.Model();
-				for (Target.Model.Field field : fields) {
+				fields.forEach(field -> {
 					// 执行字段解析器
 					ParsedResult fieldParsedResult = new ParsedResult(item);
 					for (FieldParser fieldParser : field.getParsers()) {
@@ -215,21 +215,21 @@ public abstract class Target {
 					}
 					// 若字段解析结果为空，不做后面处理
 					if ( K.isEmpty(fieldParsedResult.all())) {
-						continue;
+						return;
 					}
 					// 将字段解析结果存入模型对象中
 					modelWithFields.put(field.getName(), fieldParsedResult.all().toArray(new Object[]{}));
 					if (field.isForNewTask()) {
 						final String httpMethod = field.getProperties().getString("httpMethod", K.HTTP_GET);
-						for (Object val : fieldParsedResult.all()) {
+						fieldParsedResult.all().forEach(val -> {
 							final String newUrl = (String)val;
 							urlsForNewTask.add(new String[]{httpMethod, newUrl});
-						}
+						});
 					}
-				}
+				});
 				// 将单个解析结果存入列表中
 				parsedModelsWithFields.add(modelWithFields);
-			}
+			});
 			// 若字段解析结果不为空，将其最为最终解析结果返回
 			if (K.isNotEmpty(parsedModelsWithFields)) {
 				finalParsedResult = ParsedResult.fromList(parsedModelsWithFields);
