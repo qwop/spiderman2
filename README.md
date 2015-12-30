@@ -63,6 +63,7 @@ baidu-search.xml
 ```
 parser.js
 ```
+/* 脚本内置一个参数：$this 表示上一个解析器解析后的结果 */
 var hello = function(name) {
 	return "hello, " + name;
 }
