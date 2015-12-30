@@ -37,7 +37,7 @@ baidu-search.xml
 <spiderman>
     <!-- 引入脚本文件 -->
     <script src="src/main/resources/parser.js" />
-	<target name="列表页面URL">
+	<target name="列表分页URL">
 		<rule type="regex"><![CDATA[(?=http://www\.baidu\.com/s\?wd\=).[^&;]*]]></rule>
 		<model>
 			<field name="pager_url" isForNewTask="1"> 
