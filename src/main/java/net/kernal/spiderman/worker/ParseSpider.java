@@ -31,21 +31,22 @@ public class ParseSpider extends Worker {
 		// 匹配目标
 		final List<Target> matchedTargets = super.matchingTargets(request);
 		// 解析目标
-		for (Target target : matchedTargets) {
+		matchedTargets.forEach(target -> {
 			final ParsedResult parsedResult = target.parse(response);
-			if (parsedResult != null && K.isNotEmpty(parsedResult.all())) {
-				// 报告解析结果
-				this.conf.getReportings().reportParsedResult(parsedResult);
-				// 解析结果计数＋1
-				this.counter.parsedPlus();
-				// 若字段配置为新任务来使用，则将它的解析结果(URL地址列表)作为新任务放入队列
-				if (K.isNotEmpty(parsedResult.getUrlsForNewTask())) {
-					for (String[] arr : parsedResult.getUrlsForNewTask()) {
-						super.putTheNewTaskToQueue(arr[0], arr[1]);
-					}
-				}
+			if (parsedResult == null || K.isEmpty(parsedResult.all())) {
+				return;
 			}
-		}
+			// 报告解析结果
+			this.conf.getReportings().reportParsedResult(parsedResult);
+			// 解析结果计数＋1
+			this.counter.parsedPlus();
+			// 若字段配置为新任务来使用，则将它的解析结果(URL地址列表)作为新任务放入队列
+			if (K.isNotEmpty(parsedResult.getUrlsForNewTask())) {
+				parsedResult.getUrlsForNewTask().forEach(arr -> {
+					super.putTheNewTaskToQueue(arr[0], arr[1]);
+				});
+			}
+		});
 	}
 	
 }

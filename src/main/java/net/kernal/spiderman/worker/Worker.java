@@ -81,13 +81,11 @@ public abstract class Worker implements Runnable {
 	 */
 	protected List<Target> matchingTargets(final Downloader.Request request) {
 		final List<Target> matchedTargets = new ArrayList<Target>();
-		K.foreach(conf.getTargets().all(), new K.ForeachCallback<Target>() {
-			public void each(int i, Target target) {
-				if (target.matches(request)) {
-					matchedTargets.add(target);
-					// 目标计数＋1
-					counter.targetPlus();
-				}
+		conf.getTargets().all().forEach(target -> {
+			if (target.matches(request)) {
+				matchedTargets.add(target);
+				// 目标计数＋1
+				counter.targetPlus();
 			}
 		});
 		return matchedTargets;
