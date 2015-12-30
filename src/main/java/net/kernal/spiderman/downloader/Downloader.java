@@ -202,12 +202,6 @@ public interface Downloader {
 		 */
 		public Request addHeader(Header header) {
 			this.headers.add(header);
-//			List<String> values = this.headers.get(name);
-//			if (values == null) {
-//				values = new ArrayList<String>();
-//				this.headers.put(name, values);
-//			}
-//			values.add(value);
 			return this;
 		}
 		
@@ -228,7 +222,6 @@ public interface Downloader {
 		 * 请求参数
 		 */
 		private Map<String, List<Object>> params;
-//		private Map<String, List<File>> files;
 		/**
 		 * 请求头参数
 		 */
@@ -261,8 +254,8 @@ public interface Downloader {
 	}
 	
 	/**
-	 * 
-	 * @author laiweiwei
+	 * HTTP响应对象
+	 * @author 赖伟威 l.weiwei@163.com 2015-12-01
 	 *
 	 */
 	public static class Response {
