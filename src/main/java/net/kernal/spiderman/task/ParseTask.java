@@ -8,7 +8,9 @@ import net.kernal.spiderman.downloader.Downloader;
  *
  */
 public class ParseTask extends Task {
-
+	
+	private static final long serialVersionUID = -6399150276163991806L;
+	
 	private Downloader.Response response;
 	public ParseTask(Downloader.Response response, int priority) {
 		super(response.getRequest(), priority);

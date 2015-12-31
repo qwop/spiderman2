@@ -6,30 +6,22 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Properties;
-import net.kernal.spiderman.downloader.DefaultDownloader;
 import net.kernal.spiderman.parser.HtmlCleanerParser;
 import net.kernal.spiderman.parser.ModelParser;
 import net.kernal.spiderman.parser.Parser;
 import net.kernal.spiderman.parser.ScriptTransformParser;
 import net.kernal.spiderman.parser.TransformParser;
 import net.kernal.spiderman.parser.XMLParser;
-import net.kernal.spiderman.queue.DefaultTaskQueue;
-import net.kernal.spiderman.reporting.ConsoleReporting;
-import net.kernal.spiderman.task.TaskManager;
 
 /**
  * 此类解析规则比较复杂，建议暂时别太深入去看 :)
  * @author 赖伟威 l.weiwei@163.com 2015-12-28
  *
  */
-public class XMLConfBuilder implements Conf.Builder {
+public class XMLConfBuilder extends DefaultConfBuilder {
 
-	private Conf conf;
 	private FileInputStream is;
 	public XMLConfBuilder(File file) {
 		super();
@@ -38,12 +30,6 @@ public class XMLConfBuilder implements Conf.Builder {
 		} catch (FileNotFoundException e) {
 			throw new RuntimeException(e);
 		}
-		
-		conf = new Conf();
-		conf.setDownloadTaskQueue(new TaskManager(new DefaultTaskQueue(), new DefaultTaskQueue()))
-			.setParseTaskQueue(new TaskManager(new DefaultTaskQueue(), new DefaultTaskQueue()))
-			.setDownloader(new DefaultDownloader(conf.getProperties()))
-			.addReporting(new ConsoleReporting());
 	}
 	
 	public XMLConfBuilder addSeed(String url) {
@@ -64,14 +50,12 @@ public class XMLConfBuilder implements Conf.Builder {
 	}
 	
 	public Conf build() {
+		super.build();
+		
 		// TODO 搞个Factory，Builder之类的
 		@SuppressWarnings("unchecked")
 		final Class<? extends Parser> provider = (Class<? extends Parser>) conf.getProperties().getClass("parser.provider", HtmlCleanerParser.class);
 				
-		final String engineName = conf.getProperties().getString("scriptEngine", "nashorn");
-		final ScriptEngine scriptEngine = new ScriptEngineManager().getEngineByName(engineName);
-		this.conf.setScriptEngine(scriptEngine);
-		
 		Target.Model rootModel = new Target.Model();
 		ModelParser rootParser = new XMLParser("//spiderman", this.is);
 		rootModel.addParser(rootParser);
@@ -238,6 +222,10 @@ public class XMLConfBuilder implements Conf.Builder {
 		return conf;
 	}
 
+	public void addProperty(Properties properties) {}
+	public void addSeed(Seeds seeds) {}
+	public void addTarget(Targets targets) {}
+	
 	public static void main(String[] args) {
 		new XMLConfBuilder(new File("src/main/resources/baidu-search.xml")).build();
 	}

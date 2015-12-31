@@ -1,5 +1,6 @@
 package net.kernal.spiderman.downloader;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -141,8 +142,10 @@ public interface Downloader {
 	 * @author 赖伟威 l.weiwei@163.com 2015-12-10
 	 *
 	 */
-	public static class Request {
+	public static class Request implements Serializable {
 		
+		private static final long serialVersionUID = -5271854259417049190L;
+
 		public Request(String url) {
 			this(url, K.HTTP_GET);
 		}
@@ -258,8 +261,10 @@ public interface Downloader {
 	 * @author 赖伟威 l.weiwei@163.com 2015-12-01
 	 *
 	 */
-	public static class Response {
+	public static class Response implements Serializable {
 		
+		private static final long serialVersionUID = -9068800067277456934L;
+
 		public Response(Request request) {
 			this.request = request;
 			this.headers = new HashMap<String, List<String>>();

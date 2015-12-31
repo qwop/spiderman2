@@ -2,6 +2,8 @@ package net.kernal.spiderman.conf;
 
 import javax.script.ScriptEngine;
 
+import org.zbus.broker.Broker;
+
 import net.kernal.spiderman.Properties;
 import net.kernal.spiderman.downloader.Downloader;
 import net.kernal.spiderman.queue.TaskQueue;
@@ -24,6 +26,7 @@ public class Conf {
 	private TaskQueue downloadTaskQueue;
 	private TaskQueue parseTaskQueue;
 	private ScriptEngine scriptEngine;
+	private Broker zbusBroker;
 	
 	public static interface Builder {
 		public Conf build() throws Exception;
@@ -92,5 +95,11 @@ public class Conf {
 	}
 	public TaskQueue getParseTaskQueue() {
 		return parseTaskQueue;
+	}
+	public void setZbusBroker(Broker broker) {
+		this.zbusBroker = broker;
+	}
+	public Broker getZbusBroker() {
+		return this.zbusBroker;
 	}
 }

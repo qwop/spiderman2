@@ -27,6 +27,9 @@ public class TestXML {
 					model.addParser(new TextParser());// 目标解析规则，这里直接用通用的正文抽取器解析
 				}
 			})
+			.set("zbus.enabled", true)//是否开启分布式支持
+			.set("zbus.serverAddress", "localhost:15555")//zbus服务器地址
+			.set("zbus.timeout", "1s")
 			.set("duration", "20s")//持续时间
 			.set("downloader.threadSize", 20)//下载线程数量
 			.set("parser.threadSize", 10)//解析线程数量

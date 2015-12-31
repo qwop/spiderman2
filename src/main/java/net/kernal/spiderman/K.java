@@ -1,10 +1,14 @@
 package net.kernal.spiderman;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
@@ -387,6 +391,45 @@ public class K {
 			return (Class<T>) Thread.currentThread().getContextClassLoader().loadClass(className);
 		} catch (ClassNotFoundException e) {
 			return null;
+		}
+	}
+	
+	public final static byte[] serialize(Object object) {
+		ObjectOutputStream oos = null;
+		ByteArrayOutputStream bos = null;
+		try {
+			bos = new ByteArrayOutputStream();
+			oos = new ObjectOutputStream(bos);
+			oos.writeObject(object);
+			return bos.toByteArray();
+		} catch(Throwable e) {
+			e.printStackTrace();
+			return null;
+		} finally {
+			if (oos != null) {
+				try {
+					oos.close();
+				} catch (Throwable e2) {}
+			}
+		}
+	}
+	
+	public final static Object deserialize(byte[] data) {
+		ObjectInputStream ois = null;
+		ByteArrayInputStream bis = null;
+		try {
+			bis = new ByteArrayInputStream(data);
+			ois = new ObjectInputStream(bis);
+			return ois.readObject();
+		} catch(Throwable e) {
+			e.printStackTrace();
+			return null;
+		} finally {
+			if (ois != null) {
+				try {
+					ois.close();
+				} catch (Throwable e2) {}
+			}
 		}
 	}
 	

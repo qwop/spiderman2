@@ -1,5 +1,6 @@
 package net.kernal.spiderman;
 
+import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -166,7 +167,9 @@ public class Spiderman {
 		this.threadsForGo.shutdownNow();
 		this.threadsForDownload.shutdownNow();
 		this.threadsForParse.shutdownNow();
-		
+		try {
+			this.conf.getZbusBroker().close();
+		} catch (IOException e) {}
 		this.conf.getReportings().reportStop(counter);
 		
 		return this;

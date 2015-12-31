@@ -1,5 +1,7 @@
 package net.kernal.spiderman.task;
 
+import java.io.Serializable;
+
 import net.kernal.spiderman.downloader.Downloader;
 
 /**
@@ -7,7 +9,9 @@ import net.kernal.spiderman.downloader.Downloader;
  * @author 赖伟威 l.weiwei@163.com 2015-12-30
  *
  */
-public abstract class Task {
+public abstract class Task implements Serializable {
+
+	private static final long serialVersionUID = 1858537902103806934L;
 
 	protected Downloader.Request request;
 	

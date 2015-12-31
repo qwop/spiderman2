@@ -8,6 +8,8 @@ import net.kernal.spiderman.downloader.Downloader;
  *
  */
 public class DownloadTask extends Task {
+	
+	private static final long serialVersionUID = 945890606939291092L;
 
 	/**
 	 * 构造器
