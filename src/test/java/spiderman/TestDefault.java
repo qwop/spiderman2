@@ -64,10 +64,15 @@ public class TestDefault {
 				});
 			}
 			public void addProperty(Properties p) {
-				p.put("duration", "20s");//持续时间，超过该时间后将会自动结束，会忽略解析数量多少
-				p.put("downloader.threadSize", 20);//下载线程数量
-				p.put("parser.threadSize", 10);//解析线程数量
-//				p.put("parsedLimit", 10);//解析网页数量上限，达到后将会自动结束行动
+				p.put("zbus.enabled", true);//是否开启分布式支持
+				p.put("zbus.serverAddress", "10.8.60.8:15555");//zbus服务器地址
+//				p.put("zbus.timeout", "10s");
+//				p.put("duration", "10s");//持续时间
+				p.put("downloader.primary.threadSize", 50);//下载(主)线程数量
+				p.put("downloader.secondary.threadSize", 10);//下载(次)线程数量
+				p.put("parser.primary.threadSize", 50);//解析(主)线程数量
+				p.put("parser.secondary.threadSize", 1);//解析(次)线程数量
+				p.put("parsedLimit", 100);//解析网页数量上限，达到后将会自动结束行动
 			}
 		}.build();
 		
