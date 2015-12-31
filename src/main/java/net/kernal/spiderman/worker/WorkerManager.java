@@ -6,9 +6,6 @@ import java.util.logging.Logger;
 import net.kernal.spiderman.Spiderman.Counter;
 import net.kernal.spiderman.conf.Conf;
 import net.kernal.spiderman.queue.TaskQueue;
-import net.kernal.spiderman.task.DownloadTask;
-import net.kernal.spiderman.task.ParseTask;
-import net.kernal.spiderman.task.ResultTask;
 import net.kernal.spiderman.task.Task;
 
 /**
@@ -25,16 +22,18 @@ public class WorkerManager implements Runnable {
 	private String name;
 	private long waitSeconds;
 	private TaskQueue taskQueue;
-	private ThreadPoolExecutor workers;
+	private ThreadPoolExecutor threads;
+	private Worker.Builder workerBuilder;
 	
-	public WorkerManager(String name, TaskQueue taskQueue, ThreadPoolExecutor workers) {
+	public WorkerManager(String name, TaskQueue taskQueue, ThreadPoolExecutor threads, Worker.Builder workerBuilder) {
 		this.name = name;
 		this.taskQueue = taskQueue;
-		this.workers = workers;
+		this.threads = threads;
+		this.workerBuilder = workerBuilder;
 	}
 	
 	public void shutdown() {
-		this.workers.shutdownNow();
+		this.threads.shutdownNow();
 	}
 	
 	public void setConf(Conf conf) {
@@ -50,9 +49,9 @@ public class WorkerManager implements Runnable {
 	public void run() {
 		while (true) {
 			while(true) {
-				int coreSize = workers.getCorePoolSize();
-				long completedTaskCount = workers.getCompletedTaskCount();
-				long taskCount = workers.getTaskCount();
+				int coreSize = threads.getCorePoolSize();
+				long completedTaskCount = threads.getCompletedTaskCount();
+				long taskCount = threads.getTaskCount();
 				long runningCount = taskCount - completedTaskCount;
 				if (runningCount < coreSize) {
 					break;
@@ -73,16 +72,9 @@ public class WorkerManager implements Runnable {
 				}
 				
 				try {
-					if (task instanceof DownloadTask) {
-						workers.execute(new DownloadWorker((DownloadTask)task, conf, counter));
-						break;
-					} else if (task instanceof ParseTask) {
-						workers.execute(new ParseWorker((ParseTask)task, conf, counter));
-						break;
-					} else if (task instanceof ResultTask) {
-						workers.execute(new ResultWorker((ResultTask)task, conf, counter));
-						break;
-					}
+					Worker worker = this.workerBuilder.build(task, conf, counter);
+					threads.execute(worker);
+					break;
 				} catch (java.util.concurrent.RejectedExecutionException e) {}
 			}
 		}

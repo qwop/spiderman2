@@ -12,6 +12,13 @@ import java.util.logging.Logger;
 
 import net.kernal.spiderman.conf.Conf;
 import net.kernal.spiderman.task.DownloadTask;
+import net.kernal.spiderman.task.ParseTask;
+import net.kernal.spiderman.task.ResultTask;
+import net.kernal.spiderman.task.Task;
+import net.kernal.spiderman.worker.DownloadWorker;
+import net.kernal.spiderman.worker.ParseWorker;
+import net.kernal.spiderman.worker.ResultWorker;
+import net.kernal.spiderman.worker.Worker;
 import net.kernal.spiderman.worker.WorkerManager;
 
 /**
@@ -26,7 +33,6 @@ public class Spiderman {
 	public Spiderman(Conf conf) {
 		if (conf.getSeeds().isEmpty()) 
 			throw new RuntimeException("少年,请添加一个种子来让蜘蛛侠行动起来!参考：conf.addSeed");
-		
 		if (conf.getTargets().isEmpty()) 
 			throw new RuntimeException("少年,请添加一个目标来让蜘蛛侠行动起来!参考：conf.addTarget");
 		
@@ -43,10 +49,15 @@ public class Spiderman {
 		this.threads = Executors.newFixedThreadPool(5);
 		
 		// 下载工人包工头
+		Worker.Builder downloadBuilder = new Worker.Builder(){
+			public Worker build(Task task, Conf conf, Counter counter) {
+				return new DownloadWorker((DownloadTask)task, conf, counter);
+			}
+		};
 		final int dpts1 = this.conf.getProperties().getInt("downloader.primary.threadSize", 1);
 		if (dpts1 > 0) {
 			ThreadPoolExecutor threadsForPrimaryDownload = (ThreadPoolExecutor) Executors.newFixedThreadPool(dpts1);
-			WorkerManager mgr1 = new WorkerManager("下载(主)", conf.getPrimaryDownloadTaskQueue(), threadsForPrimaryDownload);
+			WorkerManager mgr1 = new WorkerManager("下载(主)", conf.getPrimaryDownloadTaskQueue(), threadsForPrimaryDownload, downloadBuilder);
 			this.workerManagers.add(mgr1);
 			counter.setPrimaryDownloadPool(new Counter.Threads(threadsForPrimaryDownload));
 		}
@@ -54,16 +65,21 @@ public class Spiderman {
 		final int dpts2 = this.conf.getProperties().getInt("downloader.secondary.threadSize", 1);
 		if (dpts2 > 0) {
 			ThreadPoolExecutor threadsForSecondaryDownload = (ThreadPoolExecutor) Executors.newFixedThreadPool(dpts2);
-			WorkerManager mgr2 = new WorkerManager("下载(次)", conf.getSecondaryDownloadTaskQueue(), threadsForSecondaryDownload);
+			WorkerManager mgr2 = new WorkerManager("下载(次)", conf.getSecondaryDownloadTaskQueue(), threadsForSecondaryDownload, downloadBuilder);
 			this.workerManagers.add(mgr2);
 			counter.setSecondaryDownloadPool(new Counter.Threads(threadsForSecondaryDownload));
 		}
 		
 		// 解析工人包工头
+		Worker.Builder parseBuilder = new Worker.Builder() {
+			public Worker build(Task task, Conf conf, Counter counter) {
+				return new ParseWorker((ParseTask)task, conf, counter);
+			}
+		};
 		final int ppts1 = this.conf.getProperties().getInt("parser.primary.threadSize", 1);
 		if (ppts1 > 0) {
 			ThreadPoolExecutor threadsForPrimaryParse = (ThreadPoolExecutor) Executors.newFixedThreadPool(ppts1);
-			WorkerManager mgr3 = new WorkerManager("解析(主)", conf.getPrimaryParseTaskQueue(), threadsForPrimaryParse);
+			WorkerManager mgr3 = new WorkerManager("解析(主)", conf.getPrimaryParseTaskQueue(), threadsForPrimaryParse, parseBuilder);
 			this.workerManagers.add(mgr3);
 			counter.setPrimaryParsePool(new Counter.Threads(threadsForPrimaryParse));
 		}
@@ -71,16 +87,22 @@ public class Spiderman {
 		final int ppts2 = this.conf.getProperties().getInt("parser.secondary.threadSize", 1);
 		if (ppts2 > 0) {
 			ThreadPoolExecutor threadsForSecondaryParse = (ThreadPoolExecutor) Executors.newFixedThreadPool(ppts2);
-			WorkerManager mgr4 = new WorkerManager("解析(次)", conf.getSecondaryParseTaskQueue(), threadsForSecondaryParse);
+			WorkerManager mgr4 = new WorkerManager("解析(次)", conf.getSecondaryParseTaskQueue(), threadsForSecondaryParse, parseBuilder);
 			this.workerManagers.add(mgr4);
 			counter.setSecondaryParsePool(new Counter.Threads(threadsForSecondaryParse));
 		}
 		
 		// 结果处理工人包工头
+		Worker.Builder resultBuilder = new Worker.Builder() {
+			public Worker build(Task task, Conf conf, Counter counter) {
+				return new ResultWorker((ResultTask)task, conf, counter);
+			}
+		};
+		
 		final int rts = this.conf.getProperties().getInt("result.threadSize", 1);
 		if (rts > 0) {
 			ThreadPoolExecutor threadsForResult = (ThreadPoolExecutor) Executors.newFixedThreadPool(rts);
-			WorkerManager mgr5 = new WorkerManager("结果", conf.getResultTaskQueue(), threadsForResult);
+			WorkerManager mgr5 = new WorkerManager("结果", conf.getResultTaskQueue(), threadsForResult, resultBuilder);
 			this.workerManagers.add(mgr5);
 		}
 		

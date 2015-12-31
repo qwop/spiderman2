@@ -102,4 +102,8 @@ public abstract class Worker implements Runnable {
 		return matchedTargets;
 	}
 	
+	public static interface Builder {
+		public Worker build(Task task, Conf conf, Counter counter);
+	}
+	
 }
