@@ -13,11 +13,11 @@ import net.kernal.spiderman.task.Task;
  * @author 赖伟威 l.weiwei@163.com 2015-12-30
  *
  */
-public class DownloadSpider extends Worker {
+public class DownloadWorker extends Worker {
 
 	private DownloadTask task;
 	
-	public DownloadSpider(DownloadTask task, Conf conf, Counter counter) {
+	public DownloadWorker(DownloadTask task, Conf conf, Counter counter) {
 		super(conf, counter);
 		this.task = task;
 	}

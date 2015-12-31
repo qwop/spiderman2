@@ -9,6 +9,7 @@ import net.kernal.spiderman.conf.Target;
 import net.kernal.spiderman.downloader.Downloader;
 import net.kernal.spiderman.parser.Parser.ParsedResult;
 import net.kernal.spiderman.task.ParseTask;
+import net.kernal.spiderman.task.ResultTask;
 
 /**
  * 负责解析的蜘蛛工人
@@ -16,11 +17,11 @@ import net.kernal.spiderman.task.ParseTask;
  * @author 赖伟威 l.weiwei@163.com 2015-12-30
  *
  */
-public class ParseSpider extends Worker {
+public class ParseWorker extends Worker {
 
 	private ParseTask task;
 	
-	public ParseSpider(ParseTask task, Conf conf, Counter counter) {
+	public ParseWorker(ParseTask task, Conf conf, Counter counter) {
 		super(conf, counter);
 		this.task = task;
 	}
@@ -36,14 +37,16 @@ public class ParseSpider extends Worker {
 			if (parsedResult == null || K.isEmpty(parsedResult.all())) {
 				return;
 			}
-			// 报告解析结果
-			this.conf.getReportings().reportParsedResult(parsedResult);
+			// 将解析结果放入队列
+			conf.getResultTaskQueue().put(new ResultTask(parsedResult, request));
+						
 			// 解析结果计数＋1
 			if (task.isPrimary()) {
 				this.counter.primaryParsedPlus();
 			} else {
 				this.counter.secondaryParsedPlus();
 			}
+						
 			// 若字段配置为新任务来使用，则将它的解析结果(URL地址列表)作为新任务放入队列
 			if (K.isNotEmpty(parsedResult.getUrlsForNewTask())) {
 				parsedResult.getUrlsForNewTask().forEach(arr -> {

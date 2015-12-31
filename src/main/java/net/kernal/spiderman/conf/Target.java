@@ -214,7 +214,7 @@ public abstract class Target {
 						fieldParsedResult = fieldParser.parse();
 					}
 					// 若字段解析结果为空，不做后面处理
-					if ( K.isEmpty(fieldParsedResult.all())) {
+					if (fieldParsedResult == null || K.isEmpty(fieldParsedResult.all())) {
 						return;
 					}
 					// 将字段解析结果存入模型对象中

@@ -66,6 +66,10 @@ public abstract class DefaultConfBuilder implements Conf.Builder {
 			if (K.isBlank(pqn)) {
 				throw new RuntimeException("缺少参数zbus.parseTaskQueueName");
 			}
+			final String rqn = conf.getProperties().getString("zbus.resultQueueName", "spiderman_result_task");
+			if (K.isBlank(rqn)) {
+				throw new RuntimeException("缺少参数zbus.resultQueueName");
+			}
 		    BrokerConfig brokerConfig = new BrokerConfig();
 		    brokerConfig.setServerAddress(zbusServerAddress);
 		    Broker broker = null;
@@ -80,11 +84,13 @@ public abstract class DefaultConfBuilder implements Conf.Builder {
 			conf.setSecondaryDownloadTaskQueue(buildQueue(broker, dqn+"_secondary"));
 		    conf.setPrimaryParseTaskQueue(buildQueue(broker, pqn+"_primary"));
 		    conf.setSecondaryParseTaskQueue(buildQueue(broker, pqn+"_secondary"));
+		    conf.setResultTaskQueue(buildQueue(broker, rqn));
 		} else {
 		    conf.setPrimaryDownloadTaskQueue(new DefaultTaskQueue());
 			conf.setSecondaryDownloadTaskQueue(new DefaultTaskQueue());
 		    conf.setPrimaryParseTaskQueue(new DefaultTaskQueue());
 		    conf.setSecondaryParseTaskQueue(new DefaultTaskQueue());
+		    conf.setResultTaskQueue(new DefaultTaskQueue());
 		}
 		
 		conf.setDownloader(new DefaultDownloader(conf.getProperties()))

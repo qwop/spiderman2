@@ -92,5 +92,5 @@ public class BaiduSearchConfBuilder extends DefaultConfBuilder {
 		p.put("threadSize", 5);//线程池大小
 		p.put("downloader.limit", 50);//下载网页数量限制，达到该数量后蜘蛛侠会停止活动回到你的身边哦～
 	}
-	
+
 }

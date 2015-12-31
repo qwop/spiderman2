@@ -11,12 +11,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
 import net.kernal.spiderman.conf.Conf;
-import net.kernal.spiderman.queue.TaskQueue;
 import net.kernal.spiderman.task.DownloadTask;
-import net.kernal.spiderman.task.ParseTask;
-import net.kernal.spiderman.task.Task;
-import net.kernal.spiderman.worker.DownloadSpider;
-import net.kernal.spiderman.worker.ParseSpider;
+import net.kernal.spiderman.worker.WorkerManager;
 
 /**
  * 蜘蛛侠，根据预言之子设定的目标引领蜘蛛大军开展网络世界采集行动。
@@ -42,9 +38,9 @@ public class Spiderman {
 			this.counter.setCountDown(new CountDownLatch(parsedLimit));
 		} 
 		
-		// 4个包工头
-		this.workerManagers = new ArrayList<WorkerManager>(4);
-		this.threads = Executors.newFixedThreadPool(4);
+		// 5个包工头
+		this.workerManagers = new ArrayList<WorkerManager>(5);
+		this.threads = Executors.newFixedThreadPool(5);
 		
 		// 下载工人包工头
 		final int dpts1 = this.conf.getProperties().getInt("downloader.primary.threadSize", 1);
@@ -78,6 +74,14 @@ public class Spiderman {
 			WorkerManager mgr4 = new WorkerManager("解析(次)", conf.getSecondaryParseTaskQueue(), threadsForSecondaryParse);
 			this.workerManagers.add(mgr4);
 			counter.setSecondaryParsePool(new Counter.Threads(threadsForSecondaryParse));
+		}
+		
+		// 结果处理工人包工头
+		final int rts = this.conf.getProperties().getInt("result.threadSize", 1);
+		if (rts > 0) {
+			ThreadPoolExecutor threadsForResult = (ThreadPoolExecutor) Executors.newFixedThreadPool(rts);
+			WorkerManager mgr5 = new WorkerManager("结果", conf.getResultTaskQueue(), threadsForResult);
+			this.workerManagers.add(mgr5);
 		}
 		
 		long waitSeconds = K.convertToSeconds(conf.getProperties().getString("waitSeconds", "1s")).longValue();
@@ -118,88 +122,6 @@ public class Spiderman {
 			this.threads.execute(manager);
 		});
 		
-//		this.threadsForGo.execute(new Runnable() {
-//			public void run() {
-//				while (true) {
-//					while(true) {
-//						int coreSize = threadsForDownload.getCorePoolSize();
-//						long completedTaskCount = threadsForDownload.getCompletedTaskCount();
-//						long taskCount = threadsForDownload.getTaskCount();
-//						long runningCount = taskCount - completedTaskCount;
-//						if (runningCount < coreSize) {
-//							break;
-//						}
-//						try {
-//							long seconds = K.convertToSeconds(conf.getProperties().getString("downloader.waitThread", "1s")).longValue();
-//							logger.info("下载线程池负载已满，将等待"+seconds+"秒再尝试申请线程资源");
-//							Thread.sleep(seconds*1000L);
-//						} catch (InterruptedException e) {}
-//					}
-//					while (true) {
-//						Task task = conf.getDownloadTaskQueue().poll();
-//						if (task == null) {
-//							try {
-//								long seconds = K.convertToSeconds(conf.getProperties().getString("waitQueue", "1s")).longValue();
-//								logger.info("待下载队列已无任务可分配，将等待"+seconds+"秒再尝试申领任务");
-//								Thread.sleep(seconds*1000L);
-//							} catch (InterruptedException e) {}
-//							continue;
-//						}
-//						
-//						try {
-//							if (task instanceof DownloadTask) {
-//								threadsForDownload.execute(new DownloadSpider((DownloadTask)task, conf, counter));
-//								
-//							}
-//						} catch (java.util.concurrent.RejectedExecutionException e) {}
-//						
-//						break;
-//					}
-//				}
-//			}
-//		});
-//		if (threadsForParse != null) {
-//			this.threadsForGo.execute(new Runnable() {
-//				public void run() {
-//					while (true) {
-//						while(true) {
-//							int coreSize = threadsForParse.getCorePoolSize();
-//							long completedTaskCount = threadsForParse.getCompletedTaskCount();
-//							long taskCount = threadsForParse.getTaskCount();
-//							long runningCount = taskCount - completedTaskCount;
-//							if (runningCount < coreSize) {
-//								break;
-//							}
-//							try {
-//								long seconds = K.convertToSeconds(conf.getProperties().getString("parser.waitThread", "1s")).longValue();
-//								logger.info("解析线程池负载已满，将等待"+seconds+"秒再尝试申请线程资源");
-//								Thread.sleep(seconds*1000L);
-//							} catch (InterruptedException e) {}
-//						}
-//						while (true) {
-//							Task task = conf.getParseTaskQueue().poll();
-//							if (task == null) {
-//								try {
-//									long seconds = K.convertToSeconds(conf.getProperties().getString("waitQueue", "1s")).longValue();
-//									logger.info("待解析队列已无任务可分配，将等待"+seconds+"秒再尝试申领任务");
-//									Thread.sleep(seconds*1000L);
-//								} catch (InterruptedException e) {}
-//								continue;
-//							}
-//							
-//							try {
-//								if (task instanceof ParseTask) {
-//									threadsForParse.execute(new ParseSpider((ParseTask)task, conf, counter));
-//								}
-//							} catch (java.util.concurrent.RejectedExecutionException e) {}
-//							
-//							break;
-//						}
-//					}
-//				}
-//			});
-//		}
-		
 		this._holding();
 		return this;
 	}
@@ -223,80 +145,6 @@ public class Spiderman {
 	private List<WorkerManager> workerManagers;
 	private Conf conf;
 	private Counter counter;
-	
-	/**
-	 * 包工头
-	 * @author 赖伟威 l.weiwei@163.com 2015-12-31
-	 *
-	 */
-	private static class WorkerManager implements Runnable {
-		
-		private Conf conf;
-		private Counter counter;
-		private String name;
-		private long waitSeconds;
-		private TaskQueue taskQueue;
-		private ThreadPoolExecutor workers;
-		
-		public WorkerManager(String name, TaskQueue taskQueue, ThreadPoolExecutor workers) {
-			this.name = name;
-			this.taskQueue = taskQueue;
-			this.workers = workers;
-		}
-		
-		public void shutdown() {
-			this.workers.shutdownNow();
-		}
-		
-		public void setConf(Conf conf) {
-			this.conf = conf;
-		}
-		public void setCounter(Counter counter) {
-			this.counter = counter;
-		}
-		public void setWaitSeconds(long waitSeconds) {
-			this.waitSeconds = waitSeconds;
-		}
-		
-		public void run() {
-			while (true) {
-				while(true) {
-					int coreSize = workers.getCorePoolSize();
-					long completedTaskCount = workers.getCompletedTaskCount();
-					long taskCount = workers.getTaskCount();
-					long runningCount = taskCount - completedTaskCount;
-					if (runningCount < coreSize) {
-						break;
-					}
-					try {
-						logger.info(name+"线程池负载已满，将等待"+waitSeconds+"秒再尝试");
-						Thread.sleep(waitSeconds*1000L);
-					} catch (InterruptedException e) {}
-				}
-				while (true) {
-					Task task = taskQueue.poll();
-					if (task == null) {
-						try {
-							logger.info(name+"队列已无任务可分配，将等待"+waitSeconds+"秒再尝试");
-							Thread.sleep(waitSeconds*1000L);
-						} catch (InterruptedException e) {}
-						continue;
-					}
-					
-					try {
-						if (task instanceof DownloadTask) {
-							workers.execute(new DownloadSpider((DownloadTask)task, conf, counter));
-							break;
-						} else if (task instanceof ParseTask) {
-							workers.execute(new ParseSpider((ParseTask)task, conf, counter));
-							break;
-						}
-					} catch (java.util.concurrent.RejectedExecutionException e) {}
-				}
-			}
-		}
-		
-	}
 	
 	private void _holding() {
 		if (this.counter.getCountDown() != null) {
@@ -367,6 +215,11 @@ public class Spiderman {
 			
 			this.countPrimaryParsed = new AtomicLong(0);
 			this.countSecondaryParsed = new AtomicLong(0);
+			
+			this.primaryDownloadPool = new Threads(null);
+			this.secondaryDownloadPool = new Threads(null);
+			this.primaryParsePool = new Threads(null);
+			this.secondaryParsePool = new Threads(null);
 		}
 		public Long primaryDownloadPlus() {
 			return this.countPrimaryDownload.addAndGet(1);

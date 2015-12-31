@@ -14,6 +14,7 @@ import net.kernal.spiderman.parser.Parser;
 import net.kernal.spiderman.parser.ScriptTransformParser;
 import net.kernal.spiderman.parser.TransformParser;
 import net.kernal.spiderman.parser.XMLParser;
+import net.kernal.spiderman.reporting.Reporting;
 
 /**
  * 此类解析规则比较复杂，建议暂时别太深入去看 :)
@@ -30,6 +31,11 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 		} catch (FileNotFoundException e) {
 			throw new RuntimeException(e);
 		}
+	}
+	
+	public XMLConfBuilder addReporting(Reporting reporting) {
+		this.conf.addReporting(reporting);
+		return this;
 	}
 	
 	public XMLConfBuilder addSeed(String url) {
@@ -229,5 +235,5 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 	public static void main(String[] args) {
 		new XMLConfBuilder(new File("src/main/resources/baidu-search.xml")).build();
 	}
-	
+
 }

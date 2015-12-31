@@ -28,6 +28,7 @@ public class Conf {
 	private TaskQueue secondaryDownloadTaskQueue;
 	private TaskQueue primaryParseTaskQueue;
 	private TaskQueue secondaryParseTaskQueue;
+	private TaskQueue resultTaskQueue;
 	private ScriptEngine scriptEngine;
 	private Broker zbusBroker;
 	
@@ -58,6 +59,13 @@ public class Conf {
 	public Conf setSecondaryParseTaskQueue(TaskQueue secondaryParseTaskQueue) {
 		this.secondaryParseTaskQueue = secondaryParseTaskQueue;
 		return this;
+	}
+	public Conf setResultTaskQueue(TaskQueue resultTaskQueue) {
+		this.resultTaskQueue = resultTaskQueue;
+		return this;
+	}
+	public TaskQueue getResultTaskQueue() {
+		return this.resultTaskQueue;
 	}
 	public static interface Builder {
 		public Conf build() throws Exception;
