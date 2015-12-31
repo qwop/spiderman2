@@ -17,6 +17,12 @@ public class ZBusTaskQueue implements TaskQueue {
 	private Consumer consumer;
 	public ZBusTaskQueue(MqConfig mqCfg, int timeout) {
 		this.producer = new Producer(mqCfg.getBroker(), mqCfg.getMq());
+		try {
+			this.producer.createMQ();
+		} catch (IOException | InterruptedException e) {
+			throw new RuntimeException(e);
+		}
+		
 		this.consumer = new Consumer(mqCfg);
 		if (timeout > 0) {
 			this.timeout = timeout;
@@ -41,10 +47,11 @@ public class ZBusTaskQueue implements TaskQueue {
 	public void put(Task task) {
 		byte[] data = K.serialize(task);
 		Message msg = new Message();
+		msg.setHead("key", task.getRequest().getUrl());
 		msg.setBody(data);
 		try {
-			producer.sendSync(msg, 10000);
-		} catch (IOException | InterruptedException e) {
+			producer.sendAsync(msg);
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}

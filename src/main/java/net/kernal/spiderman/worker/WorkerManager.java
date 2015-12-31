@@ -57,7 +57,9 @@ public class WorkerManager implements Runnable {
 					break;
 				}
 				try {
-					logger.info(name+"线程池负载已满，将等待"+waitSeconds+"秒再尝试");
+					if (conf.getProperties().getBoolean("debug", true)) {
+						logger.info(name+"线程池负载已满，将等待"+waitSeconds+"秒再尝试");
+					}
 					Thread.sleep(waitSeconds*1000L);
 				} catch (InterruptedException e) {}
 			}
@@ -65,7 +67,9 @@ public class WorkerManager implements Runnable {
 				Task task = taskQueue.poll();
 				if (task == null) {
 					try {
-						logger.info(name+"队列已无任务可分配，将等待"+waitSeconds+"秒再尝试");
+						if (conf.getProperties().getBoolean("debug", true)) {
+							logger.info(name+"队列已无任务可分配，将等待"+waitSeconds+"秒再尝试");
+						}
 						Thread.sleep(waitSeconds*1000L);
 					} catch (InterruptedException e) {}
 					continue;

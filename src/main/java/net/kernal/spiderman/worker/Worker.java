@@ -56,7 +56,7 @@ public abstract class Worker implements Runnable {
 				int _p = tgt.getRules().getPriority();
 				p = p == null ? _p : (_p < p ? _p : p);
 			}
-			newTask.setPriority(p == null ? 10 : p);
+			newTask.setPriority(p == null ? 1 : p);
 		} else {
 			newTask.setPriority(500);
 		}
