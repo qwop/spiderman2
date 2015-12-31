@@ -39,7 +39,11 @@ public class ParseSpider extends Worker {
 			// 报告解析结果
 			this.conf.getReportings().reportParsedResult(parsedResult);
 			// 解析结果计数＋1
-			this.counter.parsedPlus();
+			if (task.isPrimary()) {
+				this.counter.primaryParsedPlus();
+			} else {
+				this.counter.secondaryParsedPlus();
+			}
 			// 若字段配置为新任务来使用，则将它的解析结果(URL地址列表)作为新任务放入队列
 			if (K.isNotEmpty(parsedResult.getUrlsForNewTask())) {
 				parsedResult.getUrlsForNewTask().forEach(arr -> {

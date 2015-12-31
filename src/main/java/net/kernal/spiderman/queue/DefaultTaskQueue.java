@@ -15,7 +15,12 @@ public class DefaultTaskQueue implements TaskQueue {
 	private BlockingQueue<Task> queue = new LinkedBlockingQueue<Task>(5000);
 	
 	public Task poll() {
-		return this.queue.poll();
+		try {
+			return this.queue.take();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 	
 	public void put(Task task) {

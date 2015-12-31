@@ -61,13 +61,26 @@ public abstract class Worker implements Runnable {
 			newTask.setPriority(500);
 		}
 		if (newTask instanceof DownloadTask) {
-			conf.getDownloadTaskQueue().put(newTask);
-			// 队列计数+1
-			counter.downloadQueuePlus();
+			if (newTask.isPrimary()) {
+				conf.getPrimaryDownloadTaskQueue().put(newTask);
+				// 队列计数+1
+				counter.primaryDownloadQueuePlus();
+			} else {
+				conf.getSecondaryDownloadTaskQueue().put(newTask);
+				// 队列计数+1
+				counter.secondaryDownloadQueuePlus();
+			}
+			
 		} else if (newTask instanceof ParseTask) {
-			conf.getParseTaskQueue().put(newTask);
-			// 队列计数+1
-			counter.parseQueuePlus();
+			if (newTask.isPrimary()) {
+				conf.getPrimaryParseTaskQueue().put(newTask);
+				// 队列计数+1
+				counter.primaryParseQueuePlus();
+			} else {
+				conf.getSecondaryParseTaskQueue().put(newTask);
+				// 队列计数+1
+				counter.secondaryParseQueuePlus();
+			}
 		}
 		
 		// 状态报告: 创建新任务
@@ -84,8 +97,6 @@ public abstract class Worker implements Runnable {
 		conf.getTargets().all().forEach(target -> {
 			if (target.matches(request)) {
 				matchedTargets.add(target);
-				// 目标计数＋1
-				counter.targetPlus();
 			}
 		});
 		return matchedTargets;

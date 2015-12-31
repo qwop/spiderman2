@@ -1,5 +1,7 @@
 package net.kernal.spiderman.conf;
 
+import java.math.BigDecimal;
+
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
@@ -15,7 +17,6 @@ import net.kernal.spiderman.queue.DefaultTaskQueue;
 import net.kernal.spiderman.queue.TaskQueue;
 import net.kernal.spiderman.queue.ZBusTaskQueue;
 import net.kernal.spiderman.reporting.ConsoleReporting;
-import net.kernal.spiderman.task.TaskManager;
 
 /**
  * 默认的配置构建器
@@ -75,11 +76,15 @@ public abstract class DefaultConfBuilder implements Conf.Builder {
 		    	throw new RuntimeException(e);
 		    }
 		    
-			conf.setDownloadTaskQueue(new TaskManager(buildQueue(broker, dqn+"_primary"), buildQueue(broker, dqn+"_secondary")));
-		    conf.setParseTaskQueue(new TaskManager(buildQueue(broker, pqn+"_primary"), buildQueue(broker, pqn+"_secondary")));
+			conf.setPrimaryDownloadTaskQueue(buildQueue(broker, dqn+"_primary"));
+			conf.setSecondaryDownloadTaskQueue(buildQueue(broker, dqn+"_secondary"));
+		    conf.setPrimaryParseTaskQueue(buildQueue(broker, pqn+"_primary"));
+		    conf.setSecondaryParseTaskQueue(buildQueue(broker, pqn+"_secondary"));
 		} else {
-			conf.setDownloadTaskQueue(new TaskManager(new DefaultTaskQueue(), new DefaultTaskQueue()));
-		    conf.setParseTaskQueue(new TaskManager(new DefaultTaskQueue(), new DefaultTaskQueue()));
+		    conf.setPrimaryDownloadTaskQueue(new DefaultTaskQueue());
+			conf.setSecondaryDownloadTaskQueue(new DefaultTaskQueue());
+		    conf.setPrimaryParseTaskQueue(new DefaultTaskQueue());
+		    conf.setSecondaryParseTaskQueue(new DefaultTaskQueue());
 		}
 		
 		conf.setDownloader(new DefaultDownloader(conf.getProperties()))
@@ -102,8 +107,9 @@ public abstract class DefaultConfBuilder implements Conf.Builder {
 		MqConfig cfg = new MqConfig(); 
 	    cfg.setBroker(broker);
 	    cfg.setMq(mq);
-	    String timeout = conf.getProperties().getString("zbus.timeout", "5s");
-	    return new ZBusTaskQueue(cfg, K.convertToSeconds(timeout).intValue()*1000);
+	    String timeout = conf.getProperties().getString("zbus.timeout", "3600s");
+	    BigDecimal b = new BigDecimal(K.convertToSeconds(timeout).doubleValue()*1000L);
+	    return new ZBusTaskQueue(cfg, b.intValue());
 	}
 	
 }

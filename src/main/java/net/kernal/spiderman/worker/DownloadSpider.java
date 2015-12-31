@@ -56,7 +56,11 @@ public class DownloadSpider extends Worker {
 		}
 		response.setBodyStr(bodyStr);
 		// 下载计数＋1
-		this.counter.downloadPlus();
+		if (task.isPrimary()) {
+			this.counter.primaryDownloadPlus();
+		} else {
+			this.counter.secondaryDownloadPlus();
+		}
 		
 		// 报告下载事件
 		this.conf.getReportings().reportDownload(response);

@@ -11,6 +11,7 @@ import net.kernal.spiderman.reporting.Reporting;
 import net.kernal.spiderman.reporting.Reportings;
 
 public class Conf {
+	
 	public Conf() {
 		seeds = new Seeds();
 		targets = new Targets();
@@ -23,11 +24,41 @@ public class Conf {
 	private Properties properties;
 	private Downloader downloader;
 	private Reportings reportings;
-	private TaskQueue downloadTaskQueue;
-	private TaskQueue parseTaskQueue;
+	private TaskQueue primaryDownloadTaskQueue;
+	private TaskQueue secondaryDownloadTaskQueue;
+	private TaskQueue primaryParseTaskQueue;
+	private TaskQueue secondaryParseTaskQueue;
 	private ScriptEngine scriptEngine;
 	private Broker zbusBroker;
 	
+	public TaskQueue getPrimaryDownloadTaskQueue() {
+		return primaryDownloadTaskQueue;
+	}
+	public Conf setPrimaryDownloadTaskQueue(TaskQueue primaryDownloadTaskQueue) {
+		this.primaryDownloadTaskQueue = primaryDownloadTaskQueue;
+		return this;
+	}
+	public TaskQueue getSecondaryDownloadTaskQueue() {
+		return secondaryDownloadTaskQueue;
+	}
+	public Conf setSecondaryDownloadTaskQueue(TaskQueue secondaryDownloadTaskQueue) {
+		this.secondaryDownloadTaskQueue = secondaryDownloadTaskQueue;
+		return this;
+	}
+	public TaskQueue getPrimaryParseTaskQueue() {
+		return primaryParseTaskQueue;
+	}
+	public Conf setPrimaryParseTaskQueue(TaskQueue primaryParseTaskQueue) {
+		this.primaryParseTaskQueue = primaryParseTaskQueue;
+		return this;
+	}
+	public TaskQueue getSecondaryParseTaskQueue() {
+		return secondaryParseTaskQueue;
+	}
+	public Conf setSecondaryParseTaskQueue(TaskQueue secondaryParseTaskQueue) {
+		this.secondaryParseTaskQueue = secondaryParseTaskQueue;
+		return this;
+	}
 	public static interface Builder {
 		public Conf build() throws Exception;
 	}
@@ -50,14 +81,6 @@ public class Conf {
 	}
 	public Conf set(String property, Object value) {
 		this.properties.put(property, value);
-		return this;
-	}
-	public Conf setDownloadTaskQueue(TaskQueue taskQueue) {
-		this.downloadTaskQueue = taskQueue;
-		return this;
-	}
-	public Conf setParseTaskQueue(TaskQueue taskQueue) {
-		this.parseTaskQueue = taskQueue;
 		return this;
 	}
 	public Conf setDownloader(Downloader downloader) {
@@ -90,16 +113,12 @@ public class Conf {
 	public Reportings getReportings() {
 		return reportings;
 	}
-	public TaskQueue getDownloadTaskQueue() {
-		return downloadTaskQueue;
-	}
-	public TaskQueue getParseTaskQueue() {
-		return parseTaskQueue;
-	}
-	public void setZbusBroker(Broker broker) {
+	public Conf setZbusBroker(Broker broker) {
 		this.zbusBroker = broker;
+		return this;
 	}
 	public Broker getZbusBroker() {
 		return this.zbusBroker;
 	}
+	
 }

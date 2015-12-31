@@ -37,6 +37,10 @@ public abstract class Task implements Serializable {
 		this.priority = priority;
 	}
 	
+	public boolean isPrimary() {
+		return this.priority < 5;
+	}
+	
 	public abstract String getType();
 	
 }

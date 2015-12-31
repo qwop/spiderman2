@@ -42,12 +42,15 @@ public class ConsoleReporting implements Reporting {
 	
 	public void reportStop(Spiderman.Counter counter) {
 		long cost = System.currentTimeMillis() - this.startAt;
-		String fmt = "\r\n\r\n\r\n[Spiderman][结束]%s\r\n  总共花费时间:%sms \r\n  下载线程池: 总数(%s) 运行中(%s) 已完成(%s) \r\n  解析线程池: 总数(%s) 运行中(%s) 已完成(%s) \r\n  计数器: 已下载(%s) 已解析目标(%s) 待下载(%s) 待解析(%s)\r\n\r\n\r\n";
+		String fmt = "\r\n\r\n\r\n[Spiderman][结束]%s\r\n  总共花费时间:%sms \r\n  下载(主)线程池: 总数(%s) 运行中(%s) 已完成(%s) \r\n  下载(次)线程池: 总数(%s) 运行中(%s) 已完成(%s) \r\n  解析(主)线程池: 总数(%s) 运行中(%s) 已完成(%s) \r\n  解析(次)线程池: 总数(%s) 运行中(%s) 已完成(%s) \r\n  计数器(主): 已下载(%s) 已解析目标(%s) 待下载(%s) 待解析(%s) \r\n  计数器(次): 已下载(%s) 已解析目标(%s) 待下载(%s) 待解析(%s)\r\n\r\n\r\n";
 		System.out.println(String.format(fmt, K.formatNow(), cost, 
-				counter.getDownloadPool().getPoolSize(), counter.getDownloadPool().getActiveCount(), counter.getDownloadPool().getCompletedTaskCount(),
-				counter.getParsePool().getPoolSize(), counter.getParsePool().getActiveCount(), counter.getParsePool().getCompletedTaskCount(),
-				counter.getCountDownload().get(), counter.getCountParsed(), 
-				counter.getCountDownloadQueue().get(), counter.getCountParseQueue().get()));
+				counter.getPrimaryDownloadPool().getPoolSize(), counter.getPrimaryDownloadPool().getActiveCount(), counter.getPrimaryDownloadPool().getCompletedTaskCount(),
+				counter.getSecondaryDownloadPool().getPoolSize(), counter.getSecondaryDownloadPool().getActiveCount(), counter.getSecondaryDownloadPool().getCompletedTaskCount(),
+				counter.getPrimaryParsePool().getPoolSize(), counter.getPrimaryParsePool().getActiveCount(), counter.getPrimaryParsePool().getCompletedTaskCount(),
+				counter.getSecondaryParsePool().getPoolSize(), counter.getSecondaryParsePool().getActiveCount(), counter.getSecondaryParsePool().getCompletedTaskCount(),
+				counter.getCountPrimaryDownload().get(), counter.getCountPrimaryParsed(), counter.getCountPrimaryDownloadQueue().get(), counter.getCountPrimaryParseQueue().get(),
+				counter.getCountSecondaryDownload().get(), counter.getCountSecondaryParsed(), counter.getCountSecondaryDownloadQueue().get(), counter.getCountSecondaryParseQueue().get()
+				));
 	}
 
 }

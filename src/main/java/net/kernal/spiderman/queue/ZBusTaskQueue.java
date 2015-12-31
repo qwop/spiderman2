@@ -18,7 +18,9 @@ public class ZBusTaskQueue implements TaskQueue {
 	public ZBusTaskQueue(MqConfig mqCfg, int timeout) {
 		this.producer = new Producer(mqCfg.getBroker(), mqCfg.getMq());
 		this.consumer = new Consumer(mqCfg);
-		this.timeout = timeout;
+		if (timeout > 0) {
+			this.timeout = timeout;
+		}
 	}
 	
 	public Task poll() {
@@ -39,11 +41,10 @@ public class ZBusTaskQueue implements TaskQueue {
 	public void put(Task task) {
 		byte[] data = K.serialize(task);
 		Message msg = new Message();
-		msg.setAck(true);
 		msg.setBody(data);
 		try {
-			producer.sendAsync(msg);
-		} catch (IOException e) {
+			producer.sendSync(msg, 10000);
+		} catch (IOException | InterruptedException e) {
 			e.printStackTrace();
 		}
 	}
