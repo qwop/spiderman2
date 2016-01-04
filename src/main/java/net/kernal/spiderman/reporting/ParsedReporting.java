@@ -1,6 +1,7 @@
 package net.kernal.spiderman.reporting;
 
 import net.kernal.spiderman.Spiderman.Counter;
+import net.kernal.spiderman.downloader.Downloader;
 import net.kernal.spiderman.downloader.Downloader.Response;
 import net.kernal.spiderman.parser.Parser.ParsedResult;
 import net.kernal.spiderman.task.Task;
@@ -8,6 +9,9 @@ import net.kernal.spiderman.task.Task;
 public abstract class ParsedReporting implements Reporting {
 
 	public void reportStart() {
+	}
+	
+	public void reportDuplicateCheck(final String key, final boolean checkResult, final Downloader.Request request){
 	}
 
 	public void reportDownload(Response response) {
