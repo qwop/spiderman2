@@ -12,7 +12,7 @@ import net.kernal.spiderman.task.Task;
 
 public class ZBusTaskQueue implements TaskQueue {
 
-	private int timeout = 5000;
+	private int timeout = 10000;
 	private Producer producer;
 	private Consumer consumer;
 	public ZBusTaskQueue(MqConfig mqCfg, int timeout) {

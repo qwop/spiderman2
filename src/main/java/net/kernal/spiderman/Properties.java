@@ -127,7 +127,7 @@ public class Properties extends HashMap<String, Object> {
 	
 	public boolean getBoolean(String Stringey, boolean defaultVal) {
 		try {
-			return Boolean.parseBoolean(getString(Stringey));
+			return Boolean.parseBoolean(getString(Stringey, defaultVal+""));
 		} catch (Throwable e){
 			
 		}

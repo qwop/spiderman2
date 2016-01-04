@@ -1,5 +1,6 @@
 package net.kernal.spiderman.conf;
 
+import java.io.File;
 import java.math.BigDecimal;
 
 import javax.script.ScriptEngine;
@@ -17,6 +18,7 @@ import net.kernal.spiderman.queue.DefaultTaskQueue;
 import net.kernal.spiderman.queue.TaskQueue;
 import net.kernal.spiderman.queue.ZBusTaskQueue;
 import net.kernal.spiderman.reporting.ConsoleReporting;
+import net.kernal.spiderman.store.MapDb;
 
 /**
  * 默认的配置构建器
@@ -58,6 +60,10 @@ public abstract class DefaultConfBuilder implements Conf.Builder {
 			if (K.isBlank(zbusServerAddress)) {
 				throw new RuntimeException("缺少参数zbus.serverAddress");
 			}
+			final String dcn = conf.getProperties().getString("zbus.duplicateCheckQueueName", "spiderman_duplicate_check_task");
+			if (K.isBlank(dcn)) {
+				throw new RuntimeException("缺少参数zbus.duplicateCheckQueueName");
+			}
 			final String dqn = conf.getProperties().getString("zbus.downloadTaskQueueName", "spiderman_download_task");
 			if (K.isBlank(dqn)) {
 				throw new RuntimeException("缺少参数zbus.downloadTaskQueueName");
@@ -80,12 +86,14 @@ public abstract class DefaultConfBuilder implements Conf.Builder {
 		    	throw new RuntimeException(e);
 		    }
 		    
+		    conf.setDuplicateCheckQueue(buildQueue(broker, dcn));
 			conf.setPrimaryDownloadTaskQueue(buildQueue(broker, dqn+"_primary"));
 			conf.setSecondaryDownloadTaskQueue(buildQueue(broker, dqn+"_secondary"));
 		    conf.setPrimaryParseTaskQueue(buildQueue(broker, pqn+"_primary"));
 		    conf.setSecondaryParseTaskQueue(buildQueue(broker, pqn+"_secondary"));
 		    conf.setResultTaskQueue(buildQueue(broker, rqn));
 		} else {
+			conf.setDuplicateCheckQueue(new DefaultTaskQueue());
 		    conf.setPrimaryDownloadTaskQueue(new DefaultTaskQueue());
 			conf.setSecondaryDownloadTaskQueue(new DefaultTaskQueue());
 		    conf.setPrimaryParseTaskQueue(new DefaultTaskQueue());
@@ -95,6 +103,12 @@ public abstract class DefaultConfBuilder implements Conf.Builder {
 		
 		conf.setDownloader(new DefaultDownloader(conf.getProperties()))
 		    .addReporting(new ConsoleReporting());
+		
+		final String file = conf.getProperties().getString("mapdb.file");
+		if (K.isBlank(file)) {
+			throw new RuntimeException("缺少参数mapdb");
+		}
+		conf.setDb(new MapDb(new File(file)));
 		
 		final String engineName = conf.getProperties().getString("scriptEngine", "nashorn");
 		final ScriptEngine scriptEngine = new ScriptEngineManager().getEngineByName(engineName);
@@ -113,7 +127,7 @@ public abstract class DefaultConfBuilder implements Conf.Builder {
 		MqConfig cfg = new MqConfig(); 
 	    cfg.setBroker(broker);
 	    cfg.setMq(mq);
-	    String timeout = conf.getProperties().getString("zbus.timeout", "3600s");
+	    String timeout = conf.getProperties().getString("zbus.timeout", "10s");
 	    BigDecimal b = new BigDecimal(K.convertToSeconds(timeout).doubleValue()*1000L);
 	    return new ZBusTaskQueue(cfg, b.intValue());
 	}

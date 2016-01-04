@@ -16,6 +16,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
+import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -432,5 +433,25 @@ public class K {
 			}
 		}
 	}
+	
+	public static String md5(final String input) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            md.update(input.getBytes());
+            byte[] output = md.digest();
+            char hexDigit[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+            StringBuffer buf = new StringBuffer();
+            for (int j = 0; j < output.length; j++) {
+                buf.append(hexDigit[(output[j] >> 4) & 0x0f]);
+                buf.append(hexDigit[output[j] & 0x0f]);
+            }
+            return buf.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return input;
+    }
+	
 	
 }

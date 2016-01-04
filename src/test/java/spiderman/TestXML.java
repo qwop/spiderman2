@@ -27,15 +27,18 @@ public class TestXML {
 					model.addParser(new TextParser());// 目标解析规则，这里直接用通用的正文抽取器解析
 				}
 			})
+			.set("debug", false)
+			.set("mapdb.file", "src/main/resources/mapdb")
 			.set("zbus.enabled", true)//是否开启分布式支持
-			.set("zbus.serverAddress", "localhost:15555")//zbus服务器地址
+			.set("zbus.serverAddress", "10.8.60.8:15555")//zbus服务器地址
 //			.set("duration", "10s")//持续时间
-			.set("downloader.primary.threadSize", 2)//下载(主)线程数量
-			.set("downloader.secondary.threadSize", 20)//下载(次)线程数量
+			.set("duplicateChecker.threadSize", 10)//重复校验线程数量
+			.set("downloader.primary.threadSize", 1)//下载(主)线程数量
+			.set("downloader.secondary.threadSize", 1)//下载(次)线程数量
 			.set("parser.primary.threadSize", 1)//解析(主)线程数量
 			.set("parser.secondary.threadSize", 1)//解析(次)线程数量
 			.set("result.threadSize", 1)//结果处理线程数量
-			.set("parsedLimit", 2000)//解析网页数量上限，达到后将会自动结束行动
+			.set("parsedLimit", 200)//解析网页数量上限，达到后将会自动结束行动
 			.build();
 		
 		new Spiderman(conf).go();//别忘记看控制台信息哦，结束之后会有统计信息的,查看关键词"[结束]"(去掉双引号来查找)

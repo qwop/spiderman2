@@ -9,6 +9,7 @@ import net.kernal.spiderman.conf.Conf;
 import net.kernal.spiderman.conf.Target;
 import net.kernal.spiderman.downloader.Downloader;
 import net.kernal.spiderman.task.DownloadTask;
+import net.kernal.spiderman.task.DuplicateCheckTask;
 import net.kernal.spiderman.task.ParseTask;
 import net.kernal.spiderman.task.Task;
 
@@ -35,12 +36,21 @@ public abstract class Worker implements Runnable {
 	/**
 	 * 将新任务放入下载队列
 	 */
-	protected void putTheNewTaskToQueue(String httpMethod, String url) {
-		if (K.isBlank(url)) {
-			return;
-		}
-		Downloader.Request request = new Downloader.Request(url, httpMethod);
-		Task newTask = new DownloadTask(request, 500);
+	protected void putTheNewTaskToDuplicateCheckQueue(DuplicateCheckTask newTask) {
+		this.putTheNewTaskToQueue(newTask);
+	}
+	
+	/**
+	 * 将新任务放入下载队列
+	 */
+	protected void putTheNewTaskToDownloadQueue(DownloadTask newTask) {
+		this.putTheNewTaskToQueue(newTask);
+	}
+	
+	/**
+	 * 将新任务放入解析队列
+	 */
+	protected void putTheNewTaskToParseQueue(ParseTask newTask) {
 		this.putTheNewTaskToQueue(newTask);
 	}
 	
@@ -48,7 +58,10 @@ public abstract class Worker implements Runnable {
 	 * 将新任务放入队列
 	 * @param newTask 任务
 	 */
-	protected void putTheNewTaskToQueue(Task newTask) {
+	private void putTheNewTaskToQueue(Task newTask) {
+		if (newTask == null) {
+			return;
+		}
 		List<Target> matchedTargets = this.matchingTargets(newTask.getRequest());
 		if (K.isNotEmpty(matchedTargets)) {
 			Integer p = null;
@@ -60,7 +73,13 @@ public abstract class Worker implements Runnable {
 		} else {
 			newTask.setPriority(500);
 		}
-		if (newTask instanceof DownloadTask) {
+		// 重复校验任务
+		if (newTask instanceof DuplicateCheckTask) {
+			conf.getDuplicateCheckQueue().put((DuplicateCheckTask)newTask);
+			// 队列计数+1
+			counter.duplicateCheckQueuePlus();
+		} else if (newTask instanceof DownloadTask) {
+			// 下载任务
 			if (newTask.isPrimary()) {
 				conf.getPrimaryDownloadTaskQueue().put(newTask);
 				// 队列计数+1
@@ -70,8 +89,8 @@ public abstract class Worker implements Runnable {
 				// 队列计数+1
 				counter.secondaryDownloadQueuePlus();
 			}
-			
 		} else if (newTask instanceof ParseTask) {
+			// 解析任务
 			if (newTask.isPrimary()) {
 				conf.getPrimaryParseTaskQueue().put(newTask);
 				// 队列计数+1

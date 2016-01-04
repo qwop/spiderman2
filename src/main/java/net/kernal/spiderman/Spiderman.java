@@ -12,10 +12,12 @@ import java.util.logging.Logger;
 
 import net.kernal.spiderman.conf.Conf;
 import net.kernal.spiderman.task.DownloadTask;
+import net.kernal.spiderman.task.DuplicateCheckTask;
 import net.kernal.spiderman.task.ParseTask;
 import net.kernal.spiderman.task.ResultTask;
 import net.kernal.spiderman.task.Task;
 import net.kernal.spiderman.worker.DownloadWorker;
+import net.kernal.spiderman.worker.DuplicateCheckWorker;
 import net.kernal.spiderman.worker.ParseWorker;
 import net.kernal.spiderman.worker.ResultWorker;
 import net.kernal.spiderman.worker.Worker;
@@ -44,11 +46,24 @@ public class Spiderman {
 			this.counter.setCountDown(new CountDownLatch(parsedLimit));
 		} 
 		
-		// 5个包工头
-		this.workerManagers = new ArrayList<WorkerManager>(5);
-		this.threads = Executors.newFixedThreadPool(5);
+		// 6个包工头
+		this.workerManagers = new ArrayList<WorkerManager>(6);
+		this.threads = Executors.newFixedThreadPool(6);
 		
-		// 下载工人包工头
+		// 负责重复校验的包工头
+		Worker.Builder duplicateCheckBuilder = new Worker.Builder() {
+			public Worker build(Task task, Conf conf, Counter counter) {
+				return new DuplicateCheckWorker((DuplicateCheckTask)task, conf, counter);
+			}
+		};
+		final int dcts = this.conf.getProperties().getInt("duplicateChecker.threadSize", 1);
+		if (dcts > 0) {
+			ThreadPoolExecutor threads = (ThreadPoolExecutor) Executors.newFixedThreadPool(dcts);
+			WorkerManager mgr1 = new WorkerManager("重复校验", conf.getDuplicateCheckQueue(), threads, duplicateCheckBuilder);
+			this.workerManagers.add(mgr1);
+		}
+		
+		// 负责下载的包工头
 		Worker.Builder downloadBuilder = new Worker.Builder(){
 			public Worker build(Task task, Conf conf, Counter counter) {
 				return new DownloadWorker((DownloadTask)task, conf, counter);
@@ -70,7 +85,7 @@ public class Spiderman {
 			counter.setSecondaryDownloadPool(new Counter.Threads(threadsForSecondaryDownload));
 		}
 		
-		// 解析工人包工头
+		// 负责解析的包工头
 		Worker.Builder parseBuilder = new Worker.Builder() {
 			public Worker build(Task task, Conf conf, Counter counter) {
 				return new ParseWorker((ParseTask)task, conf, counter);
@@ -92,7 +107,7 @@ public class Spiderman {
 			counter.setSecondaryParsePool(new Counter.Threads(threadsForSecondaryParse));
 		}
 		
-		// 结果处理工人包工头
+		// 负责结果处理的包工头
 		Worker.Builder resultBuilder = new Worker.Builder() {
 			public Worker build(Task task, Conf conf, Counter counter) {
 				return new ResultWorker((ResultTask)task, conf, counter);
@@ -127,23 +142,22 @@ public class Spiderman {
 	
 	/**
 	 * 开展行动
-	 * @return
 	 */
 	public Spiderman go() {
-		// 将种子添加到主任务队列里
+		// 将种子添加到队列里
 		conf.getSeeds().all().forEach((seed) -> {
-			DownloadTask newTask = new DownloadTask(seed, 0);
-			conf.getPrimaryDownloadTaskQueue().put(newTask);
+			final DuplicateCheckTask task = new DuplicateCheckTask(new DownloadTask(seed, 0));
+			conf.getDuplicateCheckQueue().put(task);
 			// 队列计数+1
-			counter.primaryDownloadQueuePlus();
+			counter.duplicateCheckQueuePlus();
 		});
 		// 状态报告: 行动开始了
 		conf.getReportings().reportStart();
-		
+		// 让包工头们开始工作了
 		this.workerManagers.forEach(manager -> {
 			this.threads.execute(manager);
 		});
-		
+		// 坐下来喝杯茶，耐心等待工人们的结果
 		this._holding();
 		return this;
 	}
@@ -159,6 +173,7 @@ public class Spiderman {
 			}
 		} catch (IOException e) {}
 		this.conf.getReportings().reportStop(counter);
+		this.conf.getDb().close();
 		
 		return this;
 	}
@@ -211,6 +226,8 @@ public class Spiderman {
 		private AtomicLong countPrimaryDownload;
 		private AtomicLong countSecondaryDownload;
 		
+		private AtomicLong countDuplicateCheckQueue;
+		
 		private AtomicLong countPrimaryDownloadQueue;
 		private AtomicLong countSecondaryDownloadQueue;
 		
@@ -229,6 +246,8 @@ public class Spiderman {
 			this.countPrimaryDownload = new AtomicLong(0);
 			this.countSecondaryDownload = new AtomicLong(0);
 			
+			this.countDuplicateCheckQueue = new AtomicLong(0);
+			
 			this.countPrimaryDownloadQueue = new AtomicLong(0);
 			this.countSecondaryDownloadQueue = new AtomicLong(0);
 			
@@ -243,11 +262,16 @@ public class Spiderman {
 			this.primaryParsePool = new Threads(null);
 			this.secondaryParsePool = new Threads(null);
 		}
+		
 		public Long primaryDownloadPlus() {
 			return this.countPrimaryDownload.addAndGet(1);
 		}
 		public Long secondaryDownloadPlus() {
 			return this.countSecondaryDownload.addAndGet(1);
+		}
+		
+		public Long duplicateCheckQueuePlus() {
+			return this.countDuplicateCheckQueue.addAndGet(1);
 		}
 		
 		public Long primaryDownloadQueuePlus() {
@@ -286,6 +310,9 @@ public class Spiderman {
 		}
 		public AtomicLong getCountSecondaryDownload() {
 			return countSecondaryDownload;
+		}
+		public AtomicLong getCountDuplicateCheckQueue() {
+			return countDuplicateCheckQueue;
 		}
 		public AtomicLong getCountPrimaryDownloadQueue() {
 			return countPrimaryDownloadQueue;

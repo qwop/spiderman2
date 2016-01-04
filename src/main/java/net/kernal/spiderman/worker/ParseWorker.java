@@ -8,6 +8,8 @@ import net.kernal.spiderman.conf.Conf;
 import net.kernal.spiderman.conf.Target;
 import net.kernal.spiderman.downloader.Downloader;
 import net.kernal.spiderman.parser.Parser.ParsedResult;
+import net.kernal.spiderman.task.DownloadTask;
+import net.kernal.spiderman.task.DuplicateCheckTask;
 import net.kernal.spiderman.task.ParseTask;
 import net.kernal.spiderman.task.ResultTask;
 
@@ -50,7 +52,11 @@ public class ParseWorker extends Worker {
 			// 若字段配置为新任务来使用，则将它的解析结果(URL地址列表)作为新任务放入队列
 			if (K.isNotEmpty(parsedResult.getUrlsForNewTask())) {
 				parsedResult.getUrlsForNewTask().forEach(arr -> {
-					super.putTheNewTaskToQueue(arr[0], arr[1]);
+					final String httpMethod = arr[0];
+					final String url = arr[1];
+					final DownloadTask dTask = new DownloadTask(new Downloader.Request(url, httpMethod), 500);
+					final DuplicateCheckTask task = new DuplicateCheckTask(dTask);
+					super.putTheNewTaskToDuplicateCheckQueue(task);
 				});
 			}
 		});

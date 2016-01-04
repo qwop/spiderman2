@@ -6,6 +6,7 @@ import java.util.List;
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Spiderman;
 import net.kernal.spiderman.downloader.Downloader;
+import net.kernal.spiderman.downloader.Downloader.Request;
 import net.kernal.spiderman.parser.Parser;
 import net.kernal.spiderman.task.Task;
 
@@ -58,6 +59,12 @@ public class Reportings implements Reporting{
 			public void each(int i, Reporting item) {
 				item.reportStop(counter);
 			}
+		});
+	}
+
+	public void reportDuplicateCheck(String key, boolean checkResult, Request request) {
+		this.reportings.forEach(reporting -> {
+			reporting.reportDuplicateCheck(key, checkResult, request);
 		});
 	}
 	

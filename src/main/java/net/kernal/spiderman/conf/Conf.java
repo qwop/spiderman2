@@ -9,6 +9,7 @@ import net.kernal.spiderman.downloader.Downloader;
 import net.kernal.spiderman.queue.TaskQueue;
 import net.kernal.spiderman.reporting.Reporting;
 import net.kernal.spiderman.reporting.Reportings;
+import net.kernal.spiderman.store.KVDb;
 
 public class Conf {
 	
@@ -24,14 +25,29 @@ public class Conf {
 	private Properties properties;
 	private Downloader downloader;
 	private Reportings reportings;
+	private KVDb db;
+	// 重复校验队列
+	private TaskQueue duplicateCheckQueue;
+	// 下载(主)队列
 	private TaskQueue primaryDownloadTaskQueue;
+	// 下载(次)队列
 	private TaskQueue secondaryDownloadTaskQueue;
+	// 解析(主)队列
 	private TaskQueue primaryParseTaskQueue;
+	// 解析(次)队列
 	private TaskQueue secondaryParseTaskQueue;
+	// 结果队列
 	private TaskQueue resultTaskQueue;
 	private ScriptEngine scriptEngine;
 	private Broker zbusBroker;
 	
+	public TaskQueue getDuplicateCheckQueue() {
+		return this.duplicateCheckQueue;
+	}
+	public Conf setDuplicateCheckQueue(TaskQueue duplicateCheckQueue) {
+		this.duplicateCheckQueue = duplicateCheckQueue;
+		return this;
+	}
 	public TaskQueue getPrimaryDownloadTaskQueue() {
 		return primaryDownloadTaskQueue;
 	}
@@ -127,6 +143,13 @@ public class Conf {
 	}
 	public Broker getZbusBroker() {
 		return this.zbusBroker;
+	}
+	public Conf setDb(KVDb db) {
+		this.db = db;
+		return this;
+	}
+	public KVDb getDb() {
+		return this.db;
 	}
 	
 }

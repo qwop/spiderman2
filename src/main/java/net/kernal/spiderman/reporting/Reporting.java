@@ -14,6 +14,8 @@ public interface Reporting {
 
 	public void reportStart();
 	
+	public void reportDuplicateCheck(final String key, final boolean checkResult, final Downloader.Request request);
+	
 	public void reportDownload(final Downloader.Response response);
 	
 	public void reportNewTask(final Task newTask);

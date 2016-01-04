@@ -46,12 +46,27 @@ public abstract class Target {
 		this.rules = new Rules();
 	}
 	
+	public Target(String name, boolean duplcateCheckEnabled) {
+		this(name);
+		this.setDuplicateCheckEnabled(duplcateCheckEnabled);
+	}
+	
+	private boolean duplcateCheckEnabled;
 	private String name;
 	private Model model;
 	private Rules rules;
 	
 	public abstract void configRules(Rules rules);
 	public abstract void configModel(Model model);
+	
+	public Target setDuplicateCheckEnabled(boolean duplcateCheckEnabled) {
+		this.duplcateCheckEnabled = duplcateCheckEnabled;
+		return this;
+	}
+	
+	public boolean isDuplcateCheckEnabled() {
+		return this.duplcateCheckEnabled;
+	}
 	
 	public boolean matches(Downloader.Request request) {
 		boolean matched = true;

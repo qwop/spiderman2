@@ -5,8 +5,8 @@ import net.kernal.spiderman.Spiderman.Counter;
 import net.kernal.spiderman.conf.Conf;
 import net.kernal.spiderman.downloader.Downloader;
 import net.kernal.spiderman.task.DownloadTask;
+import net.kernal.spiderman.task.DuplicateCheckTask;
 import net.kernal.spiderman.task.ParseTask;
-import net.kernal.spiderman.task.Task;
 
 /**
  * 负责下载的蜘蛛工人
@@ -34,7 +34,10 @@ public class DownloadWorker extends Worker {
 		final int statusCode = response.getStatusCode();
 		final String location = response.getLocation();
 		if (K.isNotBlank(location) && K.isIn(statusCode, 301, 302)) {
-			super.putTheNewTaskToQueue(K.HTTP_GET, location);
+			// 将新任务放入队列
+			final DownloadTask dTask = new DownloadTask(new Downloader.Request(location), 500);
+			final DuplicateCheckTask task = new DuplicateCheckTask(dTask);
+			super.putTheNewTaskToDuplicateCheckQueue(task);
 			return ;
 		}
 		if (response.getBody() == null || response.getBody().length == 0) {
@@ -66,8 +69,8 @@ public class DownloadWorker extends Worker {
 		this.conf.getReportings().reportDownload(response);
 				
 		// 将下载好的response对象放入解析队列
-		Task newTask = new ParseTask(response, 500);
-		super.putTheNewTaskToQueue(newTask);
+		final ParseTask newTask = new ParseTask(response, 500);
+		super.putTheNewTaskToParseQueue(newTask);
 	}
 
 	private String getCharsetFromBodyStr(final String bodyStr) {
