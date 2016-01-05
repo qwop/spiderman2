@@ -1,5 +1,6 @@
 package net.kernal.spiderman.task;
 
+import net.kernal.spiderman.downloader.Downloader;
 import net.kernal.spiderman.downloader.Downloader.Request;
 import net.kernal.spiderman.parser.Parser.ParsedResult;
 
@@ -9,8 +10,8 @@ public class ResultTask extends Task {
 	
 	private ParsedResult parsedResult;
 
-	public ResultTask(ParsedResult parsedResult, Request request) {
-		super(request, 0);
+	public ResultTask(Downloader.Request seed, ParsedResult parsedResult, Request request) {
+		super(seed, request, 0);
 		this.parsedResult = parsedResult;
 	}
 	

@@ -10,6 +10,7 @@ import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 
 import net.kernal.spiderman.K;
+import net.kernal.spiderman.conf.Functions;
 
 /**
  * 脚本化的转换解析器，使用脚本引擎来将输入的参数值转换成新值作为解析的结果
@@ -18,19 +19,24 @@ import net.kernal.spiderman.K;
  */
 public class ScriptTransformParser extends TransformParser {
 
-	protected String script;
-	public ScriptTransformParser(File script) {
-		this.script = K.readFile(script);
-	}
+	protected final String script;
+	
 	public ScriptTransformParser(String script) {
 		this.script = script;
 	}
+	
+	public ScriptTransformParser(File script) {
+		this(K.readFile(script));
+	}
 	public ScriptTransformParser(File file, String script) {
-		String lib = K.readFile(file);
-		this.script = lib+";"+script;
+		this(K.readFile(file)+";\r\n"+script);
 	}
 	
 	public ScriptTransformParser(List<File> files, String script) {
+		this(loadFiles(files)+";\r\n"+script);
+	}
+	
+	private static String loadFiles(List<File> files) {
 		StringBuilder sb = new StringBuilder();
 		files.forEach(file -> {
 			StringBuilder lines = new StringBuilder();
@@ -39,12 +45,11 @@ public class ScriptTransformParser extends TransformParser {
 				lines.append(line);
 			});
 			if (sb.length() > 0) {
-				sb.append(";");
+				sb.append(";\r\n");
 			}
 			sb.append(lines.toString());
 		});
-		sb.append(";").append(script);
-		this.script = sb.toString();
+		return sb.toString();
 	}
 	
 	public Object transform(Object oldValue) {
@@ -54,6 +59,9 @@ public class ScriptTransformParser extends TransformParser {
 		try {
 			Bindings bind = new SimpleBindings();
 			bind.put("$this", oldValue);
+			this.javaInvoker.setParser(this);
+			bind.put("$Java", this.javaInvoker);
+			
 			return scriptEngine.eval(this.script, bind);
 		} catch (ScriptException e) {
 			e.printStackTrace();
@@ -61,10 +69,27 @@ public class ScriptTransformParser extends TransformParser {
 		return null;
 	}
 	
-	public static void main(String[] args) {
+	public static class My {
+		public Object invoke(String name, Object arg) {
+			return "hello, " + name + "  " + arg;
+		}
+	}
+	
+	public static void main(String[] args) throws Exception {
 		long start = System.currentTimeMillis();
-		
+		Functions funcs = new Functions();
+		funcs.register("cleanPageUrl", new TransformParser() {
+			public Object transform(Object oldValue) {
+				return "hello, " + oldValue;
+			}
+		});
+		JavaInvoker java = new JavaInvoker(funcs);
+		Bindings bind = new SimpleBindings();
+		bind.put("$this", "http://www.baidu.com");
+		bind.put("$Java", java);
 		ScriptEngine scriptEngine = new ScriptEngineManager().getEngineByName("nashorn");
+		Object val = scriptEngine.eval("$Java.invoke('cleanPageUrl', $this)", bind);
+		System.out.println(val);
 		
 		ScriptTransformParser p = new ScriptTransformParser("var s = 'hello,'+$this; s;");
 		p.setScriptEngine(scriptEngine);

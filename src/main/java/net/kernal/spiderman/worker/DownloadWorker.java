@@ -1,11 +1,9 @@
 package net.kernal.spiderman.worker;
 
+import net.kernal.spiderman.Context;
 import net.kernal.spiderman.K;
-import net.kernal.spiderman.Spiderman.Counter;
-import net.kernal.spiderman.conf.Conf;
 import net.kernal.spiderman.downloader.Downloader;
 import net.kernal.spiderman.task.DownloadTask;
-import net.kernal.spiderman.task.DuplicateCheckTask;
 import net.kernal.spiderman.task.ParseTask;
 
 /**
@@ -17,16 +15,17 @@ public class DownloadWorker extends Worker {
 
 	private DownloadTask task;
 	
-	public DownloadWorker(DownloadTask task, Conf conf, Counter counter) {
-		super(conf, counter);
+	public DownloadWorker(DownloadTask task, Context context) {
+		super(context);
 		this.task = task;
 	}
 	
 	public void run() {
 		// 从任务包里拿到请求对象
 		final Downloader.Request request = this.task.getRequest();
+		final Downloader.Request seed = this.task.getSeed() == null ? request : this.task.getSeed();
 		// 将请求丢给下载器进行下载
-		final Downloader.Response response = this.conf.getDownloader().download(request);
+		final Downloader.Response response = this.context.getDownloader().download(request);
 		if (response == null) {
 			return;
 		}
@@ -35,9 +34,8 @@ public class DownloadWorker extends Worker {
 		final String location = response.getLocation();
 		if (K.isNotBlank(location) && K.isIn(statusCode, 301, 302)) {
 			// 将新任务放入队列
-			final DownloadTask dTask = new DownloadTask(new Downloader.Request(location), 500);
-			final DuplicateCheckTask task = new DuplicateCheckTask(dTask);
-			super.putTheNewTaskToDuplicateCheckQueue(task);
+			final DownloadTask dTask = new DownloadTask(seed, new Downloader.Request(location), 500);
+			this.context.getQueueManager().put(dTask);
 			return ;
 		}
 		if (response.getBody() == null || response.getBody().length == 0) {
@@ -60,17 +58,17 @@ public class DownloadWorker extends Worker {
 		response.setBodyStr(bodyStr);
 		// 下载计数＋1
 		if (task.isPrimary()) {
-			this.counter.primaryDownloadPlus();
+			this.context.getCounter().primaryDownloadPlus();
 		} else {
-			this.counter.secondaryDownloadPlus();
+			this.context.getCounter().secondaryDownloadPlus();
 		}
 		
 		// 报告下载事件
-		this.conf.getReportings().reportDownload(response);
+		this.context.getConf().getReportings().reportDownload(response);
 				
 		// 将下载好的response对象放入解析队列
-		final ParseTask newTask = new ParseTask(response, 500);
-		super.putTheNewTaskToParseQueue(newTask);
+		final ParseTask newTask = new ParseTask(seed, response, 500);
+		this.context.getQueueManager().put(newTask);
 	}
 
 	private String getCharsetFromBodyStr(final String bodyStr) {

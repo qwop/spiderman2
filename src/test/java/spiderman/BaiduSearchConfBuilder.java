@@ -3,6 +3,7 @@ package spiderman;
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Properties;
 import net.kernal.spiderman.conf.DefaultConfBuilder;
+import net.kernal.spiderman.conf.Functions;
 import net.kernal.spiderman.conf.Seeds;
 import net.kernal.spiderman.conf.Target;
 import net.kernal.spiderman.conf.Targets;
@@ -91,6 +92,10 @@ public class BaiduSearchConfBuilder extends DefaultConfBuilder {
 //		p.put("duration", "30s");// 持续时间，到达该时间后蜘蛛侠会停止活动回到你的身边哦～
 		p.put("threadSize", 5);//线程池大小
 		p.put("downloader.limit", 50);//下载网页数量限制，达到该数量后蜘蛛侠会停止活动回到你的身边哦～
+	}
+
+	public void registerFunction(Functions functions) {
+		
 	}
 
 }

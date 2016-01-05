@@ -1,9 +1,10 @@
 package net.kernal.spiderman.parser;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.script.ScriptEngine;
 
@@ -19,16 +20,16 @@ public interface Parser {
 		
 		private static final long serialVersionUID = -6041321655997339976L;
 		
-		private List<String[]> urlsForNewTask;//["HttpMethod", "URL"]
+		private Set<String> urlsForNewTask;
 		private List<Object> objects;
 		public static ParsedResult fromList(List<?> args) {
 			return new ParsedResult(args.toArray());
 		}
 		public ParsedResult(Object... args) {
 			this.objects = Arrays.asList(args);
-			this.urlsForNewTask = new ArrayList<String[]>();
+			this.urlsForNewTask = new HashSet<String>();
 		}
-		public List<String[]> getUrlsForNewTask() {
+		public Set<String> getUrlsForNewTask() {
 			return this.urlsForNewTask;
 		}
 		public List<Object> all() {

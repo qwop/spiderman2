@@ -12,8 +12,8 @@ public class ParseTask extends Task {
 	private static final long serialVersionUID = -6399150276163991806L;
 	
 	private Downloader.Response response;
-	public ParseTask(Downloader.Response response, int priority) {
-		super(response.getRequest(), priority);
+	public ParseTask(Downloader.Request seed, Downloader.Response response, int priority) {
+		super(seed, response.getRequest(), priority);
 		this.response = response;
 	}
 	

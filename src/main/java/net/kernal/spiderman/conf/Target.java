@@ -1,7 +1,9 @@
 package net.kernal.spiderman.conf;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Properties;
@@ -10,6 +12,8 @@ import net.kernal.spiderman.parser.FieldParser;
 import net.kernal.spiderman.parser.ModelParser;
 import net.kernal.spiderman.parser.Parser;
 import net.kernal.spiderman.parser.Parser.ParsedResult;
+import net.kernal.spiderman.task.ParseTask;
+import net.kernal.spiderman.task.Task;
 
  /**
   * 目标配置
@@ -32,11 +36,11 @@ public abstract class Target {
 	 * @param response 下载器返回的响应结果
 	 * @return 解析结果
 	 */
-	public ParsedResult parse(final Downloader.Response response) {
+	public ParsedResult parse(final ParseTask task) {
 		if (model.getParser() == null) {
 			throw new RuntimeException("请为Target["+this.getName()+"].Model设置解析器，比如model.addParser");
 		}
-		model.setResponse(response);
+		model.setTask(task);
 		return model.parse();
 	}
 	
@@ -46,27 +50,12 @@ public abstract class Target {
 		this.rules = new Rules();
 	}
 	
-	public Target(String name, boolean duplcateCheckEnabled) {
-		this(name);
-		this.setDuplicateCheckEnabled(duplcateCheckEnabled);
-	}
-	
-	private boolean duplcateCheckEnabled;
 	private String name;
 	private Model model;
 	private Rules rules;
 	
 	public abstract void configRules(Rules rules);
 	public abstract void configModel(Model model);
-	
-	public Target setDuplicateCheckEnabled(boolean duplcateCheckEnabled) {
-		this.duplcateCheckEnabled = duplcateCheckEnabled;
-		return this;
-	}
-	
-	public boolean isDuplcateCheckEnabled() {
-		return this.duplcateCheckEnabled;
-	}
 	
 	public boolean matches(Downloader.Request request) {
 		boolean matched = true;
@@ -95,8 +84,15 @@ public abstract class Target {
 	public static class Rules {
 		private int priority = 10;
 		private List<Rule> rules;
+		private KeyGenerator keyGenerator;
 		public Rules() {
 			this.rules = new ArrayList<Rule>();
+		}
+		public void setKeyGenerator(KeyGenerator keyGenerator) {
+			this.keyGenerator = keyGenerator;
+		}
+		public KeyGenerator getKeyGenerator() {
+			return this.keyGenerator;
 		}
 		public void addNotRegexRule(String regex) {
 			this.rules.add(new RegexRule(regex, false));
@@ -134,6 +130,10 @@ public abstract class Target {
 		}
 		public int getPriority() {
 			return this.priority;
+		}
+		
+		public static interface KeyGenerator {
+			public Object gen(Task task, Object value);
 		}
 	}
 	
@@ -214,7 +214,7 @@ public abstract class Target {
 			}
 			// 默认用模型解析器的结果值作为最终解析结果
 			ParsedResult finalParsedResult = modelParsedResult;
-			final List<String[]> urlsForNewTask = new ArrayList<String[]>();
+			final Set<String> urlsForNewTask = new HashSet<String>();
 			// 否则需要逐个模型，逐个字段的去解析
 			final List<Parser.Model> parsedModelsWithFields = new ArrayList<Parser.Model>();
 			modelParsedResult.all().forEach(item -> {
@@ -234,11 +234,11 @@ public abstract class Target {
 					}
 					// 将字段解析结果存入模型对象中
 					modelWithFields.put(field.getName(), fieldParsedResult.all().toArray(new Object[]{}));
+					// 新URl
 					if (field.isForNewTask()) {
-						final String httpMethod = field.getProperties().getString("httpMethod", K.HTTP_GET);
 						fieldParsedResult.all().forEach(val -> {
 							final String newUrl = (String)val;
-							urlsForNewTask.add(new String[]{httpMethod, newUrl});
+							urlsForNewTask.add(newUrl);
 						});
 					}
 				});
@@ -275,8 +275,8 @@ public abstract class Target {
 			return field;
 		}
 		
-		public void setResponse(Downloader.Response response) {
-			this.parser.setResponse(response);
+		public void setTask(ParseTask task) {
+			this.parser.setTask(task);
 		}
 		
 		public static class Field {

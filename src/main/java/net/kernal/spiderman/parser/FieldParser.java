@@ -5,6 +5,7 @@ import javax.script.ScriptEngine;
 public abstract class FieldParser implements Parser {
 
 	protected ScriptEngine scriptEngine;
+	protected JavaInvoker javaInvoker;
 	protected ModelParser modelParser;
 	protected ParsedResult prevParsedResult;
 	protected boolean isSerialize;
@@ -24,5 +25,8 @@ public abstract class FieldParser implements Parser {
 	}
 	public void setScriptEngine(ScriptEngine scriptEngine) {
 		this.scriptEngine = scriptEngine;
+	}
+	public void setJavaInvoker(JavaInvoker invoker) {
+		this.javaInvoker = invoker;
 	}
 }

@@ -1,10 +1,12 @@
 package spiderman;
 
+import net.kernal.spiderman.Context;
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Properties;
 import net.kernal.spiderman.Spiderman;
 import net.kernal.spiderman.conf.Conf;
 import net.kernal.spiderman.conf.DefaultConfBuilder;
+import net.kernal.spiderman.conf.Functions;
 import net.kernal.spiderman.conf.Seeds;
 import net.kernal.spiderman.conf.Target;
 import net.kernal.spiderman.conf.Targets;
@@ -21,6 +23,9 @@ public class TestDefault {
 	public static void main(String[] args) throws InterruptedException {
 		//Conf conf = new BaiduSearchConfBuilder().build();// 复杂的例子
 		Conf conf = new DefaultConfBuilder() {
+			public void registerFunction(Functions functions) {
+				// 添加自定义函数
+			}
 			public void addSeed(Seeds seeds) {
 				// 添加种子
 				seeds.add("http://www.baidu.com/s?wd="+K.urlEncode("\"蜘蛛侠\""));
@@ -77,7 +82,7 @@ public class TestDefault {
 		}.build();
 		
 		// 开始抓取
-		new Spiderman(conf).go();
+		new Spiderman(new Context(conf)).go();
 	}
 	
 }

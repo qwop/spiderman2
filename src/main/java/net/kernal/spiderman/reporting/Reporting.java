@@ -1,6 +1,6 @@
 package net.kernal.spiderman.reporting;
 
-import net.kernal.spiderman.Spiderman;
+import net.kernal.spiderman.Counter;
 import net.kernal.spiderman.downloader.Downloader;
 import net.kernal.spiderman.parser.Parser;
 import net.kernal.spiderman.task.Task;
@@ -14,14 +14,14 @@ public interface Reporting {
 
 	public void reportStart();
 	
-	public void reportDuplicateCheck(final String key, final boolean checkResult, final Downloader.Request request);
+	public void reportDuplicate(final String key, final Downloader.Request request);
 	
 	public void reportDownload(final Downloader.Response response);
 	
 	public void reportNewTask(final Task newTask);
 	
-	public void reportParsedResult(final Parser.ParsedResult parsedResult);
+	public void reportParsedResult(final Task task, final Parser.ParsedResult parsedResult);
 	
-	public void reportStop(Spiderman.Counter counter);
+	public void reportStop(Counter counter);
 	
 }

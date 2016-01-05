@@ -10,23 +10,26 @@ import net.kernal.spiderman.downloader.Downloader;
 public class DownloadTask extends Task {
 	
 	private static final long serialVersionUID = 945890606939291092L;
-
+	private Object uniqueKey;
+	
 	/**
 	 * 构造器
 	 * @param request 请求对象
+	 * @param uniqueKey 唯一键
 	 * @param priority 优先级数字，值越小将会更优先被处理
 	 */
-	public DownloadTask(Downloader.Request request, int priority) {
-		super(request, priority);
+	public DownloadTask(Downloader.Request seed, Downloader.Request request, Object uniqueKey, int priority) {
+		super(seed, request, priority);
 		this.request = request;
+		this.uniqueKey = uniqueKey;
+	}
+	
+	public DownloadTask(Downloader.Request seed, Downloader.Request request, int priority) {
+		this(seed, request, null, priority);
 	}
 	
 	public String getType() {
 		return "download";
-	}
-	
-	public boolean isMatchedTarget() {
-		return true;
 	}
 	
 	/**
@@ -59,6 +62,9 @@ public class DownloadTask extends Task {
 	}
 	public void setDepth(int depth) {
 		this.depth = depth;
+	}
+	public Object getUniqueKey() {
+		return this.uniqueKey;
 	}
 
 	@Override

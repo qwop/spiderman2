@@ -2,23 +2,17 @@
 <spiderman>
     <!-- 引入脚本文件 -->
     <script src="src/main/resources/parser.js" />
-	<target name="列表分页URL">
-		<rule type="regex"><![CDATA[(?=http://www\.baidu\.com/s\?wd\=).[^&;]*]]></rule>
+	<target name="DigUrl">
+		<rule type="regex"><![CDATA[(?=http://www\.baidu\.com/s\?wd\=).[^&;]*(&pn\=\d+)?]]></rule>
 		<model>
-			<field name="pager_url" isForNewTask="1"> 
+			<field name="分页URL" isForNewTask="1"> 
 				<parser xpath="//div[@id='page']//a[@href]" attribute="href" />
 				<!-- 这里的addPrefix方法是在上面引入的JS文件里定义的 -->
 				<parser script="addPrefix('http://www.baidu.com')" />
-				<!-- 也可以直接执行JS脚本，不调用函数 
-				<parser script="'http://www.baidu.com'+$this" />
-				-->
+				<!-- 调用函数 -->
+				<parser script="$Java.invoke('cleanPageUrl', $this)" />
 			</field>
-		</model>
-	</target>
-	<target name="详情页URL">
-		<rule type="start">http://www.baidu.com/s?wd=</rule>
-		<model>
-			<field name="detail_url" isForNewTask="1"> 
+			<field name="详情URl" isForNewTask="1"> 
 				<parser xpath="//div[@id='content_left']//div[@class='result c-container ']//h3//a[@href]" attribute="href" />
 			</field>
 		</model>

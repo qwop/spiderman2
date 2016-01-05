@@ -1,24 +1,7 @@
 package net.kernal.spiderman.conf;
 
-import java.io.File;
-import java.math.BigDecimal;
-
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-
-import org.zbus.broker.Broker;
-import org.zbus.broker.BrokerConfig;
-import org.zbus.broker.SingleBroker;
-import org.zbus.mq.MqConfig;
-
-import net.kernal.spiderman.K;
 import net.kernal.spiderman.Properties;
-import net.kernal.spiderman.downloader.DefaultDownloader;
-import net.kernal.spiderman.queue.DefaultTaskQueue;
-import net.kernal.spiderman.queue.TaskQueue;
-import net.kernal.spiderman.queue.ZBusTaskQueue;
 import net.kernal.spiderman.reporting.ConsoleReporting;
-import net.kernal.spiderman.store.MapDb;
 
 /**
  * 默认的配置构建器
@@ -32,6 +15,15 @@ public abstract class DefaultConfBuilder implements Conf.Builder {
 		super();
 		conf = new Conf();
 	}
+	
+	/**
+	 * 留给客户端去注册自定义函数，可以直接在script脚本中调用
+	 * @param functionName
+	 * @param function
+	 * @return
+	 */
+	public abstract void registerFunction(Functions functions);
+	
 	/**
 	 * 留给客户端程序去添加属性
 	 * @param properties
@@ -53,66 +45,7 @@ public abstract class DefaultConfBuilder implements Conf.Builder {
 	 */
 	public Conf build() {
 		this.addProperty(conf.getProperties());
-		boolean zbusEnabled = conf.getProperties().getBoolean("zbus.enabled", false);
-		if (zbusEnabled) {
-			//开启分布式支持
-			final String zbusServerAddress = conf.getProperties().getString("zbus.serverAddress");
-			if (K.isBlank(zbusServerAddress)) {
-				throw new RuntimeException("缺少参数zbus.serverAddress");
-			}
-			final String dcn = conf.getProperties().getString("zbus.duplicateCheckQueueName", "spiderman_duplicate_check_task");
-			if (K.isBlank(dcn)) {
-				throw new RuntimeException("缺少参数zbus.duplicateCheckQueueName");
-			}
-			final String dqn = conf.getProperties().getString("zbus.downloadTaskQueueName", "spiderman_download_task");
-			if (K.isBlank(dqn)) {
-				throw new RuntimeException("缺少参数zbus.downloadTaskQueueName");
-			}
-			final String pqn = conf.getProperties().getString("zbus.parseTaskQueueName", "spiderman_parse_task");
-			if (K.isBlank(pqn)) {
-				throw new RuntimeException("缺少参数zbus.parseTaskQueueName");
-			}
-			final String rqn = conf.getProperties().getString("zbus.resultQueueName", "spiderman_result_task");
-			if (K.isBlank(rqn)) {
-				throw new RuntimeException("缺少参数zbus.resultQueueName");
-			}
-		    BrokerConfig brokerConfig = new BrokerConfig();
-		    brokerConfig.setServerAddress(zbusServerAddress);
-		    Broker broker = null;
-		    try {
-		    	broker = new SingleBroker(brokerConfig);
-		    	conf.setZbusBroker(broker);
-		    } catch (Throwable e) {
-		    	throw new RuntimeException(e);
-		    }
-		    
-		    conf.setDuplicateCheckQueue(buildQueue(broker, dcn));
-			conf.setPrimaryDownloadTaskQueue(buildQueue(broker, dqn+"_primary"));
-			conf.setSecondaryDownloadTaskQueue(buildQueue(broker, dqn+"_secondary"));
-		    conf.setPrimaryParseTaskQueue(buildQueue(broker, pqn+"_primary"));
-		    conf.setSecondaryParseTaskQueue(buildQueue(broker, pqn+"_secondary"));
-		    conf.setResultTaskQueue(buildQueue(broker, rqn));
-		} else {
-			conf.setDuplicateCheckQueue(new DefaultTaskQueue());
-		    conf.setPrimaryDownloadTaskQueue(new DefaultTaskQueue());
-			conf.setSecondaryDownloadTaskQueue(new DefaultTaskQueue());
-		    conf.setPrimaryParseTaskQueue(new DefaultTaskQueue());
-		    conf.setSecondaryParseTaskQueue(new DefaultTaskQueue());
-		    conf.setResultTaskQueue(new DefaultTaskQueue());
-		}
-		
-		conf.setDownloader(new DefaultDownloader(conf.getProperties()))
-		    .addReporting(new ConsoleReporting());
-		
-		final String file = conf.getProperties().getString("mapdb.file");
-		if (K.isBlank(file)) {
-			throw new RuntimeException("缺少参数mapdb");
-		}
-		conf.setDb(new MapDb(new File(file)));
-		
-		final String engineName = conf.getProperties().getString("scriptEngine", "nashorn");
-		final ScriptEngine scriptEngine = new ScriptEngineManager().getEngineByName(engineName);
-		this.conf.setScriptEngine(scriptEngine);
+		conf.addReporting(new ConsoleReporting());
 		
 		this.addSeed(conf.getSeeds());
 		this.addTarget(conf.getTargets());
@@ -120,16 +53,8 @@ public abstract class DefaultConfBuilder implements Conf.Builder {
 			target.configModel(target.getModel());
 			target.configRules(target.getRules());
 		}
+		
 		return conf;
 	}
 
-	private TaskQueue buildQueue(Broker broker, String mq) {
-		MqConfig cfg = new MqConfig(); 
-	    cfg.setBroker(broker);
-	    cfg.setMq(mq);
-	    String timeout = conf.getProperties().getString("zbus.timeout", "10s");
-	    BigDecimal b = new BigDecimal(K.convertToSeconds(timeout).doubleValue()*1000L);
-	    return new ZBusTaskQueue(cfg, b.intValue());
-	}
-	
 }

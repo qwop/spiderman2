@@ -33,6 +33,11 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 		}
 	}
 	
+	public XMLConfBuilder registerFunction(String funcName, TransformParser function) {
+		this.conf.registerFunction(funcName, function);
+		return this;
+	}
+	
 	public XMLConfBuilder addReporting(Reporting reporting) {
 		this.conf.addReporting(reporting);
 		return this;
@@ -112,12 +117,24 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 			m2.addField("parser").addParser(new XMLParser.FieldPaser(".", "parser"));
 			Properties targetCfg = (Properties)m2.parse().first();
 			String targetName = targetCfg.getString("name");
+			if (K.isBlank(targetName)) {
+				throw new RuntimeException("Target.name required");
+			}
+			
 			//System.out.println("taretName: "+targetName);
-			final Target target = new Target(targetName){
-				public void configRules(Rules rules) {}
-				public void configModel(Model model) {}
+			Target target = null;
+			for (Target tg : conf.getTargets().all()) {
+				if (targetName.equals(tg.getName())) {
+					target = tg;
+				}
 			};
-			conf.getTargets().add(target);
+			if (target == null) {
+				target = new Target(targetName){
+					public void configRules(Rules rules) {}
+					public void configModel(Model model) {}
+				};
+				conf.getTargets().add(target);
+			}
 			
 			Target.Model m3 = new Target.Model();
 			m3.addParser(new XMLParser(".//rule", rootParser).setPrevParsedResult(pr1));
@@ -228,6 +245,7 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 		return conf;
 	}
 
+	public void registerFunction(Functions functions){}
 	public void addProperty(Properties properties) {}
 	public void addSeed(Seeds seeds) {}
 	public void addTarget(Targets targets) {}

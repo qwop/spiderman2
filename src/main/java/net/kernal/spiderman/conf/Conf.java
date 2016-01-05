@@ -1,15 +1,10 @@
 package net.kernal.spiderman.conf;
 
-import javax.script.ScriptEngine;
-
-import org.zbus.broker.Broker;
-
 import net.kernal.spiderman.Properties;
 import net.kernal.spiderman.downloader.Downloader;
-import net.kernal.spiderman.queue.TaskQueue;
+import net.kernal.spiderman.parser.TransformParser;
 import net.kernal.spiderman.reporting.Reporting;
 import net.kernal.spiderman.reporting.Reportings;
-import net.kernal.spiderman.store.KVDb;
 
 public class Conf {
 	
@@ -18,71 +13,15 @@ public class Conf {
 		targets = new Targets();
 		properties = new Properties();
 		reportings = new Reportings();
+		functions = new Functions();
 	}
 	
 	private Seeds seeds;
 	private Targets targets;
 	private Properties properties;
-	private Downloader downloader;
 	private Reportings reportings;
-	private KVDb db;
-	// 重复校验队列
-	private TaskQueue duplicateCheckQueue;
-	// 下载(主)队列
-	private TaskQueue primaryDownloadTaskQueue;
-	// 下载(次)队列
-	private TaskQueue secondaryDownloadTaskQueue;
-	// 解析(主)队列
-	private TaskQueue primaryParseTaskQueue;
-	// 解析(次)队列
-	private TaskQueue secondaryParseTaskQueue;
-	// 结果队列
-	private TaskQueue resultTaskQueue;
-	private ScriptEngine scriptEngine;
-	private Broker zbusBroker;
+	private Functions functions;
 	
-	public TaskQueue getDuplicateCheckQueue() {
-		return this.duplicateCheckQueue;
-	}
-	public Conf setDuplicateCheckQueue(TaskQueue duplicateCheckQueue) {
-		this.duplicateCheckQueue = duplicateCheckQueue;
-		return this;
-	}
-	public TaskQueue getPrimaryDownloadTaskQueue() {
-		return primaryDownloadTaskQueue;
-	}
-	public Conf setPrimaryDownloadTaskQueue(TaskQueue primaryDownloadTaskQueue) {
-		this.primaryDownloadTaskQueue = primaryDownloadTaskQueue;
-		return this;
-	}
-	public TaskQueue getSecondaryDownloadTaskQueue() {
-		return secondaryDownloadTaskQueue;
-	}
-	public Conf setSecondaryDownloadTaskQueue(TaskQueue secondaryDownloadTaskQueue) {
-		this.secondaryDownloadTaskQueue = secondaryDownloadTaskQueue;
-		return this;
-	}
-	public TaskQueue getPrimaryParseTaskQueue() {
-		return primaryParseTaskQueue;
-	}
-	public Conf setPrimaryParseTaskQueue(TaskQueue primaryParseTaskQueue) {
-		this.primaryParseTaskQueue = primaryParseTaskQueue;
-		return this;
-	}
-	public TaskQueue getSecondaryParseTaskQueue() {
-		return secondaryParseTaskQueue;
-	}
-	public Conf setSecondaryParseTaskQueue(TaskQueue secondaryParseTaskQueue) {
-		this.secondaryParseTaskQueue = secondaryParseTaskQueue;
-		return this;
-	}
-	public Conf setResultTaskQueue(TaskQueue resultTaskQueue) {
-		this.resultTaskQueue = resultTaskQueue;
-		return this;
-	}
-	public TaskQueue getResultTaskQueue() {
-		return this.resultTaskQueue;
-	}
 	public static interface Builder {
 		public Conf build() throws Exception;
 	}
@@ -107,20 +46,13 @@ public class Conf {
 		this.properties.put(property, value);
 		return this;
 	}
-	public Conf setDownloader(Downloader downloader) {
-		this.downloader = downloader;
+	public Conf registerFunction(String functionName, TransformParser function) {
+		this.functions.register(functionName, function);
 		return this;
 	}
 	public Conf addReporting(Reporting reporting) {
 		this.reportings.add(reporting);
 		return this;
-	}
-	public Conf setScriptEngine(ScriptEngine scriptEngine) {
-		this.scriptEngine = scriptEngine;
-		return this;
-	}
-	public ScriptEngine getScriptEngine() {
-		return this.scriptEngine;
 	}
 	public Seeds getSeeds() {
 		return seeds;
@@ -131,25 +63,11 @@ public class Conf {
 	public Properties getProperties() {
 		return properties;
 	}
-	public Downloader getDownloader() {
-		return downloader;
-	}
 	public Reportings getReportings() {
 		return reportings;
 	}
-	public Conf setZbusBroker(Broker broker) {
-		this.zbusBroker = broker;
-		return this;
-	}
-	public Broker getZbusBroker() {
-		return this.zbusBroker;
-	}
-	public Conf setDb(KVDb db) {
-		this.db = db;
-		return this;
-	}
-	public KVDb getDb() {
-		return this.db;
+	public Functions getFunctions() {
+		return this.functions;
 	}
 	
 }

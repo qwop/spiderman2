@@ -2,12 +2,16 @@ package spiderman;
 
 import java.io.File;
 
+import net.kernal.spiderman.Context;
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Spiderman;
 import net.kernal.spiderman.conf.Conf;
 import net.kernal.spiderman.conf.Target;
 import net.kernal.spiderman.conf.XMLConfBuilder;
+import net.kernal.spiderman.downloader.Downloader;
 import net.kernal.spiderman.parser.TextParser;
+import net.kernal.spiderman.parser.TransformParser;
+import net.kernal.spiderman.task.Task;
 
 public class TestXML {
 
@@ -16,9 +20,26 @@ public class TestXML {
 	 * 还可以在代码里添加种子，添加目标，添加属性等等来跟XML文件的配置进行合并。
 	 */
 	public static void main(String[] args) {
+//		final String input = "http://www.baidu.com/s?wd=%22%E8%9C%98%E8%9B%9B%E4%BE%A0%22&pn=111&xxxx=sdf";
+//		System.out.println(K.findOneByRegex(input, "&pn\\=\\d+"));
+//		if (true) {
+//			return;
+//		}
 		Conf conf = 
 			new XMLConfBuilder(new File("src/main/resources/baidu-search.xml"))//XML配置构建器
 			.addSeed("http://www.baidu.com/s?wd="+K.urlEncode("\"蜘蛛侠\""))//种子
+			.registerFunction("cleanPageUrl", new TransformParser() {//自定义函数,可在脚本调用
+				public Object transform(Object url) {
+					// 清理URL,去掉一些杂质,只保留关键词和分页参数，这样就不会重复了
+					final String pn = K.findOneByRegex((String)url, "&pn\\=\\d+");
+					if (K.isBlank(pn)) {
+						return url;
+					}
+					final Task task = this.modelParser.getTask();
+					final Downloader.Request seed = task.getSeed() == null ? task.getRequest() : task.getSeed();
+					return seed.getUrl()+pn;
+				}
+			})
 			.addTarget(new Target("网页内容"){//目标
 				public void configRules(Rules rules) {
 					rules.setPriority(1).addNotContainsRule("baidu");//目标URL规则
@@ -29,10 +50,10 @@ public class TestXML {
 			})
 			.set("debug", false)
 			.set("mapdb.file", "src/main/resources/mapdb")
-			.set("zbus.enabled", true)//是否开启分布式支持
+			.set("mapdb.deleteFilesAfterClose", true)
+			.set("zbus.enabled", false)//是否开启分布式支持
 			.set("zbus.serverAddress", "10.8.60.8:15555")//zbus服务器地址
 //			.set("duration", "10s")//持续时间
-			.set("duplicateChecker.threadSize", 10)//重复校验线程数量
 			.set("downloader.primary.threadSize", 1)//下载(主)线程数量
 			.set("downloader.secondary.threadSize", 1)//下载(次)线程数量
 			.set("parser.primary.threadSize", 1)//解析(主)线程数量
@@ -41,7 +62,7 @@ public class TestXML {
 			.set("parsedLimit", 200)//解析网页数量上限，达到后将会自动结束行动
 			.build();
 		
-		new Spiderman(conf).go();//别忘记看控制台信息哦，结束之后会有统计信息的,查看关键词"[结束]"(去掉双引号来查找)
+		new Spiderman(new Context(conf)).go();//别忘记看控制台信息哦，结束之后会有统计信息的,查看关键词"[结束]"(去掉双引号来查找)
 	}
 	
 }

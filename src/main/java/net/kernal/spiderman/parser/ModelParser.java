@@ -2,25 +2,29 @@ package net.kernal.spiderman.parser;
 
 import javax.script.ScriptEngine;
 
-import net.kernal.spiderman.downloader.Downloader;
+import net.kernal.spiderman.task.ParseTask;
 
 public abstract class ModelParser implements Parser {
 
+	protected ParseTask task;
 	protected ScriptEngine scriptEngine;
 	protected Parser.ParsedResult prevParsedResult;
 	protected ModelParser prevParser;
-	protected Downloader.Response response;
-	public ModelParser(Downloader.Response response) {
-		this.response = response;
+	public ModelParser(ParseTask task) {
+		this.task = task;
 	}
-	public ModelParser(Downloader.Response response, ModelParser prevParser) {
-		this.response = response;
+	public ModelParser(ParseTask task, ModelParser prevParser) {
+		this.task = task;
 		this.prevParser = prevParser;
 	}
-	public ModelParser setResponse(Downloader.Response response) {
-		this.response = response;
-		return this;
+	
+	public ModelParser setTask(ParseTask task) {
+		this.task = task;
+		return this.afterSetTask();
 	}
+	
+	public abstract ModelParser afterSetTask();
+	
 	public ModelParser setPrevParser(ModelParser prevParser) {
 		this.prevParser = prevParser;
 		return this;
@@ -29,8 +33,8 @@ public abstract class ModelParser implements Parser {
 		this.prevParsedResult = prevParsedResult;
 		return this;
 	}
-	public Downloader.Response getResponse() {
-		return this.response;
+	public ParseTask getTask() {
+		return this.task;
 	}
 	public void setScriptEngine(ScriptEngine scriptEngine) {
 		this.scriptEngine = scriptEngine;

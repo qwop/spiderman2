@@ -7,7 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import net.kernal.spiderman.K;
-import net.kernal.spiderman.downloader.Downloader.Response;
+import net.kernal.spiderman.task.ParseTask;
 
 /**
  * 网页正文内容解析器
@@ -24,18 +24,18 @@ public class TextParser extends ModelParser {
 	public TextParser() {
 		this(null);
 	}
-	public TextParser(Response response) {
-		super(response);
+	public TextParser(ParseTask task) {
+		super(task);
 	}
 
 	public ParsedResult parse() {
-		String html = response.getBodyStr();
+		String html = task.getResponse().getBodyStr();
 		Model model = new Model();
 		TextExtractor te = new TextExtractor();
 		te.extractHTML(html);
 		String title = te.getTitle();
 		String text = te.getText();
-		model.put("url", response.getRequest().getUrl());
+		model.put("url", task.getResponse().getRequest().getUrl());
 		model.put("title", K.trim(title));
 		model.put("text", K.trim(text));
 		model.put("html", html);
@@ -289,6 +289,10 @@ public class TextParser extends ModelParser {
 
 	    return text;
 	  }
+	}
+
+	public ModelParser afterSetTask() {
+		return this;
 	}
 
 }

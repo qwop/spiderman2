@@ -10,7 +10,7 @@ import java.util.List;
  */
 public abstract class TransformParser extends FieldParser {
 
-	private ParsedResult parsedResult;
+	protected ParsedResult parsedResult;
 	
 	public TransformParser() {}
 
@@ -20,7 +20,8 @@ public abstract class TransformParser extends FieldParser {
 			Object newValue = this.transform(oldValue);
 			newValues.add(newValue);
 		});
-		return ParsedResult.fromList(newValues);
+		this.parsedResult = ParsedResult.fromList(newValues);
+		return getParsedResult();
 	}
 	
 	public abstract Object transform(Object oldValue);

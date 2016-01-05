@@ -5,15 +5,20 @@ import java.io.File;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 
+import net.kernal.spiderman.conf.Conf;
+
 public class MapDb implements KVDb {
 	
 	private DB db;
 	
-	public MapDb(File file) {
-		this.db = DBMaker.newFileDB(file)
+	public MapDb(File file, Conf conf) {
+		DBMaker<?> maker = DBMaker.newFileDB(file)
 	               .closeOnJvmShutdown()
-	               .encryptionEnable("password")
-	               .make();
+	               .encryptionEnable("password");
+		if (conf.getProperties().getBoolean("mapdb.deleteFilesAfterClose", false)) {
+			maker.deleteFilesAfterClose();
+		}
+		this.db = maker.make();
 	}
 	
 	public boolean contains(String region, Object key) {
@@ -31,6 +36,7 @@ public class MapDb implements KVDb {
 	
 	public void close() {
 		this.db.close();
+		
 	}
 	
 }

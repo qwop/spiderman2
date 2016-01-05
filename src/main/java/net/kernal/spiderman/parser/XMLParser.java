@@ -20,7 +20,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import net.kernal.spiderman.K;
-import net.kernal.spiderman.downloader.Downloader;
+import net.kernal.spiderman.task.ParseTask;
 
 public class XMLParser extends ModelParser {
 
@@ -60,10 +60,10 @@ public class XMLParser extends ModelParser {
 		this.init(inputstream);
 	}
 	
-	public XMLParser(Downloader.Response response, String xpath) {
-		super(response);
+	public XMLParser(ParseTask task, String xpath) {
+		super(task);
 		this.xpath = xpath;
-		this.init(new ByteArrayInputStream(super.response.getBody()));
+		this.init(new ByteArrayInputStream(super.task.getResponse().getBody()));
 	}
 	
 	public String getXPath() {
@@ -221,6 +221,10 @@ public class XMLParser extends ModelParser {
 			
 			System.out.println("r3---->"+r3.all());
 		}
+	}
+	
+	public ModelParser afterSetTask() {
+		return this;
 	}
 	
 }

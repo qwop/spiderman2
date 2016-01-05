@@ -12,7 +12,6 @@ import org.htmlcleaner.TagNode;
 import org.htmlcleaner.XPatherException;
 
 import net.kernal.spiderman.K;
-import net.kernal.spiderman.downloader.Downloader;
 
 /**
  * 模型解析器，基于HtmlCleaner实现, 且具备XPath解析能力
@@ -38,8 +37,8 @@ public class HtmlCleanerParser extends ModelParser {
 		this.xpath = xpath;
 		this.init(html);
 	}
-	public ModelParser setResponse(Downloader.Response response) {
-		this.init(response.getBodyStr());
+	public ModelParser afterSetTask() {
+		this.init(task.getResponse().getBodyStr());
 		return this;
 	}
 	public String getXPath() {
@@ -117,7 +116,7 @@ public class HtmlCleanerParser extends ModelParser {
 						}
 						this.parsedResult =  new ParsedResult(tmpList.toArray(new Object[]{}));
 					} else if (super.isSerialize) {
-						final String charset = super.modelParser.getResponse().getCharset();
+						final String charset = super.modelParser.getTask().getResponse().getCharset();
 						HtmlCleaner cleaner = ((HtmlCleanerParser)super.modelParser).htmlCleaner;
 						StringWriter sw = new StringWriter();
 						CleanerProperties prop = cleaner.getProperties();

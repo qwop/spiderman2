@@ -3,8 +3,8 @@ package net.kernal.spiderman.reporting;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.kernal.spiderman.Counter;
 import net.kernal.spiderman.K;
-import net.kernal.spiderman.Spiderman;
 import net.kernal.spiderman.downloader.Downloader;
 import net.kernal.spiderman.downloader.Downloader.Request;
 import net.kernal.spiderman.parser.Parser;
@@ -46,15 +46,15 @@ public class Reportings implements Reporting{
 		});
 	}
 	
-	public void reportParsedResult(final Parser.ParsedResult parsedResult) {
+	public void reportParsedResult(final Task task, final Parser.ParsedResult parsedResult) {
 		K.foreach(this.reportings, new K.ForeachCallback<Reporting>() {
 			public void each(int i, Reporting item) {
-				item.reportParsedResult(parsedResult);
+				item.reportParsedResult(task, parsedResult);
 			}
 		});
 	}
 	
-	public void reportStop(final Spiderman.Counter counter) {
+	public void reportStop(final Counter counter) {
 		K.foreach(this.reportings, new K.ForeachCallback<Reporting>() {
 			public void each(int i, Reporting item) {
 				item.reportStop(counter);
@@ -62,9 +62,9 @@ public class Reportings implements Reporting{
 		});
 	}
 
-	public void reportDuplicateCheck(String key, boolean checkResult, Request request) {
+	public void reportDuplicate(String key, Request request) {
 		this.reportings.forEach(reporting -> {
-			reporting.reportDuplicateCheck(key, checkResult, request);
+			reporting.reportDuplicate(key, request);
 		});
 	}
 	

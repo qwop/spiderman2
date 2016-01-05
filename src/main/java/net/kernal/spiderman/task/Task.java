@@ -13,6 +13,7 @@ public abstract class Task implements Serializable {
 
 	private static final long serialVersionUID = 1858537902103806934L;
 
+	protected Downloader.Request seed;
 	protected Downloader.Request request;
 	
 	/**
@@ -20,13 +21,18 @@ public abstract class Task implements Serializable {
 	 */
 	protected int priority;
 	
-	public Task(Downloader.Request request, int priority) {
+	public Task(Downloader.Request seed, Downloader.Request request, int priority) {
+		this.seed = seed;
 		this.request = request;
 		this.priority = priority;
 	}
 	
 	public Downloader.Request getRequest() {
 		return this.request;
+	}
+	
+	public Downloader.Request getSeed() {
+		return this.seed;
 	}
 	
 	public int getPriority() {
