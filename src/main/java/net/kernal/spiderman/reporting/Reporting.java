@@ -2,7 +2,7 @@ package net.kernal.spiderman.reporting;
 
 import net.kernal.spiderman.Counter;
 import net.kernal.spiderman.downloader.Downloader;
-import net.kernal.spiderman.parser.Parser;
+import net.kernal.spiderman.task.ResultTask;
 import net.kernal.spiderman.task.Task;
 
 /**
@@ -20,7 +20,7 @@ public interface Reporting {
 	
 	public void reportNewTask(final Task newTask);
 	
-	public void reportParsedResult(final Task task, final Parser.ParsedResult parsedResult);
+	public void reportParsedResult(final ResultTask task);
 	
 	public void reportStop(Counter counter);
 	

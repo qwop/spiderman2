@@ -9,6 +9,7 @@ import net.kernal.spiderman.conf.Conf;
 import net.kernal.spiderman.downloader.DefaultDownloader;
 import net.kernal.spiderman.downloader.Downloader;
 import net.kernal.spiderman.parser.JavaInvoker;
+import net.kernal.spiderman.parser.TransformParser;
 import net.kernal.spiderman.queue.QueueManager;
 
 public class Context {
@@ -47,6 +48,12 @@ public class Context {
 			final JavaInvoker javaInvoker = new JavaInvoker(conf.getFunctions());
 			this.conf.getTargets().all().forEach((target) -> {
 				target.getModel().getFields().forEach((field) -> {
+					//加trim处理
+					field.addParser(new TransformParser() {
+						public Object transform(Object oldValue) {
+							return oldValue == null ? oldValue : oldValue instanceof String ? ((String)oldValue).trim() : oldValue;
+						}
+					});
 					field.getParsers().forEach((parser) -> {
 						parser.setScriptEngine(this.scriptEngine);
 						parser.setJavaInvoker(javaInvoker);

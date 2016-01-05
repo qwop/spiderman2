@@ -8,10 +8,12 @@ public class ResultTask extends Task {
 
 	private static final long serialVersionUID = -2038408835292733528L;
 	
+	private String target;
 	private ParsedResult parsedResult;
 
-	public ResultTask(Downloader.Request seed, ParsedResult parsedResult, Request request) {
+	public ResultTask(String target, Downloader.Request seed, ParsedResult parsedResult, Request request) {
 		super(seed, request, 0);
+		this.target = target;
 		this.parsedResult = parsedResult;
 	}
 	
@@ -23,4 +25,8 @@ public class ResultTask extends Task {
 		return "reporting";
 	}
 
+	public String getTarget() {
+		return this.target;
+	}
+	
 }

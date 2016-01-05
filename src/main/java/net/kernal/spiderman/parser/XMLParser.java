@@ -148,7 +148,8 @@ public class XMLParser extends ModelParser {
 			XMLParser mp = (XMLParser)super.modelParser;
 			XPath xpathObj = mp.getXPathObject();
 			Object inputSource = mp.getParsedResult().first();//FIXME 有问题！总是取第一个，不可以！
-			
+			String xpath = this.xpath;
+			final String attr = this.attr;
 			if (xpath.endsWith("/text()")) {
 				xpath = xpath.replace("/text()", "");
 				Object nodes = null;

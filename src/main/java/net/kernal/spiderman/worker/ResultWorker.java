@@ -13,7 +13,7 @@ public class ResultWorker extends Worker {
 	}
 
 	public void run() {
-		context.getConf().getReportings().reportParsedResult(task, task.getParsedResult());
+		context.getConf().getReportings().reportParsedResult(task);
 	}
 
 }

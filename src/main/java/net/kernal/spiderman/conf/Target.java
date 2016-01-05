@@ -58,15 +58,14 @@ public abstract class Target {
 	public abstract void configModel(Model model);
 	
 	public boolean matches(Downloader.Request request) {
-		boolean matched = true;
 		// FIXME 暂时使用and逻辑
 		for (Rule r : rules.rules) {
-			matched = r.matches(request);
-			if (!matched) {
-				return false;
+			if (r.matches(request)) {
+				return true;
 			}
 		}
-		return matched;
+		
+		return false;
 	}
 	
 	public List<Model.Field> getTheFieldsWhichForNewTask() {
@@ -233,10 +232,12 @@ public abstract class Target {
 						return;
 					}
 					// 将字段解析结果存入模型对象中
-					modelWithFields.put(field.getName(), fieldParsedResult.all().toArray(new Object[]{}));
+					List<Object> list = fieldParsedResult.all();
+					Object value = list.isEmpty() ? null : list.size() == 1 ? list.get(0) : list.toArray(new Object[]{});
+					modelWithFields.put(field.getName(), value);
 					// 新URl
 					if (field.isForNewTask()) {
-						fieldParsedResult.all().forEach(val -> {
+						list.forEach(val -> {
 							final String newUrl = (String)val;
 							urlsForNewTask.add(newUrl);
 						});

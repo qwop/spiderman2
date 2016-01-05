@@ -45,7 +45,7 @@ public abstract class DefaultConfBuilder implements Conf.Builder {
 	 */
 	public Conf build() {
 		this.addProperty(conf.getProperties());
-		conf.addReporting(new ConsoleReporting());
+		conf.addReporting(new ConsoleReporting(conf.getProperties().getBoolean("debug", true)));
 		
 		this.addSeed(conf.getSeeds());
 		this.addTarget(conf.getTargets());

@@ -39,7 +39,7 @@ public class ParseWorker extends Worker {
 				return;
 			}
 			// 将解析结果放入队列
-			this.context.getQueueManager().put(new ResultTask(seed, parsedResult, request));
+			this.context.getQueueManager().put(new ResultTask(target.getName(), seed, parsedResult, request));
 						
 			// 若字段配置为新任务来使用，则将它的解析结果(URL地址列表)作为新任务放入队列
 			if (K.isNotEmpty(parsedResult.getUrlsForNewTask())) {

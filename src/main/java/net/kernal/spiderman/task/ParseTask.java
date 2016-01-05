@@ -20,9 +20,8 @@ public class ParseTask extends Task {
 	public Downloader.Response getResponse() {
 		return this.response;
 	}
-
+	
 	public String getType() {
 		return "parse";
 	}
-	
 }

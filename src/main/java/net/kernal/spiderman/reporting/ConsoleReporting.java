@@ -9,7 +9,7 @@ import net.kernal.spiderman.Counter;
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.downloader.Downloader.Request;
 import net.kernal.spiderman.downloader.Downloader.Response;
-import net.kernal.spiderman.parser.Parser;
+import net.kernal.spiderman.task.ResultTask;
 import net.kernal.spiderman.task.Task;
 
 /**
@@ -20,7 +20,12 @@ import net.kernal.spiderman.task.Task;
  */
 public class ConsoleReporting implements Reporting {
 
+	private boolean debug;
 	private long startAt;
+	
+	public ConsoleReporting(boolean debug) {
+		this.debug = debug;
+	}
 	
 	public void reportStart() {
 		this.startAt = System.currentTimeMillis();
@@ -32,15 +37,21 @@ public class ConsoleReporting implements Reporting {
 		if (K.isNotBlank(response.getLocation())) {
 			sb.append("\r\n  redirect ").append(response.getLocation());
 		} 
-		System.out.println(sb.toString()+"\r\n");
+		if (debug) {
+			System.out.println(sb.toString()+"\r\n");
+		}
 	}
 
 	public void reportNewTask(Task newTask) {
-		System.out.println("[Spiderman][创建"+newTask.getType()+"任务]"+K.formatNow()+"\r\n  "+newTask.getRequest().getUrl()+"\r\n");
+		if (debug) {
+			System.out.println("[Spiderman][创建"+newTask.getType()+"任务]"+K.formatNow()+"\r\n  "+newTask.getRequest().getUrl()+"\r\n");
+		}
 	}
 
-	public void reportParsedResult(Task task, Parser.ParsedResult parsedResult) {
-		System.err.println("[Spiderman][解析结果]"+K.formatNow()+"\r\n  from: "+task.getRequest().getUrl()+"\r\n  "+JSON.toJSONString(parsedResult.first(), SerializerFeature.PrettyFormat)+"\r\n");
+	public void reportParsedResult(final ResultTask task) {
+		if (debug) {
+			System.err.println("[Spiderman][解析结果]"+K.formatNow()+" target:"+task.getTarget()+"\r\n  from: "+task.getRequest().getUrl()+"\r\n  "+JSON.toJSONString(task.getParsedResult().first(), SerializerFeature.PrettyFormat)+"\r\n");
+		}
 	}
 	
 	public void reportStop(Counter counter) {
@@ -57,8 +68,10 @@ public class ConsoleReporting implements Reporting {
 	}
 
 	public void reportDuplicate(String key, Request request) {
-		PrintStream ps = System.err;
-		ps.println("\r\n[Spiderman][重复URL]"+K.formatNow()+"\r\n  key:"+key+" \r\n  url:"+request.getUrl()+"\r\n");
+		if (debug) {
+			PrintStream ps = System.err;
+			ps.println("\r\n[Spiderman][重复URL]"+K.formatNow()+"\r\n  key:"+key+" \r\n  url:"+request.getUrl()+"\r\n");
+		}
 	}
 
 }

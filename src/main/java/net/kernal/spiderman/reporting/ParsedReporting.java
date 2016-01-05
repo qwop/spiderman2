@@ -4,7 +4,7 @@ import net.kernal.spiderman.Counter;
 import net.kernal.spiderman.downloader.Downloader;
 import net.kernal.spiderman.downloader.Downloader.Request;
 import net.kernal.spiderman.downloader.Downloader.Response;
-import net.kernal.spiderman.parser.Parser.ParsedResult;
+import net.kernal.spiderman.task.ResultTask;
 import net.kernal.spiderman.task.Task;
 
 public abstract class ParsedReporting implements Reporting {
@@ -21,7 +21,7 @@ public abstract class ParsedReporting implements Reporting {
 	public void reportNewTask(Task newTask) {
 	}
 
-	public abstract void reportParsedResult(Task task, ParsedResult parsedResult);
+	public abstract void reportParsedResult(ResultTask task);
 
 	public void reportStop(Counter counter) {
 	}

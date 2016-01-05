@@ -83,6 +83,8 @@ public class HtmlCleanerParser extends ModelParser {
 		
 		public ParsedResult parse() {
 			TagNode prevParsedResult = (TagNode)this.prevParsedResult.first();
+			String xpath = this.xpath;
+			final String attr = this.attr;
 			if (xpath.endsWith("/text()")) {
 				xpath = xpath.replace("/text()", "");
 				Object[] nodes = null;
@@ -95,7 +97,8 @@ public class HtmlCleanerParser extends ModelParser {
 				
 				List<String> tmpList = new ArrayList<String>();
 				for (Object node : nodes){
-					String nodeValue = node.toString();
+					TagNode tagNode = (TagNode)node;
+					String nodeValue = tagNode.getText().toString();
 					tmpList.add(nodeValue);
 				}
 				this.parsedResult = new ParsedResult(tmpList.toArray(new Object[]{}));
@@ -151,13 +154,12 @@ public class HtmlCleanerParser extends ModelParser {
 	
 	public static void main(String[] args) throws XPatherException {
 		String html = "<html><title>Hello</title><targets><target name='vivi' /><target name='linda' /></targets></html>";
-		String xpath = "//target";
+		String xpath = null;
 		Parser p1 = new HtmlCleanerParser(html, xpath);
 		final ParsedResult r = p1.parse();
-		System.out.println(r.all());
 		K.foreach(r.all(), new K.ForeachCallback<Object>(){
 			public void each(int i, Object item) {
-				FieldParser p2 = new HtmlCleanerParser.FieldPaser(".", "name");
+				FieldParser p2 = new HtmlCleanerParser.FieldPaser("//title/text()");
 				p2.setPrevParserResult(new ParsedResult(item));
 				
 				ParsedResult r2 = p2.parse();
