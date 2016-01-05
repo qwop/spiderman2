@@ -64,7 +64,7 @@ public class Spiderman {
 		// 将种子添加到队列里
 		this.context.getConf().getSeeds().all().forEach((seed) -> {
 			this.context.getQueueManager().put(seed, 0);
-		});
+		}); 
 		// 状态报告: 行动开始了
 		this.context.getConf().getReportings().reportStart();
 		// 让包工头们开始工作了

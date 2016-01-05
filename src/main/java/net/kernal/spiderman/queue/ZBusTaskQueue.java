@@ -5,6 +5,7 @@ import java.io.IOException;
 import org.zbus.mq.Consumer;
 import org.zbus.mq.MqConfig;
 import org.zbus.mq.Producer;
+import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.http.Message;
 
 import net.kernal.spiderman.K;
@@ -50,7 +51,11 @@ public class ZBusTaskQueue implements TaskQueue {
 		msg.setHead("key", task.getRequest().getUrl());
 		msg.setBody(data);
 		try {
-			producer.sendAsync(msg);
+			producer.invokeAsync(msg, new ResultCallback<Message>() {
+				public void onReturn(Message result) {
+					// ignore
+				}
+			});
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

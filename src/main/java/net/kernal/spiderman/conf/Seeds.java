@@ -6,21 +6,23 @@ import java.util.List;
 import net.kernal.spiderman.downloader.Downloader;
 
 public class Seeds {
-		private List<Downloader.Request> requests;
+	
+		private List<Seed> seeds;
+		
 		public Seeds() {
-			this.requests = new ArrayList<Downloader.Request>();
+			this.seeds = new ArrayList<Seed>();
 		}
-		public List<Downloader.Request> all() {
-			return this.getAll();
-		}
-		public List<Downloader.Request> getAll(){
-			return this.requests;
+		public List<Seed> all() {
+			return this.seeds;
 		}
 		public boolean isEmpty() {
-			return this.requests.isEmpty();
+			return this.seeds.isEmpty();
 		}
 		public Seeds add(Downloader.Request request) {
-			this.requests.add(request);
+			return add(new Seed(null, request));
+		}
+		public Seeds add(Seed seed) {
+			this.seeds.add(seed);
 			return this;
 		}
 		public Seeds add(String url) {

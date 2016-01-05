@@ -2,6 +2,7 @@ package net.kernal.spiderman.worker;
 
 import net.kernal.spiderman.Context;
 import net.kernal.spiderman.K;
+import net.kernal.spiderman.conf.Seed;
 import net.kernal.spiderman.downloader.Downloader;
 import net.kernal.spiderman.task.DownloadTask;
 import net.kernal.spiderman.task.ParseTask;
@@ -23,7 +24,7 @@ public class DownloadWorker extends Worker {
 	public void run() {
 		// 从任务包里拿到请求对象
 		final Downloader.Request request = this.task.getRequest();
-		final Downloader.Request seed = this.task.getSeed() == null ? request : this.task.getSeed();
+		final Seed seed = this.task.getSeed();
 		// 将请求丢给下载器进行下载
 		final Downloader.Response response = this.context.getDownloader().download(request);
 		if (response == null) {

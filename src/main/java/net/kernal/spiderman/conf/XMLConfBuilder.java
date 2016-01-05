@@ -8,6 +8,7 @@ import java.util.List;
 
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Properties;
+import net.kernal.spiderman.downloader.Downloader;
 import net.kernal.spiderman.parser.HtmlCleanerParser;
 import net.kernal.spiderman.parser.ModelParser;
 import net.kernal.spiderman.parser.Parser;
@@ -45,6 +46,11 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 	
 	public XMLConfBuilder addSeed(String url) {
 		this.conf.getSeeds().add(url);
+		return this;
+	}
+	
+	public XMLConfBuilder addSeed(String name, String url) {
+		this.conf.getSeeds().add(new Seed(name, new Downloader.Request(url)));
 		return this;
 	}
 	
@@ -94,15 +100,19 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 				Parser.ParsedResult pr = new Parser.ParsedResult(sd);
 				Target.Model m = new Target.Model();
 				m.addParser(new XMLParser(rootParser).setPrevParsedResult(pr));
+				m.addField("name").addParser(new XMLParser.FieldPaser(".", "name"));
 				m.addField("url").addParser(new XMLParser.FieldPaser(".", "url"));
 				m.addField("text").addParser(new XMLParser.FieldPaser("./text()"));
 				Properties seed = (Properties)m.parse().first();
+				String seedName = seed.getString("name");
 				String seedUrl = seed.getString("url");
 				if (K.isBlank(seedUrl)) {
 					seedUrl = seed.getString("text");
 				}
 				//System.out.println("seed: "+seedUrl);
-				conf.addSeed(K.urlEncode(seedUrl));
+				String url = K.urlEncode(seedUrl);
+				Seed s = new Seed(seedName, new Downloader.Request(url));
+				conf.addSeed(s);
 			});
 		}
 		

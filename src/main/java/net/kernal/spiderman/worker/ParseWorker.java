@@ -4,6 +4,7 @@ import java.util.List;
 
 import net.kernal.spiderman.Context;
 import net.kernal.spiderman.K;
+import net.kernal.spiderman.conf.Seed;
 import net.kernal.spiderman.conf.Target;
 import net.kernal.spiderman.downloader.Downloader;
 import net.kernal.spiderman.parser.Parser.ParsedResult;
@@ -29,7 +30,7 @@ public class ParseWorker extends Worker {
 	public void run() {
 		final Downloader.Response response = task.getResponse();
 		final Downloader.Request request = response.getRequest();
-		final Downloader.Request seed = task.getSeed() == null ? request : task.getSeed();
+		final Seed seed = task.getSeed();
 		// 匹配目标
 		final List<Target> matchedTargets = super.matchingTargets(request);
 		// 解析目标

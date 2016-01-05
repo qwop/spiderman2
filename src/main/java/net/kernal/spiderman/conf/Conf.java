@@ -26,12 +26,8 @@ public class Conf {
 		public Conf build() throws Exception;
 	}
 	
-	public Conf addSeed(String url) {
-		seeds.add(new Downloader.Request(url));
-		return this;
-	}
-	public Conf addSeed(String url, String httpMethod) {
-		seeds.add(new Downloader.Request(url, httpMethod));
+	public Conf addSeed(Seed seed) {
+		seeds.add(seed);
 		return this;
 	}
 	public Conf addSeed(Downloader.Request request) {

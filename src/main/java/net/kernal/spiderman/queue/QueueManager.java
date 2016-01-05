@@ -11,8 +11,8 @@ import org.zbus.mq.MqConfig;
 import net.kernal.spiderman.Counter;
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.conf.Conf;
+import net.kernal.spiderman.conf.Seed;
 import net.kernal.spiderman.conf.Targets;
-import net.kernal.spiderman.downloader.Downloader;
 import net.kernal.spiderman.reporting.Reportings;
 import net.kernal.spiderman.store.KVDb;
 import net.kernal.spiderman.store.MapDb;
@@ -106,8 +106,8 @@ public class QueueManager {
 	    return new ZBusTaskQueue(cfg, b.intValue());
 	}
 	
-	public void put(final Downloader.Request seed, int priority) {
-		this.put(new DownloadTask(null, seed, priority));
+	public void put(final Seed seed, int priority) {
+		this.put(new DownloadTask(null, seed.getRequest(), priority));
 	}
 	
 	public void put(final Task task) {

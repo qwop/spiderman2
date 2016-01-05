@@ -1,5 +1,6 @@
 package net.kernal.spiderman.task;
 
+import net.kernal.spiderman.conf.Seed;
 import net.kernal.spiderman.downloader.Downloader;
 
 /**
@@ -18,13 +19,13 @@ public class DownloadTask extends Task {
 	 * @param uniqueKey 唯一键
 	 * @param priority 优先级数字，值越小将会更优先被处理
 	 */
-	public DownloadTask(Downloader.Request seed, Downloader.Request request, Object uniqueKey, int priority) {
+	public DownloadTask(Seed seed, Downloader.Request request, Object uniqueKey, int priority) {
 		super(seed, request, priority);
 		this.request = request;
 		this.uniqueKey = uniqueKey;
 	}
 	
-	public DownloadTask(Downloader.Request seed, Downloader.Request request, int priority) {
+	public DownloadTask(Seed seed, Downloader.Request request, int priority) {
 		this(seed, request, null, priority);
 	}
 	

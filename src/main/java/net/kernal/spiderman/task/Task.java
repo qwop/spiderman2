@@ -2,6 +2,7 @@ package net.kernal.spiderman.task;
 
 import java.io.Serializable;
 
+import net.kernal.spiderman.conf.Seed;
 import net.kernal.spiderman.downloader.Downloader;
 
 /**
@@ -13,7 +14,7 @@ public abstract class Task implements Serializable {
 
 	private static final long serialVersionUID = 1858537902103806934L;
 
-	protected Downloader.Request seed;
+	protected Seed seed;
 	protected Downloader.Request request;
 	
 	/**
@@ -21,7 +22,7 @@ public abstract class Task implements Serializable {
 	 */
 	protected int priority;
 	
-	public Task(Downloader.Request seed, Downloader.Request request, int priority) {
+	public Task(Seed seed, Downloader.Request request, int priority) {
 		this.seed = seed;
 		this.request = request;
 		this.priority = priority;
@@ -31,7 +32,7 @@ public abstract class Task implements Serializable {
 		return this.request;
 	}
 	
-	public Downloader.Request getSeed() {
+	public Seed getSeed() {
 		return this.seed;
 	}
 	

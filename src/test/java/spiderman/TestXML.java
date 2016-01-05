@@ -6,9 +6,9 @@ import net.kernal.spiderman.Context;
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Spiderman;
 import net.kernal.spiderman.conf.Conf;
+import net.kernal.spiderman.conf.Seed;
 import net.kernal.spiderman.conf.Target;
 import net.kernal.spiderman.conf.XMLConfBuilder;
-import net.kernal.spiderman.downloader.Downloader;
 import net.kernal.spiderman.parser.TextParser;
 import net.kernal.spiderman.parser.TransformParser;
 import net.kernal.spiderman.task.Task;
@@ -25,21 +25,21 @@ public class TestXML {
 			if (line.startsWith("#")) {
 				return;
 			}
-			builder.addSeed("http://www.baidu.com/s?wd="+K.urlEncode("\""+line+"\""));//百度网页搜索种子
-			builder.addSeed("http://news.baidu.com/ns?word="+K.urlEncode("\""+line+"\""));//百度新闻搜索种子
-			builder.addSeed("http://zhidao.baidu.com/search?word="+K.urlEncode("\""+line+"\""));//百度知道搜索种子
+			builder.addSeed(line, "http://www.baidu.com/s?wd="+K.urlEncode("\""+line+"\""));//百度网页搜索种子
+			builder.addSeed(line, "http://news.baidu.com/ns?word="+K.urlEncode("\""+line+"\""));//百度新闻搜索种子
+			builder.addSeed(line, "http://zhidao.baidu.com/search?word="+K.urlEncode("\""+line+"\""));//百度知道搜索种子
 		});
 		Conf conf = builder
 			.registerFunction("cleanPageUrl", new TransformParser() {//自定义函数,可在脚本调用
 				public Object transform(Object url) {
 					// 清理URL,去掉一些杂质,只保留关键词和分页参数，这样就不会重复了
-					final String pn = K.findOneByRegex((String)url, "&pn\\=\\d+");
-					if (K.isBlank(pn)) {
-						return url;
-					}
 					final Task task = this.modelParser.getTask();
-					final Downloader.Request seed = task.getSeed() == null ? task.getRequest() : task.getSeed();
-					return seed.getUrl()+pn;
+					final Seed seed = task.getSeed();
+					if (seed == null) return url;
+					final String pn = K.findOneByRegex((String)url, "&pn\\=\\d+");
+					if (K.isBlank(pn)) return url;
+					
+					return seed.getRequest().getUrl()+pn;
 				}
 			})
 			.addTarget(new Target("网页内容"){//目标
