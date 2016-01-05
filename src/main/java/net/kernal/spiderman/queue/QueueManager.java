@@ -107,7 +107,7 @@ public class QueueManager {
 	}
 	
 	public void put(final Seed seed, int priority) {
-		this.put(new DownloadTask(null, seed.getRequest(), priority));
+		this.put(new DownloadTask(seed, seed.getRequest(), priority));
 	}
 	
 	public void put(final Task task) {
