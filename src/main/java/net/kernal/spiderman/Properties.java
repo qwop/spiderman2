@@ -3,6 +3,7 @@ package net.kernal.spiderman;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * HashMap Help类
@@ -10,10 +11,45 @@ import java.util.List;
  *
  */
 public class Properties extends HashMap<String, Object> {
+	
 	private static final long serialVersionUID = 1L;
-	public String getString(String Stringey, String defaultVal) {
+	
+	public Properties getProperties(String key) {
+		Object v = this.get(key);
+		if (v instanceof Map) {
+			@SuppressWarnings("unchecked")
+			Map<String, Object> map = (Map<String, Object>)v;
+			Properties props = new Properties();
+			props.putAll(map);
+			return props;
+		}
+		return null;
+	}
+	
+	public List<Properties> getListProperties(String key) {
+		Object vs = this.get(key);
+		if (vs instanceof List) {
+			@SuppressWarnings("unchecked")
+			List<Object> list = (List<Object>)vs;
+			final List<Properties> r = new ArrayList<Properties>();
+			list.forEach(v -> {
+				if (v instanceof Map) {
+					@SuppressWarnings("unchecked")
+					Map<String, Object> map = (Map<String, Object>)v;
+					Properties props = new Properties();
+					props.putAll(map);
+					r.add(props);
+				}
+			});
+			return r;
+		}
+		return null;
+	}
+	
+	
+	public String getString(String key, String defaultVal) {
 		try {
-			Object v = get(Stringey);
+			Object v = get(key);
 			if (v == null) return defaultVal;
 			if (v instanceof Object[]){
 				Object[] nv = (Object[])v;
@@ -26,126 +62,126 @@ public class Properties extends HashMap<String, Object> {
 		return defaultVal;
 	}
 	
-	public Integer getInteger(String Stringey, Integer defaultVal) {
+	public Integer getInteger(String key, Integer defaultVal) {
 		try {
-			return Integer.parseInt(getString(Stringey));
+			return Integer.parseInt(getString(key));
 		} catch (Throwable e){
 			
 		}
 		return defaultVal;
 	}
 	
-	public int getInt(String Stringey, int defaultVal) {
+	public int getInt(String key, int defaultVal) {
 		try {
-			return Integer.parseInt(getString(Stringey));
+			return Integer.parseInt(getString(key));
 		} catch (Throwable e){
 			
 		}
 		return defaultVal;
 	}
 	
-	public byte getByte(String Stringey, byte defaultVal) {
+	public byte getByte(String key, byte defaultVal) {
 		try {
-			return Byte.parseByte(getString(Stringey));
+			return Byte.parseByte(getString(key));
 		} catch (Throwable e){
 			
 		}
 		return defaultVal;
 	}
 
-	public Byte getByte(String Stringey) {
+	public Byte getByte(String key) {
 		try {
-			return Byte.parseByte(getString(Stringey));
+			return Byte.parseByte(getString(key));
 		} catch (Throwable e){
 			
 		}
 		return null;
 	}
 
-	public Long getLong(String Stringey, Long defaultVal) {
+	public Long getLong(String key, Long defaultVal) {
 		try {
-			return Long.parseLong(getString(Stringey));
+			return Long.parseLong(getString(key));
 		} catch (Throwable e){
 			
 		}
 		return defaultVal;
 	}
 	
-	public long getLong(String Stringey, long defaultVal) {
+	public long getLong(String key, long defaultVal) {
 		try {
-			return Long.parseLong(getString(Stringey));
+			return Long.parseLong(getString(key));
 		} catch (Throwable e){
 			
 		}
 		return defaultVal;
 	}
 
-	public float getFloat(String Stringey, float defaultVal) {
+	public float getFloat(String key, float defaultVal) {
 		try {
-			return Float.parseFloat(getString(Stringey));
+			return Float.parseFloat(getString(key));
 		} catch (Throwable e){
 			
 		}
 		return defaultVal;
 	}
 	
-	public Float getFloat(String Stringey, Float defaultVal) {
+	public Float getFloat(String key, Float defaultVal) {
 		try {
-			return Float.parseFloat(getString(Stringey));
+			return Float.parseFloat(getString(key));
 		} catch (Throwable e){
 			
 		}
 		return defaultVal;
 	}
 
-	public double getDouble(String Stringey, double defaultVal) {
+	public double getDouble(String key, double defaultVal) {
 		try {
-			return Double.parseDouble(getString(Stringey));
+			return Double.parseDouble(getString(key));
 		} catch (Throwable e){
 			
 		}
 		return defaultVal;
 	}
 	
-	public Double getDouble(String Stringey, Double defaultVal) {
+	public Double getDouble(String key, Double defaultVal) {
 		try {
-			return Double.parseDouble(getString(Stringey));
+			return Double.parseDouble(getString(key));
 		} catch (Throwable e){
 			
 		}
 		return defaultVal;
 	}
 
-	public Boolean getBoolean(String Stringey, Boolean defaultVal) {
+	public Boolean getBoolean(String key, Boolean defaultVal) {
 		try {
-			return Boolean.parseBoolean(getString(Stringey));
+			return Boolean.parseBoolean(getString(key));
 		} catch (Throwable e){
 			
 		}
 		return defaultVal;
 	}
 	
-	public boolean getBoolean(String Stringey, boolean defaultVal) {
+	public boolean getBoolean(String key, boolean defaultVal) {
 		try {
-			return Boolean.parseBoolean(getString(Stringey, defaultVal+""));
+			return Boolean.parseBoolean(getString(key, defaultVal+""));
 		} catch (Throwable e){
 			
 		}
 		return defaultVal;
 	}
 
-	public Integer getInteger(String Stringey) {
+	public Integer getInteger(String key) {
 		try {
-			return Integer.parseInt(getString(Stringey));
+			return Integer.parseInt(getString(key));
 		} catch (Throwable e){
 			
 		}
 		return null;
 	}
 	
-	public int getInt(String Stringey) {
+	public int getInt(String key) {
 		try {
-			return Integer.parseInt(getString(Stringey));
+			return Integer.parseInt(getString(key));
 		} catch (Throwable e){
 			
 		}
@@ -153,45 +189,45 @@ public class Properties extends HashMap<String, Object> {
 		return 0;
 	}
 
-	public String getString(String Stringey) {
+	public String getString(String key) {
 		try {
-			return getString(Stringey, null);
+			return getString(key, null);
 		} catch (Throwable e){
 			
 		}
 		return null;
 	}
 
-	public Long getLong(String Stringey) {
+	public Long getLong(String key) {
 		try {
-			return Long.parseLong(getString(Stringey));
+			return Long.parseLong(getString(key));
 		} catch (Throwable e){
 			
 		}
 		return null;
 	}
 
-	public Float getFloat(String Stringey) {
+	public Float getFloat(String key) {
 		try {
-			return Float.parseFloat(getString(Stringey));
+			return Float.parseFloat(getString(key));
 		} catch (Throwable e){
 			
 		}
 		return null;
 	}
 
-	public Double getDouble(String Stringey) {
+	public Double getDouble(String key) {
 		try {
-			return Double.parseDouble(getString(Stringey));
+			return Double.parseDouble(getString(key));
 		} catch (Throwable e){
 			
 		}
 		return null;
 	}
 
-	public Boolean getBoolean(String Stringey) {
+	public Boolean getBoolean(String key) {
 		try {
-			return Boolean.parseBoolean(getString(Stringey));
+			return Boolean.parseBoolean(getString(key));
 		} catch (Throwable e){
 			
 		}

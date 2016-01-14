@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<spiderman>
+    <!-- 引入脚本文件 -->
+    <script src="src/main/resources/lib.js" />
+    
+    <!-- 选项配置 -->
+    <property key="duration" value="30s" />
+    <property key="logger.level" value="2" />
+    <property key="worker.downloader.size" value="5" />
+    <property key="worker.extractor.size" value="5" />
+    <property key="queue.zbus.address" value="10.8.60.8:15555" />
+    <property key="store.bdb.file" value="src/main/resources/store" />
+    
+    <!-- 种子入口 -->
+    <seed name="Spiderman">http://www.baidu.com/s?wd=Spiderman</seed>
+    
+    <!-- 页面抽取规则 -->
+	<extract-page name="百度网页搜索">
+		<url-match-rule type="regex"><![CDATA[(?=http://www\.baidu\.com/s\?wd\=).[^&]*(&pn\=\d+)?]]></url-match-rule>
+		<model>
+			<field name="分页URL" isForNewTask="true" isArray="true" xpath="//div[@id='page']//a[@href]" attr="href" filter="resetPageUrl" />
+			<field name="详情URl" isForNewTask="true" isArray="true" xpath="//div[@id='content_left']//div[@class='result c-container ']//h3//a[@href]" attr="href" /> 
+		</model>
+	</extract-page>
+	<extract-page name="百度新闻搜索">
+		<url-match-rule type="regex"><![CDATA[http://news\.baidu\.com/ns\?word\=.[^&]*(&pn\=\d+)?]]></url-match-rule>
+		<model>
+			<field name="分页URL" isForNewTask="true" isArray="true" xpath="//p[@id='page']//a[@href]" attr="href" filter="resetPageUrl" />
+			<field name="详情URl" isForNewTask="true" isArray="true" xpath="//div[@id='content_left']//div[@class='result']//h3//a[@href]" attr="href" /> 
+		</model>
+	</extract-page>
+	<extract-page name="百度知道搜索">
+		<url-match-rule type="regex"><![CDATA[http://zhidao\.baidu\.com/search\?word\=.[^&]*(&pn\=\d+)?]]></url-match-rule>
+		<model>
+			<field name="分页URL" isForNewTask="true" isArray="true" xpath="//div[@class='pager']//a[@href]" attr="href" filter="resetPageUrl" />
+			<field name="详情URl" isForNewTask="true" isArray="true" xpath="//div[@class='list']//dl//dt//a[@href]" attr="href" /> 
+		</model>
+	</extract-page>
+	<extract-page name="百度知道内容">
+		<url-match-rule type="startsWith" value="http://zhidao.baidu.com/question/" />
+		<model>
+			<field name="title" xpath="//h1[@accuse='qTitle']//span/text()" />
+			<field name="question" xpath="//pre[@class='line mt-5 q-content']/text()" />
+			<field name="answers" isArray="true" xpath="//div[@class='line content']/text()">
+				<filter type="script">$this.replace('分享','').replace('评论','').replace('|','')</filter>
+			</field>
+			<field name="bestAnswer" xpath="//div[@class='wgt-quality mod-shadow']//div[@class='quality-content-detail content']/text()" />
+		</model>
+	</extract-page>
+</spiderman>

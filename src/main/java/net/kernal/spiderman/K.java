@@ -133,33 +133,43 @@ public class K {
 	 * @param strTime 比如 1h 1h1m1s
 	 * @return
 	 */
-	public static BigDecimal convertToSeconds(String strTime) {
+	public static BigDecimal convertToMillis(String strTime) {
 		BigDecimal time = new BigDecimal("0");
         for (String s : strTime.split(" ")) {
-        	BigDecimal _time = _convertToSeconds(s);
+        	BigDecimal _time = _convertToMillis(s);
         	time = time.add(_time);
         }
 
         return time;
     }
 
-    private static BigDecimal _convertToSeconds(String strTime) {
-        float time = 0F;
+    private static BigDecimal _convertToMillis(String strTime) {
+    	if (isBlank(strTime)) {
+    		return null;
+    	}
+    	
         try {
-            if (strTime.endsWith("s")) {
-                time = Float.parseFloat(strTime.replace("s", "")) * 1;
+        	Float time;
+        	if (strTime.endsWith("ms")) {
+                time = Float.parseFloat(strTime.replace("ms", "")) * 1;
+            } else if (strTime.endsWith("s")) {
+                time = Float.parseFloat(strTime.replace("s", "")) * 1000;
             } else if (strTime.endsWith("m")) {
-                time = Float.parseFloat(strTime.replace("m", "")) * 60;
+                time = Float.parseFloat(strTime.replace("m", "")) * 60 * 1000;
             } else if (strTime.endsWith("h")) {
-                time = Float.parseFloat(strTime.replace("h", "")) * 60 * 60;
+                time = Float.parseFloat(strTime.replace("h", "")) * 60 * 60 * 1000;
             } else if (strTime.endsWith("d")) {
-                time = Float.parseFloat(strTime.replace("d", "")) * 60 * 60 * 24;
-            } else time = Float.parseFloat(strTime);
+                time = Float.parseFloat(strTime.replace("d", "")) * 60 * 60 * 24 * 1000;
+            } else if (strTime.endsWith("y")) {
+                time = Float.parseFloat(strTime.replace("y", "")) * 60 * 60 * 24 * 365 * 1000;
+            } else {
+            	time = Float.parseFloat(strTime);
+            }
+        	return new BigDecimal(String.valueOf(time));
         } catch (Throwable e) {
-
+        	e.printStackTrace();
+        	return null;
         }
-
-        return new BigDecimal(String.valueOf(time));
     }
     
     /**

@@ -1,7 +1,8 @@
 package net.kernal.spiderman.conf;
 
 import net.kernal.spiderman.Properties;
-import net.kernal.spiderman.reporting.ConsoleReporting;
+import net.kernal.spiderman.Spiderman;
+import net.kernal.spiderman.worker.extract.conf.Page;
 
 /**
  * 默认的配置构建器
@@ -17,41 +18,33 @@ public abstract class DefaultConfBuilder implements Conf.Builder {
 	}
 	
 	/**
-	 * 留给客户端去注册自定义函数，可以直接在script脚本中调用
-	 * @param functionName
-	 * @param function
-	 * @return
-	 */
-	public abstract void registerFunction(Functions functions);
-	
-	/**
-	 * 留给客户端程序去添加属性
+	 * 留给客户端程序去添加参数
 	 * @param properties
 	 */
-	public abstract void addProperty(Properties properties);
+	public abstract void configParams(Properties params);
 	/**
 	 * 留给客户端程序去添加种子
 	 * @param seeds
 	 */
-	public abstract void addSeed(Seeds seeds);
+	public abstract void configSeeds(Conf.Seeds seeds);
 	/**
-	 * 留给客户端程序去添加目标
+	 * 留给客户端程序去添加需要抽取的页面
 	 * @param targets
 	 */
-	public abstract void addTarget(Targets targets);
+	public abstract void configPages(Conf.Pages pages);
 	
 	/**
 	 * 构建Spiderman.Conf对象
 	 */
 	public Conf build() {
-		this.addProperty(conf.getProperties());
-		conf.addReporting(new ConsoleReporting(conf.getProperties().getBoolean("debug", true)));
-		
-		this.addSeed(conf.getSeeds());
-		this.addTarget(conf.getTargets());
-		for (Target target : conf.getTargets().all()) {
-			target.configModel(target.getModel());
-			target.configRules(target.getRules());
+		this.configParams(conf.getParams());
+		this.configSeeds(conf.getSeeds());
+		this.configPages(conf.getPages());
+		for (Page page : conf.getPages().all()) {
+			page.config(page.getRules(), page.getModels());
+			if (page.getExtractorBuilder() == null) {
+				throw new Spiderman.Exception("页面[name="+page.getName()+"]缺少可以构建抽取器的对象，请设置一个 models.setExtractorBuilder");
+			}
 		}
 		
 		return conf;

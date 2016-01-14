@@ -1,221 +1,114 @@
 package net.kernal.spiderman.queue;
 
 import java.io.File;
-import java.math.BigDecimal;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
 import org.zbus.broker.SingleBroker;
-import org.zbus.mq.MqConfig;
 
-import net.kernal.spiderman.Counter;
 import net.kernal.spiderman.K;
-import net.kernal.spiderman.conf.Conf;
-import net.kernal.spiderman.conf.Seed;
-import net.kernal.spiderman.conf.Targets;
-import net.kernal.spiderman.reporting.Reportings;
-import net.kernal.spiderman.store.KVDb;
-import net.kernal.spiderman.store.MapDb;
-import net.kernal.spiderman.task.DownloadTask;
-import net.kernal.spiderman.task.ParseTask;
-import net.kernal.spiderman.task.ResultTask;
-import net.kernal.spiderman.task.Task;
+import net.kernal.spiderman.Properties;
+import net.kernal.spiderman.Spiderman;
+import net.kernal.spiderman.logger.Logger;
+import net.kernal.spiderman.store.BDbStore;
+import net.kernal.spiderman.store.KVStore;
+import net.kernal.spiderman.worker.Task;
+import net.kernal.spiderman.worker.download.DownloadTask;
+import net.kernal.spiderman.worker.extract.ExtractTask;
 
 public class QueueManager {
-
-	private final static String REGION = "urls";
 	
-	private Targets targets;
-	private Reportings reportings;
-	private Counter counter;
-	private KVDb db;
-	private Broker queueBroker;
+	private Logger logger;
 	
-	// 下载(主)队列
-	private TaskQueue primaryDownloadTaskQueue;
-	// 下载(次)队列
-	private TaskQueue secondaryDownloadTaskQueue;
-	// 解析(主)队列
-	private TaskQueue primaryParseTaskQueue;
-	// 解析(次)队列
-	private TaskQueue secondaryParseTaskQueue;
-	// 结果队列
-	private TaskQueue resultTaskQueue;
+	private TaskQueue downloadQueue;
+	private TaskQueue extractQueue;
+	private KVStore store;
 	
-	public QueueManager(Conf conf, Counter counter) {
-		this.targets = conf.getTargets();
-		this.reportings = conf.getReportings();
-		this.counter = counter;
-		
-		final String file = conf.getProperties().getString("mapdb.file");
-		if (K.isNotBlank(file)) {
-			this.db = new MapDb(new File(file), conf);
+	public QueueManager(Properties params, Logger logger) {
+		this.logger = logger;
+		// 构建存储
+		final boolean bdbEnabled = params.getBoolean("store.bdb.enabled", false);
+		if (bdbEnabled) {
+			final String bdbFile = params.getString("store.bdb.file");
+			if (K.isBlank(bdbFile)) {
+				throw new Spiderman.Exception("缺少参数: store.bdb.file, 参考: conf.set(\"store.bdb.file\")");
+			}
+			final String dbName = params.getString("store.bdb.name", "spiderman_store");
+			this.store = new BDbStore(new File(bdbFile), dbName);
 		}
 		
-		// build queue
-		boolean zbusEnabled = conf.getProperties().getBoolean("zbus.enabled", false);
+		// 构建队列
+		final boolean zbusEnabled = params.getBoolean("queue.zbus.enabled", false);
 		if (zbusEnabled) {
-			//开启分布式支持
-			final String zbusServerAddress = conf.getProperties().getString("zbus.serverAddress");
-			if (K.isBlank(zbusServerAddress)) {
-				throw new RuntimeException("缺少参数zbus.serverAddress");
+			// 构建ZBus队列
+			final String server = params.getString("queue.zbus.server");
+			if (K.isBlank(server)) {
+				throw new Spiderman.Exception("缺少参数: queue.zbus.server, 参考: conf.set(\"queue.zbus.enabled\")");
 			}
-			final String dcn = conf.getProperties().getString("zbus.duplicateCheckQueueName", "spiderman_duplicate_check_task");
-			if (K.isBlank(dcn)) {
-				throw new RuntimeException("缺少参数zbus.duplicateCheckQueueName");
-			}
-			final String dqn = conf.getProperties().getString("zbus.downloadTaskQueueName", "spiderman_download_task");
-			if (K.isBlank(dqn)) {
-				throw new RuntimeException("缺少参数zbus.downloadTaskQueueName");
-			}
-			final String pqn = conf.getProperties().getString("zbus.parseTaskQueueName", "spiderman_parse_task");
-			if (K.isBlank(pqn)) {
-				throw new RuntimeException("缺少参数zbus.parseTaskQueueName");
-			}
-			final String rqn = conf.getProperties().getString("zbus.resultQueueName", "spiderman_result_task");
-			if (K.isBlank(rqn)) {
-				throw new RuntimeException("缺少参数zbus.resultQueueName");
-			}
-		    BrokerConfig brokerConfig = new BrokerConfig();
-		    brokerConfig.setServerAddress(zbusServerAddress);
+			final BrokerConfig brokerConfig = new BrokerConfig();
+		    brokerConfig.setServerAddress(server);
+		    final Broker broker;
 		    try {
-		    	this.queueBroker = new SingleBroker(brokerConfig);
+		    	broker = new SingleBroker(brokerConfig);
 		    } catch (Throwable e) {
-		    	throw new RuntimeException(e);
+		    	throw new Spiderman.Exception("连接ZBus服务失败", e);
 		    }
-		    String timeout = conf.getProperties().getString("zbus.timeout", "10s");
-			this.setPrimaryDownloadTaskQueue(buildQueue(dqn+"_primary", timeout));
-			this.setSecondaryDownloadTaskQueue(buildQueue(dqn+"_secondary", timeout));
-			this.setPrimaryParseTaskQueue(buildQueue(pqn+"_primary", timeout));
-			this.setSecondaryParseTaskQueue(buildQueue(pqn+"_secondary", timeout));
-			this.setResultTaskQueue(buildQueue(rqn, timeout));
+		    final String downloadQueueName = params.getString("queue.download.name", "SPIDERMAN_DOWNLOAD_TASK");
+			final String extractQueueName = params.getString("queue.download.name", "SPIDERMAN_DOWNLOAD_TASK");
+			downloadQueue = new ZBusTaskQueue(broker, downloadQueueName);
+			logger.debug("创建ZBus下载队列");
+			extractQueue = new ZBusTaskQueue(broker, extractQueueName);
+			logger.debug("创建ZBus解析队列");
 		} else {
-			this.setPrimaryDownloadTaskQueue(new DefaultTaskQueue());
-			this.setSecondaryDownloadTaskQueue(new DefaultTaskQueue());
-			this.setPrimaryParseTaskQueue(new DefaultTaskQueue());
-			this.setSecondaryParseTaskQueue(new DefaultTaskQueue());
-			this.setResultTaskQueue(new DefaultTaskQueue());
+			// 构建默认队列
+			downloadQueue = new DefaultTaskQueue();
+			logger.debug("创建默认下载队列");
+			extractQueue = new DefaultTaskQueue();
+			logger.debug("创建默认下载队列");
 		}
 	}
 	
-	private TaskQueue buildQueue(String mq, String timeout) {
-		MqConfig cfg = new MqConfig(); 
-	    cfg.setBroker(queueBroker);
-	    cfg.setMq(mq);
-	    BigDecimal b = new BigDecimal(K.convertToSeconds(timeout).doubleValue()*1000L);
-	    return new ZBusTaskQueue(cfg, b.intValue());
-	}
-	
-	public void put(final Seed seed, int priority) {
-		this.put(new DownloadTask(seed, seed.getRequest(), priority));
-	}
-	
-	public void put(final Task task) {
+	public void append(Task task) {
+		// 检查重复
+		final String key = task.getUniqueKey();
+		if (this.store != null && K.isNotBlank(key)) {
+			if (this.store.contains(key)) {
+				// key重复了
+				logger.info("任务[key="+key+"]重复了");
+				return;
+			}
+			// 将key存储起来
+			this.store.put(key, key.getBytes());
+		}
 		if (task instanceof DownloadTask) {
-			if (db != null) {
-				// 检查重复
-				final String key = K.md5(task.getRequest().getUrl()+"#"+task.getRequest().getMethod());
-				boolean duplicate = db.contains(REGION, key);
-				if (duplicate) {
-					reportings.reportDuplicate(key, task.getRequest());
-					return;
-				}
-				db.put(REGION, key, (byte)0);// TODO 将内容也保存起来
-			}
-			
-			setPriority(task);
-			if (task.isPrimary()) {
-				this.primaryDownloadTaskQueue.put(task);
-				// 队列计数+1
-				counter.primaryDownloadQueuePlus();
-			} else {
-				this.secondaryDownloadTaskQueue.put(task);
-				// 队列计数+1
-				counter.secondaryDownloadQueuePlus();
-			}
-			// 状态报告: 创建新任务
-			reportings.reportNewTask(task);
-			return;
+			this.downloadQueue.append(task);
+			logger.info("添加下载任务: "+((DownloadTask)task).getRequest().getUrl()+", 所属种子->"+task.getSeed().getUrl());
+		} else if (task instanceof ExtractTask) {
+			this.extractQueue.append(task);
+			logger.info("添加解析任务: "+((ExtractTask)task).getResponse().getRequest().getUrl()+", 所属种子->"+task.getSeed().getUrl());
 		}
-		
-		setPriority(task);
-		if (task instanceof ParseTask) {
-			// 解析任务
-			if (task.isPrimary()) {
-				primaryParseTaskQueue.put(task);
-				// 队列计数+1
-				counter.primaryParseQueuePlus();
-			} else {
-				secondaryParseTaskQueue.put(task);
-				// 队列计数+1
-				counter.secondaryParseQueuePlus();
-			}
-		} else if (task instanceof ResultTask) {
-			// 将解析结果放入队列
-			resultTaskQueue.put(task);
-			// 解析结果计数＋1
-			if (task.isPrimary()) {
-				this.counter.primaryParsedPlus();
-			} else {
-				this.counter.secondaryParsedPlus();
-			}
-		}
-		
-		// 状态报告: 创建新任务
-		reportings.reportNewTask(task);
 	}
 	
-	private void setPriority(Task task) {
-		task.setPriority(500);
-		targets.all().forEach(tgt -> {
-			if (tgt.matches(task.getRequest())) {
-				Integer p = null;
-				int _p = tgt.getRules().getPriority();
-				p = p == null ? _p : (_p < p ? _p : p);
-				task.setPriority(p == null ? 1 : p);
-			}
-		});
+	public TaskQueue getDownloadQueue() {
+		return this.downloadQueue;
 	}
 	
-	public void setPrimaryDownloadTaskQueue(TaskQueue primaryDownloadTaskQueue) {
-		this.primaryDownloadTaskQueue = primaryDownloadTaskQueue;
+	public TaskQueue getExtractQueue() {
+		return this.extractQueue;
 	}
-	public void setSecondaryDownloadTaskQueue(TaskQueue secondaryDownloadTaskQueue) {
-		this.secondaryDownloadTaskQueue = secondaryDownloadTaskQueue;
+	
+	public void shutdown() {
+		if (this.downloadQueue != null) {
+			this.downloadQueue.clear();
+		}
+		if (this.extractQueue != null) {
+			this.extractQueue.clear();
+		}
+		if (this.store != null) {
+			this.store.close();
+		}
+		
+		logger.debug("退出...");
 	}
-	public void setPrimaryParseTaskQueue(TaskQueue primaryParseTaskQueue) {
-		this.primaryParseTaskQueue = primaryParseTaskQueue;
-	}
-	public void setSecondaryParseTaskQueue(TaskQueue secondaryParseTaskQueue) {
-		this.secondaryParseTaskQueue = secondaryParseTaskQueue;
-	}
-	public void setResultTaskQueue(TaskQueue resultTaskQueue) {
-		this.resultTaskQueue = resultTaskQueue;
-	}
-	public void setDb(KVDb db) {
-		this.db = db;
-	}
-
-	public TaskQueue getPrimaryDownloadTaskQueue() {
-		return primaryDownloadTaskQueue;
-	}
-
-	public TaskQueue getSecondaryDownloadTaskQueue() {
-		return secondaryDownloadTaskQueue;
-	}
-
-	public TaskQueue getPrimaryParseTaskQueue() {
-		return primaryParseTaskQueue;
-	}
-
-	public TaskQueue getSecondaryParseTaskQueue() {
-		return secondaryParseTaskQueue;
-	}
-
-	public TaskQueue getResultTaskQueue() {
-		return resultTaskQueue;
-	}
-	public KVDb getDb() {
-		return this.db;
-	}
+	
 }

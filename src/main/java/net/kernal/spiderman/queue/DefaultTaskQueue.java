@@ -3,7 +3,7 @@ package net.kernal.spiderman.queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import net.kernal.spiderman.task.Task;
+import net.kernal.spiderman.worker.Task;
 
 /**
  * 默认的任务队列实现
@@ -14,25 +14,23 @@ public class DefaultTaskQueue implements TaskQueue {
 	
 	private BlockingQueue<Task> queue = new LinkedBlockingQueue<Task>(5000);
 	
-	public Task poll() {
+	public Task take() {
 		try {
 			return this.queue.take();
 		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+		}	
 		return null;
 	}
 	
-	public void put(Task task) {
+	public void append(Task task) {
 		try {
 			this.queue.put(task);
 		} catch (InterruptedException e) {
-			e.printStackTrace();
 		}
 	}
-	
-	public long size() {
-		return this.queue.size();
+
+	public void clear() {
+		queue.clear();
 	}
 	
 }

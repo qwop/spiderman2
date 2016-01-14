@@ -2,16 +2,15 @@ package spiderman;
 
 import java.io.File;
 
+import com.alibaba.fastjson.JSON;
+
 import net.kernal.spiderman.Context;
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Spiderman;
 import net.kernal.spiderman.conf.Conf;
-import net.kernal.spiderman.conf.Seed;
-import net.kernal.spiderman.conf.Target;
 import net.kernal.spiderman.conf.XMLConfBuilder;
-import net.kernal.spiderman.parser.TextParser;
-import net.kernal.spiderman.parser.TransformParser;
-import net.kernal.spiderman.task.Task;
+import net.kernal.spiderman.worker.extract.TextExtractor;
+import net.kernal.spiderman.worker.extract.conf.Page;
 
 public class TestXML {
 
@@ -20,50 +19,25 @@ public class TestXML {
 	 * 还可以在代码里添加种子，添加目标，添加属性等等来跟XML文件的配置进行合并。
 	 */
 	public static void main(String[] args) {
-		XMLConfBuilder builder = new XMLConfBuilder(new File("src/main/resources/baidu-search.xml"));//XML配置构建器
-		K.readLine(new File("src/main/resources/seeds.txt")).forEach(line -> {
-			if (line.startsWith("#")) {
-				return;
-			}
-			builder.addSeed(line, "http://www.baidu.com/s?wd="+K.urlEncode("\""+line+"\""));//百度网页搜索种子
-			builder.addSeed(line, "http://news.baidu.com/ns?word="+K.urlEncode("\""+line+"\""));//百度新闻搜索种子
-			builder.addSeed(line, "http://zhidao.baidu.com/search?word="+K.urlEncode("\""+line+"\""));//百度知道搜索种子
-		});
-		Conf conf = builder
-			.registerFunction("cleanPageUrl", new TransformParser() {//自定义函数,可在脚本调用
-				public Object transform(Object url) {
-					// 清理URL,去掉一些杂质,只保留关键词和分页参数，这样就不会重复了
-					final Task task = this.modelParser.getTask();
-					final Seed seed = task.getSeed();
-					if (seed == null) return url;
-					final String pn = K.findOneByRegex((String)url, "&pn\\=\\d+");
-					if (K.isBlank(pn)) return url;
-					
-					return seed.getRequest().getUrl()+pn;
-				}
-			})
-			.addTarget(new Target("网页内容"){//目标
-				public void configRules(Rules rules) {
-					rules.setPriority(1).addNotContainsRule("baidu");//目标URL规则
-				}
-				public void configModel(Model model) {
-					model.addParser(new TextParser());// 目标解析规则，这里直接用通用的正文抽取器解析
-				}
-			})
-			.set("debug", true)
-			.set("duration", "30s")
-			.set("mapdb.file", "src/main/resources/mapdb")
-			.set("mapdb.deleteFilesAfterClose", true)
-			.set("zbus.enabled", false)//是否开启分布式支持
-			.set("zbus.serverAddress", "10.8.60.8:15555")//zbus服务器地址
-			.set("downloader.primary.threadSize", 1)//下载(主)线程数量
-			.set("downloader.secondary.threadSize", 1)//下载(次)线程数量
-			.set("parser.primary.threadSize", 1)//解析(主)线程数量
-			.set("parser.secondary.threadSize", 1)//解析(次)线程数量
-			.set("result.threadSize", 1)//结果处理线程数量
-			.build();
+		final String kw = "蜘蛛侠";
+		final Conf conf = 
+				new XMLConfBuilder(new File("src/main/resources/spiderman.conf.xml"))//XML配置构建器
+				.addSeed(kw, "http://www.baidu.com/s?wd="+K.urlEncode("\""+kw+"\""))//百度网页搜索种子
+				.addSeed(kw, "http://news.baidu.com/ns?word="+K.urlEncode("\""+kw+"\""))//百度新闻搜索种子
+				.addSeed(kw, "http://zhidao.baidu.com/search?word="+K.urlEncode("\""+kw+"\""))//百度知道搜索种子
+				.addPage(new Page("网页内容"){//目标
+					public void config(UrlMatchRules rules, Models models) {
+						setExtractorBuilder(TextExtractor.builder());//设置抽取器(解析器)
+						rules.addNegativeContainsRule("baidu");//目标URL规则
+					}
+				})
+				.build();
 		
-		new Spiderman(new Context(conf)).go();//别忘记看控制台信息哦，结束之后会有统计信息的,查看关键词"[结束]"(去掉双引号来查找)
+		Context ctx = new Context(conf, (r, c) -> {
+			System.err.println("抓取到第"+c+"个结果：\r\n"+JSON.toJSONString(r, true));
+		});
+		
+		new Spiderman(ctx).go();//别忘记看控制台信息哦，结束之后会有统计信息的
 	}
 	
 }
