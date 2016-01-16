@@ -33,15 +33,15 @@ Conf conf = new DefaultConfBuilder() {
 					.set("isArray", true)
 					.set("isForNewTask", true);
 				model.addField("分页URL")
-				.set("xpath", "//div[@id='page']//a[@href]")
-				.set("attr", "href")
-				.set("isArray", true)
-				.set("isDistinct", true)
-				.set("isForNewTask", true)
-				.addFilter((e, v) -> {
-					final String pn = K.findOneByRegex(v, "&pn\\=\\d+");
-					return K.isBlank(pn) ? v : e.getTask().getSeed().getUrl()+pn;
-				});
+					.set("xpath", "//div[@id='page']//a[@href]")
+					.set("attr", "href")
+					.set("isArray", true)
+					.set("isDistinct", true)
+					.set("isForNewTask", true)
+					.addFilter((e, v) -> {
+						final String pn = K.findOneByRegex(v, "&pn\\=\\d+");
+						return K.isBlank(pn) ? v : e.getTask().getSeed().getUrl()+pn;
+					});
 			}
 		});
 	}
@@ -49,40 +49,25 @@ Conf conf = new DefaultConfBuilder() {
 		seeds.add(new Seed("http://www.baidu.com/s?wd="+K.urlEncode("\"蜘蛛侠\"")));
 	}
 	public void configParams(Properties params) {
-		params.put("logger.level", Logger.LEVEL_DEBUG);
+		params.put("logger.level", Logger.LEVEL_INFO);
 		params.put("duration", "30s");
-		params.put("worker.downloader.size", 5);
-		params.put("worker.extractor.size", 5);
+		params.put("worker.download.size", 10);
+		params.put("worker.extract.size", 10);
+		params.put("worker.result.size", 10);
 	}
 }.build();
 
-// 启动蜘蛛侠
-Context ctx = new Context(conf, (result, count) -> {
-	// handle the extract result
-	System.err.println("解析到第"+count+"个:\r\n"+JSON.toJSONString(result, true));
+final Context ctx = new Context(conf, (result, c) -> {
+	System.err.println("获得第"+c.get()+"个结果:\r\n"+JSON.toJSONString(result, true));
 });
 new Spiderman(ctx).go();
 ```
 也可以使用配置文件
 ```
-final String kw = "蜘蛛侠";
-final Conf conf = 
-		new XMLConfBuilder(new File("src/main/resources/spiderman.conf.xml"))//XML配置构建器
-		.addSeed(kw, "http://www.baidu.com/s?wd="+K.urlEncode("\""+kw+"\""))//百度网页搜索种子
-		.addSeed(kw, "http://news.baidu.com/ns?word="+K.urlEncode("\""+kw+"\""))//百度新闻搜索种子
-		.addSeed(kw, "http://zhidao.baidu.com/search?word="+K.urlEncode("\""+kw+"\""))//百度知道搜索种子
-		.addPage(new Page("网页内容"){//目标
-			public void config(UrlMatchRules rules, Models models) {
-				setExtractorBuilder(TextExtractor.builder());//设置抽取器(解析器)
-				rules.addNegativeContainsRule("baidu");//目标URL规则
-			}
-		})
-		.build();
-
-Context ctx = new Context(conf, (r, c) -> {
-	System.err.println("抓取到第"+c+"个结果：\r\n"+JSON.toJSONString(r, true));
+final Conf conf = new XMLConfBuilder(new File("src/main/resources/spiderman.conf.xml")).build();
+final Context ctx = new Context(conf, (result, c) -> {
+	System.err.println("获得第"+c.get()+"个结果：\r\n"+JSON.toJSONString(result, true));
 });
-
 new Spiderman(ctx).go();//别忘记看控制台信息哦，结束之后会有统计信息的
 ```
 spiderman.conf.xml
@@ -93,48 +78,71 @@ spiderman.conf.xml
     <script src="src/main/resources/lib.js" />
     
     <!-- 选项配置 -->
-    <property key="duration" value="30s" />
+    <!--<property key="duration" value="30s" />-->
     <property key="logger.level" value="2" />
-    <property key="worker.downloader.size" value="5" />
-    <property key="worker.extractor.size" value="5" />
+    <property key="worker.download.size" value="5" />
+    <property key="worker.extract.size" value="5" />
+    <property key="worker.result.size" value="5" />
+    <property key="worker.result.limit" value="340" />
+    
+    <!-- 配置 -->
+    <bean id="" class="" />
     
     <!-- 种子入口 -->
-    <seed name="Spiderman">http://www.baidu.com/s?wd=Spiderman</seed>
+    <seed name="Spiderman">http://www.baidu.com/s?wd=%22%E8%9C%98%E8%9B%9B%E4%BE%A0%22</seed>
+    <seed name="Spiderman">http://news.baidu.com/ns?word=%22%E8%9C%98%E8%9B%9B%E4%BE%A0%22</seed>
+    <seed name="Spiderman">http://zhidao.baidu.com/search?word=%22%E8%9C%98%E8%9B%9B%E4%BE%A0%22</seed>
     
     <!-- 页面抽取规则 -->
-	<extract-page name="百度网页搜索">
-		<url-match-rule type="regex"><![CDATA[(?=http://www\.baidu\.com/s\?wd\=).[^&]*(&pn\=\d+)?]]></url-match-rule>
-		<model>
-			<field name="分页URL" isForNewTask="true" isArray="true" xpath="//div[@id='page']//a[@href]" attr="href" filter="resetPageUrl" />
-			<field name="详情URl" isForNewTask="true" isArray="true" xpath="//div[@id='content_left']//div[@class='result c-container ']//h3//a[@href]" attr="href" /> 
-		</model>
-	</extract-page>
-	<extract-page name="百度新闻搜索">
-		<url-match-rule type="regex"><![CDATA[http://news\.baidu\.com/ns\?word\=.[^&]*(&pn\=\d+)?]]></url-match-rule>
-		<model>
-			<field name="分页URL" isForNewTask="true" isArray="true" xpath="//p[@id='page']//a[@href]" attr="href" filter="resetPageUrl" />
-			<field name="详情URl" isForNewTask="true" isArray="true" xpath="//div[@id='content_left']//div[@class='result']//h3//a[@href]" attr="href" /> 
-		</model>
-	</extract-page>
-	<extract-page name="百度知道搜索">
-		<url-match-rule type="regex"><![CDATA[http://zhidao\.baidu\.com/search\?word\=.[^&]*(&pn\=\d+)?]]></url-match-rule>
-		<model>
-			<field name="分页URL" isForNewTask="true" isArray="true" xpath="//div[@class='pager']//a[@href]" attr="href" filter="resetPageUrl" />
-			<field name="详情URl" isForNewTask="true" isArray="true" xpath="//div[@class='list']//dl//dt//a[@href]" attr="href" /> 
-		</model>
-	</extract-page>
-	<extract-page name="百度知道内容">
-		<url-match-rule type="startsWith" value="http://zhidao.baidu.com/question/" />
-		<model>
-			<field name="title" xpath="//h1[@accuse='qTitle']//span/text()" />
-			<field name="question" xpath="//pre[@class='line mt-5 q-content']/text()" />
-			<field name="answers" isArray="true" xpath="//div[@class='line content']/text()">
-				<filter type="script">$this.replace('分享','').replace('评论','').replace('|','')</filter>
-			</field>
-			<field name="bestAnswer" xpath="//div[@class='wgt-quality mod-shadow']//div[@class='quality-content-detail content']/text()" />
-		</model>
-	</extract-page>
+    <extract>
+        <!-- 定义解析器别名, 可以在page节点的extractor属性使用 -->
+        <extractor alias="Html" class="net.kernal.spiderman.worker.extract.HtmlCleanerExtractor" isDefault="1" />
+        <extractor alias="Text" class="net.kernal.spiderman.worker.extract.TextExtractor" />
+        <!--
+        <extractor alias="Xml" class="net.kernal.spiderman.worker.extract.XMLExtractor" />
+        <extractor alias="Jsoup" class="net.kernal.spiderman.worker.extract.JsoupExtractor" />
+        -->
+        
+        <!-- 定义过滤器别名, 可以在field节点的filter属性使用 -->
+        <filter alias="resetUrl" class="spiderman.ResetPageUrlFilter" />
+        <page name="网页内容" extractor="Text">
+			<url-match-rule type="!contains" value="baidu" />
+		</page>
+		<page name="百度网页搜索">
+			<url-match-rule type="regex"><![CDATA[(?=http://www\.baidu\.com/s\?wd\=).[^&]*(&pn\=\d+)?]]></url-match-rule>
+			<model>
+				<field name="详情URl" isForNewTask="1" isArray="1" xpath="//div[@id='content_left']//div[@class='result c-container ']//h3//a[@href]" attr="href" /> 
+				<field name="分页URL" isForNewTask="1" isArray="1" isDistinct="1" filter="resetUrl" xpath="//div[@id='page']//a[@href]" attr="href" />
+			</model>
+		</page>
+		<page name="百度新闻搜索">
+			<url-match-rule type="regex"><![CDATA[http://news\.baidu\.com/ns\?word\=.[^&]*(&pn\=\d+)?]]></url-match-rule>
+			<model>
+				<field name="详情URl" isForNewTask="1" isArray="1" xpath="//div[@id='content_left']//div[@class='result']//h3//a[@href]" attr="href" /> 
+				<field name="分页URL" isForNewTask="1" isArray="1" isDistinct="1" filter="resetUrl" xpath="//p[@id='page']//a[@href]" attr="href" />
+			</model>
+		</page>
+		<page name="百度知道搜索">
+			<url-match-rule type="regex"><![CDATA[http://zhidao\.baidu\.com/search\?word\=.[^&]*(&pn\=\d+)?]]></url-match-rule>
+			<model>
+				<field name="详情URl" isForNewTask="1" isArray="1" xpath="//div[@class='list']//dl//dt//a[@href]" attr="href" /> 
+				<field name="分页URL" isForNewTask="1" isArray="1" isDistinct="1" filter="resetUrl" xpath="//div[@class='pager']//a[@href]" attr="href" />
+			</model>
+		</page>
+		<page name="百度知道内容">
+			<url-match-rule type="startsWith" value="http://zhidao.baidu.com/question/" />
+			<model>
+				<field name="title" xpath="//h1[@accuse='qTitle']//span/text()" />
+				<field name="question" xpath="//pre[@class='line mt-5 q-content']/text()" />
+				<field name="answers" isArray="true" xpath="//div[@class='line content']/text()">
+					<!-- <filter type="script">$this.replace('分享','').replace('评论','').replace('|','')</filter> -->
+				</field>
+				<field name="bestAnswer" xpath="//div[@class='wgt-quality mod-shadow']//div[@class='quality-content-detail content']/text()" />
+			</model>
+		</page>
+	</extract>
 </spiderman>
+
 ```
 lib.js
 ```
