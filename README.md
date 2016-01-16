@@ -50,15 +50,16 @@ Conf conf = new DefaultConfBuilder() {
 	}
 	public void configParams(Properties params) {
 		params.put("logger.level", Logger.LEVEL_INFO);
-		params.put("duration", "30s");
-		params.put("worker.download.size", 10);
-		params.put("worker.extract.size", 10);
-		params.put("worker.result.size", 10);
+		//params.put("duration", "30s");
+		params.put("worker.download.size", 20);
+		params.put("worker.extract.size", 20);
+		params.put("worker.result.size", 20);
+		params.put("worker.result.limit", 100);
 	}
 }.build();
 
 final Context ctx = new Context(conf, (result, c) -> {
-	System.err.println("获得第"+c.get()+"个结果:\r\n"+JSON.toJSONString(result, true));
+	System.err.println("获得第"+c+"个结果:\r\n"+JSON.toJSONString(result, true));
 });
 new Spiderman(ctx).go();
 ```
@@ -80,10 +81,10 @@ spiderman.conf.xml
     <!-- 选项配置 -->
     <!--<property key="duration" value="30s" />-->
     <property key="logger.level" value="2" />
-    <property key="worker.download.size" value="5" />
-    <property key="worker.extract.size" value="5" />
-    <property key="worker.result.size" value="5" />
-    <property key="worker.result.limit" value="340" />
+    <property key="worker.download.size" value="20" />
+    <property key="worker.extract.size" value="20" />
+    <property key="worker.result.size" value="20" />
+    <property key="worker.result.limit" value="100" />
     
     <!-- 配置 -->
     <bean id="" class="" />
@@ -153,4 +154,3 @@ var hello = function(name) {
 var addPrefix = function(prefix) {
 	return prefix+$this;
 }
-```
