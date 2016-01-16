@@ -23,15 +23,10 @@ public class ResultManager extends WorkerManager {
 		// 计数器加1
 		if (task instanceof ResultTask) {
 			long count = getCounter().plus();
-//			int limit = getCounter().getLimit();
-//			if (limit > 0 && count > limit) {
-			    //通知该结束了
-//				return;
-//			}
 			final ResultTask rtask = (ResultTask)task;
 			final ExtractResult extractResult = rtask.getResult();
 			getLogger().info("消费了第"+count+"个结果: "+extractResult);
-			this.handler.handle(extractResult, count);
+			this.handler.handle(extractResult, getCounter());
 		}
 	}
 

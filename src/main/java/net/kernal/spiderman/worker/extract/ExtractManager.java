@@ -72,7 +72,7 @@ public class ExtractManager extends WorkerManager {
 	}
 	
 	public static interface ResultHandler {
-		public void handle(ExtractResult result, long count);
+		public void handle(ExtractResult result, Counter counter);
 	}
 
 	protected void clear() {

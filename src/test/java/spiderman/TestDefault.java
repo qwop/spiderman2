@@ -11,6 +11,7 @@ import net.kernal.spiderman.conf.Conf;
 import net.kernal.spiderman.conf.Conf.Pages;
 import net.kernal.spiderman.conf.Conf.Seeds;
 import net.kernal.spiderman.conf.DefaultConfBuilder;
+import net.kernal.spiderman.logger.Logger;
 import net.kernal.spiderman.worker.extract.HtmlCleanerExtractor;
 import net.kernal.spiderman.worker.extract.TextExtractor;
 import net.kernal.spiderman.worker.extract.conf.Model;
@@ -58,23 +59,19 @@ public class TestDefault {
 				seeds.add(new Seed("http://www.baidu.com/s?wd="+K.urlEncode("\"蜘蛛侠\"")));
 			}
 			public void configParams(Properties params) {
-//				params.put("logger.level", Logger.LEVEL_DEBUG);
-				params.put("duration", "30s");
+				params.put("logger.level", Logger.LEVEL_INFO);
+//				params.put("duration", "30s");
 				params.put("worker.download.size", 10);
-//				params.put("worker.download.result.limit", 10);
 				params.put("worker.extract.size", 10);
-//				params.put("worker.extract.result.limit", 8);
 				params.put("worker.result.size", 10);
-//				params.put("worker.result.limit", 5);
+				params.put("worker.result.limit", 340);
 			}
 		}.build();
 		
-		// 启动蜘蛛侠
-		Context ctx = new Context(conf, (result, count) -> {
-			// handle the extract result
-			System.err.println("获得第"+count+"个结果:\r\n"+JSON.toJSONString(result, true));
+		final Context ctx = new Context(conf, (result, c) -> {
+			System.err.println("获得第"+c.get()+"个结果:\r\n"+JSON.toJSONString(result, true));
 		});
-		new Spiderman(ctx).go();
+		new Spiderman(ctx).go();//别忘记看控制台信息哦，结束之后会有统计信息的
 	}
 	
 }

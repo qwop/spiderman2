@@ -4,13 +4,36 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * 计数器
+ * @author 赖伟威 l.weiwei@163.com 2016-01-16
+ *
+ */
 public class Counter {
 
-	private CountDownLatch countDown;
+	/**
+	 * 计数
+	 */
 	private AtomicLong count;
+	/**
+	 * 计数最大限制
+	 */
 	private int limit;
+	/**
+	 * 停止信号计数器
+	 */
+	private CountDownLatch countDown;
+	/**
+	 * 等待超时时间,配合停止信号计数器
+	 */
 	private long timeout;
+	/**
+	 * 计数开始时间
+	 */
 	private long start;
+	/**
+	 * 计数结束时间
+	 */
 	private long end;
 	
 	public Counter(int limit, long timeout) {
@@ -21,6 +44,9 @@ public class Counter {
 		this.start = System.currentTimeMillis();
 	}
 	
+	/**
+	 * 计数器加1
+	 */
 	public long plus() {
 		if (this.limit > 0) {
 			this.countDown.countDown();

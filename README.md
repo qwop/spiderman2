@@ -33,15 +33,15 @@ Conf conf = new DefaultConfBuilder() {
 					.set("isArray", true)
 					.set("isForNewTask", true);
 				model.addField("分页URL")
-				.set("xpath", "//div[@id='page']//a[@href]")
-				.set("attr", "href")
-				.set("isArray", true)
-				.set("isDistinct", true)
-				.set("isForNewTask", true)
-				.addFilter((e, v) -> {
-					final String pn = K.findOneByRegex(v, "&pn\\=\\d+");
-					return K.isBlank(pn) ? v : e.getTask().getSeed().getUrl()+pn;
-				});
+					.set("xpath", "//div[@id='page']//a[@href]")
+					.set("attr", "href")
+					.set("isArray", true)
+					.set("isDistinct", true)
+					.set("isForNewTask", true)
+					.addFilter((e, v) -> {
+						final String pn = K.findOneByRegex(v, "&pn\\=\\d+");
+						return K.isBlank(pn) ? v : e.getTask().getSeed().getUrl()+pn;
+					});
 			}
 		});
 	}
@@ -49,25 +49,24 @@ Conf conf = new DefaultConfBuilder() {
 		seeds.add(new Seed("http://www.baidu.com/s?wd="+K.urlEncode("\"蜘蛛侠\"")));
 	}
 	public void configParams(Properties params) {
-		params.put("logger.level", Logger.LEVEL_DEBUG);
+		params.put("logger.level", Logger.LEVEL_INFO);
 		params.put("duration", "30s");
-		params.put("worker.downloar.size", 10);
+		params.put("worker.download.size", 10);
 		params.put("worker.extract.size", 10);
 		params.put("worker.result.size", 10);
 	}
 }.build();
 
-// 启动蜘蛛侠
-final Context ctx = new Context(conf, (r, c) -> {
-	System.err.println("获得第"+c+"个结果:\r\n"+JSON.toJSONString(r, true));
+final Context ctx = new Context(conf, (result, c) -> {
+	System.err.println("获得第"+c.get()+"个结果:\r\n"+JSON.toJSONString(result, true));
 });
-new Spiderman(ctx).go();//别忘记看控制台信息哦，结束之后会有统计信息的
+new Spiderman(ctx).go();
 ```
 也可以使用配置文件
 ```
-final Conf conf = new XMLConfBuilder(new File("src/main/resources/spiderman.conf.xml")).build();//XML配置构建器
-final Context ctx = new Context(conf, (r, c) -> {
-	System.err.println("获得第"+c+"个结果：\r\n"+JSON.toJSONString(r, true));
+final Conf conf = new XMLConfBuilder(new File("src/main/resources/spiderman.conf.xml")).build();
+final Context ctx = new Context(conf, (result, c) -> {
+	System.err.println("获得第"+c.get()+"个结果：\r\n"+JSON.toJSONString(result, true));
 });
 new Spiderman(ctx).go();//别忘记看控制台信息哦，结束之后会有统计信息的
 ```
@@ -143,6 +142,7 @@ spiderman.conf.xml
 		</page>
 	</extract>
 </spiderman>
+
 ```
 lib.js
 ```
