@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import net.kernal.spiderman.K;
-import net.kernal.spiderman.Spiderman;
+import net.kernal.spiderman.worker.Task;
 import net.kernal.spiderman.worker.Worker;
 import net.kernal.spiderman.worker.WorkerManager;
 import net.kernal.spiderman.worker.download.Downloader;
@@ -23,16 +23,13 @@ public class ExtractWorker extends Worker {
 	
 	private ExtractManager manager;
 	
-	public ExtractWorker(WorkerManager manager, ExtractTask task) {
-		super(manager, task);
+	public ExtractWorker(WorkerManager manager) {
+		super(manager);
 		this.manager = (ExtractManager)manager;
 	}
 	
-	public void run() {
-		final ExtractTask task = (ExtractTask)getTask();
-		if (task == null) {
-			throw new Spiderman.Exception("缺少任务");
-		}
+	public void work(Task t) {
+		final ExtractTask task = (ExtractTask)t;
 		final List<Page> pages = manager.getPages();
 		final Downloader.Response response = task.getResponse();
 		final Downloader.Request request = response.getRequest();
@@ -61,8 +58,6 @@ public class ExtractWorker extends Worker {
 					// 处理过滤器
 					final List<Field.ValueFilter> filters = new ArrayList<Field.ValueFilter>();
 					filters.add(new TrimFilter());// 添加一个trim过滤器
-					final Field.ValueFilter filter = manager.getFilter(field.getString("filter"));
-					if (filter != null) filters.add(filter);// 添加一个在属性里配置的过滤器
 					filters.addAll(field.getFilters());// 添加多个子元素配置的过滤器
 					
 					// 执行过滤, 得到过滤后的新值

@@ -7,6 +7,11 @@ import java.util.List;
 import net.kernal.spiderman.Properties;
 import net.kernal.spiderman.worker.WorkerResult;
 
+/**
+ * 下载器抽象
+ * @author 赖伟威 l.weiwei@163.com 2016-01-16
+ *
+ */
 public interface Downloader {
 
 	public Response download(Request request);

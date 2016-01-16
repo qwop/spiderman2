@@ -1,6 +1,7 @@
 package net.kernal.spiderman.queue;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.zbus.broker.Broker;
 import org.zbus.mq.Consumer;
@@ -14,7 +15,6 @@ import net.kernal.spiderman.worker.Task;
 
 public class ZBusTaskQueue implements TaskQueue {
 
-	private int timeout = 30*1000;
 	private Broker broker;
 	private Producer producer;
 	private Consumer consumer;
@@ -36,18 +36,16 @@ public class ZBusTaskQueue implements TaskQueue {
 	}
 	
 	public Task take() {
-		try {
-			Message msg = consumer.recv(timeout);
-			if (msg == null) {
-				return null;
-			}
-			byte[] data = msg.getBody();
-			Task task = (Task)K.deserialize(data);
-			return task;
-		} catch (IOException | InterruptedException e) {
-			e.printStackTrace();
+		AtomicReference<Message> am = new AtomicReference<Message>();
+		// FIXME 要用take，不能有timeout, 需要ZBUS提供支持
+		consumer.onMessage((m, s) -> am.set(m));
+		Message msg = am.get();
+		if (msg == null) {
+			return null;
 		}
-		return null;
+		byte[] data = msg.getBody();
+		Task task = (Task)K.deserialize(data);
+		return task;
 	}
 
 	public void append(Task task) {

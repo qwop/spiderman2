@@ -16,6 +16,10 @@ public abstract class UrlMatchRule {
 		boolean r = this.doMatches(request);
 		return this.isNegativeEnabled ? !r : r;
 	}
-	
+
+	@Override
+	public String toString() {
+		return "UrlMatchRule [isNegativeEnabled=" + isNegativeEnabled + "]";
+	}
 	
 }

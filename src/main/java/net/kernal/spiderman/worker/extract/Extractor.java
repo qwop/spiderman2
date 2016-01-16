@@ -14,7 +14,7 @@ import net.kernal.spiderman.worker.extract.conf.Model;
  *
  */
 public abstract class Extractor {
-
+	
 	private ExtractTask task;
 	/**
 	 * 所属页面名称
@@ -22,11 +22,12 @@ public abstract class Extractor {
 	private String page;
 	private List<Model> models;
 	
-	protected Extractor(ExtractTask task, String page, Model... models) {
+	public Extractor(ExtractTask task, String page, Model... models) {
 		this.task = task;
 		this.page = page;
 		this.models = new ArrayList<Model>(Arrays.asList(models));
 	}
+	
 	public Extractor addModel(Model model) {
 		this.models.add(model);
 		return this;

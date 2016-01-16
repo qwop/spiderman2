@@ -2,6 +2,7 @@ package net.kernal.spiderman.worker.download;
 
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Spiderman;
+import net.kernal.spiderman.worker.Task;
 import net.kernal.spiderman.worker.Worker;
 import net.kernal.spiderman.worker.WorkerManager;
 
@@ -9,20 +10,19 @@ public class DownloadWorker extends Worker {
 
 	private Downloader downloader;
 	
-	public DownloadWorker(WorkerManager manager, DownloadTask task, Downloader downloader) {
-		super(manager, task);
+	public DownloadWorker(WorkerManager manager, Downloader downloader) {
+		super(manager);
 		this.downloader = downloader;
 	}
 	
-	public void run() {
+	public void work(Task t) {
 		if (this.downloader == null) {
 			throw new Spiderman.Exception("缺少下载器");
 		}
-		if (this.getTask() == null) {
+		if (t == null) {
 			throw new Spiderman.Exception("缺少任务对象");
 		}
-		
-		final DownloadTask task = (DownloadTask)this.getTask();
+		final DownloadTask task = (DownloadTask)t;
 		final Downloader.Request request = task.getRequest();
 		final Downloader.Response response = this.downloader.download(request);
 		if (response == null) {
@@ -55,7 +55,6 @@ public class DownloadWorker extends Worker {
 			return;
 		}
 		response.setBodyStr(bodyStr);
-		
 		// 告诉经理完成任务，并将结果传递过去
 		this.getManager().done(task, response);
 	}

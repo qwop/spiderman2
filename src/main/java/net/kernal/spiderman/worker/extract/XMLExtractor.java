@@ -164,35 +164,48 @@ public class XMLExtractor extends AbstractXPathExtractor {
 				.set("xpath", "//seed")
 				.set("isAutoExtractAttrs", true);
 		seed.addField("text").set("xpath", "./text()");
-		// ExtractPage模型
+		// Extractor定义
+		Model extractors = new Model("extractor")
+			.set("xpath", "//extractor[@alias]")
+			.set("isArray", true)
+			.set("isAutoExtractAttrs", true);
+		// Filter定义
+		Model filters = new Model("filter")
+			.set("xpath", "//filter[@alias]")
+			.set("isArray", true)
+			.set("isAutoExtractAttrs", true);
+		// Page模型
 		Model page = new Model("extract-page")
-				.set("xpath", "//extract-page")
+				.set("xpath", "//page")
+				.set("isArray", true)
 				.set("isAutoExtractAttrs", true);
 		// URL match rule
 		Field urlMatchRule = page.addField("url-match-rule")
 			.set("xpath", ".//url-match-rule")
 			.set("isAutoExtractAttrs", true);
 		urlMatchRule.addField("text").set("xpath", "./text()");
-		// models
+		// Models
 		Field model = page.addField("model")
 				.set("xpath", ".//model")
 				.set("isAutoExtractAttrs", true)
 				.set("isArray", true);
-		// fields
+		// Fields
 		Field field = model.addField("field")
 			.set("xpath", ".//field")
 			.set("isAutoExtractAttrs", true)
 			.set("isArray", true);
-		// filters
-		Field filter = field.addField("filter")
-			.set("xpath", ".//filter")
+		// Field's filters
+		Field filter = field.addField("filters")
+			.set("xpath", ".//filter[@type]")
 			.set("isAutoExtractAttrs", true)
 			.set("isArray", true);
 		filter.addField("text").set("xpath", "./text()");
 		// 抽取器
-		Extractor extractor = new XMLExtractor(new File("src/main/resources/baidu-search.xml"));
+		Extractor extractor = new XMLExtractor(new File("src/main/resources/spiderman.conf.xml"));
 		extractor.addModel(property);
 		extractor.addModel(seed);
+		extractor.addModel(extractors);
+		extractor.addModel(filters);
 		extractor.addModel(page);
 		extractor.extract(new Callback() {
 			public void onModelExtracted(ModelEntry entry) {

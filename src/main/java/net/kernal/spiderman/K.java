@@ -396,12 +396,11 @@ public class K {
 		return lines.toString();
 	}
 	
-	@SuppressWarnings("unchecked")
-	public final static <T> Class<T> loadClass(final String className) {
+	public final static Class<?> loadClass(final String className) {
 		try {
-			return (Class<T>) Thread.currentThread().getContextClassLoader().loadClass(className);
+			return Thread.currentThread().getContextClassLoader().loadClass(className);
 		} catch (ClassNotFoundException e) {
-			return null;
+			throw new RuntimeException(e);
 		}
 	}
 	
@@ -462,6 +461,5 @@ public class K {
 
         return input;
     }
-	
 	
 }

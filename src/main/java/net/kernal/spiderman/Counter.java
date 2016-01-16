@@ -10,14 +10,15 @@ public class Counter {
 	private AtomicLong count;
 	private int limit;
 	private long timeout;
-	private boolean isWorking;
+	private long start;
+	private long end;
 	
 	public Counter(int limit, long timeout) {
 		this.limit = limit;
 		this.countDown = new CountDownLatch(limit > 0 ? limit : 1);
 		this.count = new AtomicLong();
 		this.timeout = timeout;
-		this.isWorking = true;
+		this.start = System.currentTimeMillis();
 	}
 	
 	public long plus() {
@@ -27,8 +28,15 @@ public class Counter {
 		return this.count.addAndGet(1);
 	}
 	
-	public boolean isWorking() {
-		return this.isWorking;
+	/**
+	 * 供外界主动调用
+	 */
+	public void stop() {
+		final int c = limit > 0 ? limit : 1;
+		for (int i = 0; i < c; i++) {
+			this.countDown.countDown();
+		}
+		this.end = System.currentTimeMillis();
 	}
 	
 	public void await() {
@@ -40,7 +48,20 @@ public class Counter {
 			}
 		} catch (InterruptedException e) {
 		}
-		this.isWorking = false;
+		this.end = System.currentTimeMillis();
+	}
+	
+	public int getLimit() {
+		return this.limit;
+	}
+	
+	public long get() {
+		return this.count.get();
+	}
+	
+	public long getCost() {
+		final long cost = this.end - this.start;
+		return cost;
 	}
 	
 }

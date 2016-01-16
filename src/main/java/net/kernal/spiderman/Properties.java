@@ -154,7 +154,8 @@ public class Properties extends HashMap<String, Object> {
 
 	public Boolean getBoolean(String key, Boolean defaultVal) {
 		try {
-			return Boolean.parseBoolean(getString(key));
+			String str = getString(key, defaultVal+"");
+			return Boolean.parseBoolean("1".equals(str) ? "true" : str);
 		} catch (Throwable e){
 			
 		}
@@ -163,7 +164,8 @@ public class Properties extends HashMap<String, Object> {
 	
 	public boolean getBoolean(String key, boolean defaultVal) {
 		try {
-			return Boolean.parseBoolean(getString(key, defaultVal+""));
+			String str = getString(key, defaultVal+"");
+			return Boolean.parseBoolean("1".equals(str) ? "true" : str);
 		} catch (Throwable e){
 			
 		}

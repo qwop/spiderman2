@@ -1,6 +1,8 @@
 package net.kernal.spiderman.queue;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.zbus.broker.Broker;
 import org.zbus.broker.BrokerConfig;
@@ -14,18 +16,24 @@ import net.kernal.spiderman.store.BDbStore;
 import net.kernal.spiderman.store.KVStore;
 import net.kernal.spiderman.worker.Task;
 import net.kernal.spiderman.worker.download.DownloadTask;
+import net.kernal.spiderman.worker.extract.ExtractResult;
 import net.kernal.spiderman.worker.extract.ExtractTask;
+import net.kernal.spiderman.worker.result.ResultTask;
 
 public class QueueManager {
 	
 	private Logger logger;
 	
+	private Map<String, TaskQueue> queues;
 	private TaskQueue downloadQueue;
 	private TaskQueue extractQueue;
+	private TaskQueue resultQueue;
+	
 	private KVStore store;
 	
 	public QueueManager(Properties params, Logger logger) {
 		this.logger = logger;
+		this.queues = new HashMap<String, TaskQueue>();
 		// 构建存储
 		final boolean bdbEnabled = params.getBoolean("store.bdb.enabled", false);
 		if (bdbEnabled) {
@@ -54,17 +62,22 @@ public class QueueManager {
 		    	throw new Spiderman.Exception("连接ZBus服务失败", e);
 		    }
 		    final String downloadQueueName = params.getString("queue.download.name", "SPIDERMAN_DOWNLOAD_TASK");
-			final String extractQueueName = params.getString("queue.download.name", "SPIDERMAN_DOWNLOAD_TASK");
 			downloadQueue = new ZBusTaskQueue(broker, downloadQueueName);
-			logger.debug("创建ZBus下载队列");
+			logger.debug("创建下载队列(ZBus)");
+			final String extractQueueName = params.getString("queue.download.name", "SPIDERMAN_EXTRACT_TASK");
 			extractQueue = new ZBusTaskQueue(broker, extractQueueName);
-			logger.debug("创建ZBus解析队列");
+			logger.debug("创建解析队列(ZBus)");
+			final String resultQueueName = params.getString("queue.download.name", "SPIDERMAN_RESULT_TASK");
+			resultQueue = new ZBusTaskQueue(broker, resultQueueName);
+			logger.debug("创建结果队列(ZBus)");
 		} else {
 			// 构建默认队列
 			downloadQueue = new DefaultTaskQueue();
-			logger.debug("创建默认下载队列");
+			logger.debug("创建下载队列(默认)");
 			extractQueue = new DefaultTaskQueue();
-			logger.debug("创建默认下载队列");
+			logger.debug("创建下载队列(默认)");
+			resultQueue = new DefaultTaskQueue();
+			logger.debug("创建结果队列(默认)");
 		}
 	}
 	
@@ -86,6 +99,10 @@ public class QueueManager {
 		} else if (task instanceof ExtractTask) {
 			this.extractQueue.append(task);
 			logger.info("添加解析任务: "+((ExtractTask)task).getResponse().getRequest().getUrl()+", 所属种子->"+task.getSeed().getUrl());
+		} else if (task instanceof ResultTask) {
+			this.resultQueue.append(task);
+			final ExtractResult r = ((ResultTask)task).getResult();
+			logger.info("添加结果任务: [page="+r.getPageName()+"].[model="+r.getModelName()+"], 所属种子->"+task.getSeed().getUrl());
 		}
 	}
 	
@@ -95,6 +112,14 @@ public class QueueManager {
 	
 	public TaskQueue getExtractQueue() {
 		return this.extractQueue;
+	}
+	
+	public TaskQueue getResultQueue() {
+		return this.resultQueue;
+	}
+	
+	public TaskQueue getQueue(String name) {
+		return this.queues.get(name);
 	}
 	
 	public void shutdown() {

@@ -12,10 +12,10 @@ import net.kernal.spiderman.queue.QueueManager;
 
 /**
  * 工人经理，俗称包工头。
- * 1. 从队列里获取任务
- * 2. 将任务分配给工人
- * 3. 接收工人工作结果
- * @author laiweiwei
+ * 1. 安排工人们开工
+ * 2. 接收工人工作结果
+ * 3. 结束的时候显示统计结果
+ * @author 赖伟威 l.weiwei@163.com 2016-01-16
  *
  */
 public abstract class WorkerManager implements Runnable {
@@ -26,6 +26,7 @@ public abstract class WorkerManager implements Runnable {
 	}
 	
 	private ThreadPoolExecutor threads;
+	private List<Worker> workers;
 	private QueueManager queueManager;
 	protected QueueManager getQueueManager() {
 		return queueManager;
@@ -60,74 +61,66 @@ public abstract class WorkerManager implements Runnable {
 	}
 	
 	/**
-	 * 停工
-	 */
-	public void shutdown() {
-		try {
-			this.threads.shutdownNow();
-		} catch(Throwable e) {
-		} finally {
-			this.clear();
-			logger.debug("退出...");
-		}
-	}
-	
-	/**
 	 * 处理工人的工作结果, 子类实现
 	 * @param task
 	 * @param result
 	 */
 	protected abstract void handleResult(Task task, WorkerResult result);
+	/**
+	 * 获取任务，子类实现
+	 */
+	protected abstract Task takeTask();
+	/**
+	 * 获取工人实例，子类实现
+	 * @param task
+	 */
+	protected abstract Worker buildWorker();
+	protected abstract void clear();
 	
 	/**
-	 * 接收工人完成工作的通知
-	 * @param worker
+	 * 接收工人完成工作的通知，然后调用子类去处理结果
 	 */
 	public void done(Task task, WorkerResult result) {
 		this.handleResult(task, result);
 	}
 	
-	protected abstract Task takeTask();
-	protected abstract Worker buildWorker(Task task);
-	protected abstract void clear();
-	
+	/**
+	 * 工作
+	 */
 	public void run() {
 		if (this.queueManager == null) {
 			throw new Spiderman.Exception(getClass().getSimpleName()+" 缺少队列管理器");
 		}
-		// 要有地方触发这个计时器
-		new Thread(() -> this.counter.await()).start();
-		
-		// 进入正题
-		boolean needCheck = true;
-		while (this.counter.isWorking()) {
-			if (needCheck) {
-				boolean isAvai = (threads.getTaskCount() - threads.getCompletedTaskCount()) < threads.getCorePoolSize();
-				if (!isAvai) {
-					wait(1);
-					continue;
-				}
-				needCheck = false;
-			}
-			
-			final Task task = this.takeTask();
-			if (task == null) {
-				wait(1);
-				continue;
-			}
-			logger.info("获得任务: "+task);
-			final Worker worker = this.buildWorker(task);
-			threads.execute(worker);
-			needCheck = true;
+		final int nWorkers = threads.getCorePoolSize();
+		workers = new ArrayList<Worker>(nWorkers);
+		for (int i = 0; i < nWorkers; i++) {
+			final Worker worker = this.buildWorker();
+			workers.add(worker);
 		}
-		logger.debug("退出获取任务的循环...");
-		listeners.forEach(l -> l.shouldShutdown());
+		
+		this.workers.forEach(w -> threads.execute(w));
+		this.counter.await();
+		this.shutdown();
 	}
 	
-	private void wait(int waitSeconds) {
+	/**
+	 * 停工
+	 */
+	private void shutdown() {
 		try {
-			Thread.sleep(waitSeconds*1000L);
-		} catch (InterruptedException e) {}
+			this.workers.forEach(w -> w.stop());
+			this.threads.shutdownNow();
+		} catch(Throwable e) {
+		} finally {
+			this.clear();
+			logger.debug("退出管理器...");
+			// 统计结果
+			final String fmt = "统计结果 \r\n 耗时:%sms \r\n 计数:%s \r\n 线程池:总数(%s) 运行中(%s) 已完成(%s) \r\n";
+			final String msg = String.format(fmt, counter.getCost(), counter.get(), threads.getCorePoolSize(), threads.getActiveCount(), threads.getCompletedTaskCount());
+			logger.debug(msg);
+			listeners.forEach(l -> l.shouldShutdown());
+			this.listeners.clear();
+		}
 	}
 	
 }

@@ -2,12 +2,15 @@ package net.kernal.spiderman.worker.extract.conf;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 import net.kernal.spiderman.Properties;
 import net.kernal.spiderman.worker.extract.Extractor;
 
 public class Field extends Properties {
 
+	private static final Logger logger = Logger.getLogger(Field.class.getName());
+	
 	private static final long serialVersionUID = 7148432045433277575L;
 	
 	private String page;
@@ -51,13 +54,14 @@ public class Field extends Properties {
 		return this.name;
 	}
 	
-	public Field set(String key, Object value) {
-		this.put(key, value);
+	public Field set(String k, Object v) {
+		this.put(k, v);
 		return this;
 	}
 	
-	public Field addFilter(ValueFilter transformer) {
-		this.filters.add(transformer);
+	public Field addFilter(ValueFilter ft) {
+		this.filters.add(ft);
+		logger.info("添加字段值过滤器: " + ft);
 		return this;
 	}
 	
@@ -66,6 +70,11 @@ public class Field extends Properties {
 	}
 	
 	public static interface ValueFilter {
-		public String filter(Extractor extractor, String value);
+		public String filter(Extractor e, String v);
 	}
+
+	public String toString() {
+		return "Field [page=" + page + ", model=" + model + ", name=" + name + "]";
+	}
+	
 }

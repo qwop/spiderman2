@@ -20,11 +20,7 @@ import net.kernal.spiderman.worker.extract.conf.Model;
 public class TextExtractor extends Extractor {
 	
 	public static Extractor.Builder builder() {
-		return new Extractor.Builder() {
-			public Extractor build(ExtractTask task, String page, Model... models) {
-				return new TextExtractor(task, page, models);
-			}
-		};
+		return (t, p, ms) -> new TextExtractor(t, p, ms);
 	}
 	
 	public TextExtractor(ExtractTask task,String page, Model... models) {

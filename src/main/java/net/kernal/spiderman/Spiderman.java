@@ -1,7 +1,6 @@
 package net.kernal.spiderman;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -18,37 +17,34 @@ public class Spiderman {
 	private Logger logger;
 	
 	private Context context;
-	private List<WorkerManager> managers;
+	private Collection<WorkerManager> managers;
 	private ExecutorService threads;
 	private Counter counter;
 	
 	public Spiderman(Context context) {
 		this.context = context;
-		final byte level = context.getParams().getByte("logger.level", Logger.LEVEL_INFO);
+		final Properties params = context.getParams();
+		final byte level = params.getByte("logger.level", Logger.LEVEL_INFO);
 		this.logger = new ConsoleLogger(ExtractManager.class, level);
 		this.threads = Executors.newCachedThreadPool();
-		managers = new ArrayList<WorkerManager>(2);
-		final WorkerManager downloadManager = context.getDownloadManager();
-		if (downloadManager != null) {
-			downloadManager.addListener(() -> counter.plus());
-			managers.add(downloadManager);
-		}
-		final WorkerManager extractManager = context.getExtractManager();
-		if (extractManager != null) {
-			downloadManager.addListener(() -> counter.plus());
-			managers.add(extractManager);
-		}
-		counter = new Counter(managers.size(), 0);
+		this.managers = context.getManagers();
+		this.managers.forEach(m -> m.addListener(() -> counter.plus()));
+		final long duration = K.convertToMillis(params.getString("duration", "0")).longValue();
+		counter = new Counter(managers.size(), duration);
 	}
 	
 	public void go() {
 		logger.debug("开始行动...");
 		this.managers.forEach(m -> threads.execute(m));
 		this.counter.await();
-		stop();
+		_stop();
 	}
 	
 	public void stop() {
+		this.managers.forEach(m -> m.getCounter().stop());
+	}
+	
+	private void _stop() {
 		this.threads.shutdownNow();
 		this.context.shutdown();
 		logger.debug("停止行动...");

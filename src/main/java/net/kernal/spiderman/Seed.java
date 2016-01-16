@@ -24,5 +24,9 @@ public class Seed implements Serializable {
 	public String getUrl() {
 		return this.url;
 	}
+
+	public String toString() {
+		return "Seed [name=" + name + ", url=" + url + "]";
+	}
 	
 }

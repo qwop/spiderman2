@@ -31,8 +31,8 @@ public class DownloadManager extends WorkerManager {
 	/**
 	 * 构建工人对象
 	 */
-	protected Worker buildWorker(Task task) {
-		return new DownloadWorker(this, (DownloadTask)task, downloader);
+	protected Worker buildWorker() {
+		return new DownloadWorker(this, downloader);
 	}
 	
 	/**
@@ -44,14 +44,18 @@ public class DownloadManager extends WorkerManager {
 			// 放入下载队列
 			getQueueManager().append(new DownloadTask(task.getSeed(), request));
 		} else if (result instanceof Downloader.Response) {
+			// 计数器加1
+			long count = getCounter().plus();
+//			int limit = getCounter().getLimit();
+//			if (limit > 0 && count > limit) {
+//				// 通知该结束了
+//				return;
+//			}
+			
 			Downloader.Response response = (Downloader.Response)result;
 			// 放入解析队列
 			getQueueManager().append(new ExtractTask(task.getSeed(), response));
-			if (getCounter() != null) {
-				// 计数器加1
-				long c = getCounter().plus();
-				getLogger().info(getClass().getSimpleName()+"下载了第"+c+"个网页: "+response);
-			}
+			getLogger().info("下载了第"+count+"个网页: "+response);
 		}
 	}
 

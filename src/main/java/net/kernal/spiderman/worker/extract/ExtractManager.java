@@ -1,8 +1,6 @@
 package net.kernal.spiderman.worker.extract;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.script.ScriptEngine;
 
@@ -17,33 +15,24 @@ import net.kernal.spiderman.worker.WorkerManager;
 import net.kernal.spiderman.worker.WorkerResult;
 import net.kernal.spiderman.worker.download.DownloadTask;
 import net.kernal.spiderman.worker.download.Downloader;
-import net.kernal.spiderman.worker.extract.conf.Field;
 import net.kernal.spiderman.worker.extract.conf.Page;
+import net.kernal.spiderman.worker.result.ResultTask;
 
 public class ExtractManager extends WorkerManager {
 	
 	private List<Page> pages;
 	private ScriptEngine scriptEngine;
-	private Map<String, Field.ValueFilter> filters;
-	private ResultHandler resultHandler;
 	
-	public ExtractManager(int nWorkers, QueueManager queueManager, Counter counter, Logger logger, List<Page> pages, ResultHandler resultHandler) {
+	public ExtractManager(int nWorkers, QueueManager queueManager, Counter counter, Logger logger, List<Page> pages) {
 		super(nWorkers, queueManager, counter, logger);
 		this.pages = pages;
 		if (K.isEmpty(pages)) {
 			throw new Spiderman.Exception("缺少页面抽取配置");
 		}
-		this.filters = new HashMap<String, Field.ValueFilter>();
-		this.resultHandler = resultHandler;
 	}
 
 	public ExtractManager setScriptEngine(ScriptEngine scriptEngine) {
 		this.scriptEngine = scriptEngine;
-		return this;
-	}
-	
-	public ExtractManager registerFilter(String name, Field.ValueFilter filter) {
-		this.filters.put(name, filter);
 		return this;
 	}
 	
@@ -55,17 +44,19 @@ public class ExtractManager extends WorkerManager {
 		return this.scriptEngine;
 	}
 	
-	public Field.ValueFilter getFilter(String name) {
-		return this.filters.get(name);
-	}
-
 	protected void handleResult(Task task, WorkerResult result) {
 		if (result instanceof ExtractResult) {
-			ExtractResult extractResult = (ExtractResult)result;
 			// 计数器加1
 			long count = getCounter().plus();
-			getLogger().info("解析了第"+count+"个模型: "+extractResult);
-			this.resultHandler.handle(extractResult, count);
+//			int limit = getCounter().getLimit();
+//			if (limit > 0 && count > limit) {
+//				// 通知该结束了
+//				return;
+//			}
+			getLogger().info("解析了第"+count+"个模型");
+			// 将成果放入结果处理队列
+			final ExtractResult extractResult = (ExtractResult)result;
+			getQueueManager().append(new ResultTask(task.getSeed(), extractResult));
 		} else if (result instanceof Downloader.Request) {
 			Downloader.Request request = (Downloader.Request)result;
 			getQueueManager().append(new DownloadTask(task.getSeed(), request));
@@ -76,8 +67,8 @@ public class ExtractManager extends WorkerManager {
 		return getQueueManager().getExtractQueue().take();
 	}
 
-	protected Worker buildWorker(Task task) {
-		return new ExtractWorker(this, (ExtractTask)task);
+	protected Worker buildWorker() {
+		return new ExtractWorker(this);
 	}
 	
 	public static interface ResultHandler {

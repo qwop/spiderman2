@@ -1,21 +1,32 @@
 package net.kernal.spiderman.conf;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.logging.Logger;
 
 import net.kernal.spiderman.Properties;
 import net.kernal.spiderman.Seed;
+import net.kernal.spiderman.worker.extract.Extractor;
+import net.kernal.spiderman.worker.extract.conf.Field;
 import net.kernal.spiderman.worker.extract.conf.Page;
 
 public class Conf {
 	
+	private static final Logger logger = Logger.getLogger(Conf.class.getName());
+	
 	public Conf() {
 		seeds = new Seeds();
+		extractors = new Extractors();
+		filters = new Filters();
 		pages = new Pages();
 		params = new Properties();
 	}
 	
 	private Seeds seeds;
+	private Extractors extractors;
+	private Filters filters;
 	private Pages pages;
 	private Properties params;
 	
@@ -26,10 +37,39 @@ public class Conf {
 		}
 		public Seeds add(Seed seed) {
 			this.seeds.add(seed);
+			logger.info("添加种子: " + seed);
 			return this;
 		}
 		public List<Seed> all() {
 			return this.seeds;
+		}
+	}
+	public static class Extractors {
+		private Map<String, Class<Extractor>> extractors;
+		public Extractors() {
+			extractors = new HashMap<String, Class<Extractor>>();
+		}
+		public Extractors register(String alias, Class<Extractor> extractor) {
+			this.extractors.put(alias, extractor);
+			logger.info("注册解析器类: " + alias + ", " + extractor.getName());
+			return this;
+		}
+		public Map<String, Class<Extractor>> all() {
+			return this.extractors;
+		}
+	}
+	public static class Filters {
+		private Map<String, Field.ValueFilter> filters;
+		public Filters() {
+			filters = new HashMap<String, Field.ValueFilter>();
+		}
+		public Filters register(String alias, Field.ValueFilter ft) {
+			this.filters.put(alias, ft);
+			logger.info("注册过滤器: " + alias + ", " + ft);
+			return this;
+		}
+		public Map<String, Field.ValueFilter> all() {
+			return this.filters;
 		}
 	}
 	public static class Pages {
@@ -39,6 +79,7 @@ public class Conf {
 		}
 		public Pages add(Page page) {
 			this.pages.add(page);
+			logger.info("添加页面配置: " + page);
 			return this;
 		}
 		public List<Page> all() {
@@ -59,6 +100,14 @@ public class Conf {
 		seeds.add(seed);
 		return this;
 	}
+	public Conf registerExtractor(String alias, Class<Extractor> extractor) {
+		extractors.register(alias, extractor);
+		return this;
+	}
+	public Conf registerFilter(String alias, Field.ValueFilter filter) {
+		filters.register(alias, filter);
+		return this;
+	}
 	public Conf addPage(Page page) {
 		pages.add(page);
 		return this;
@@ -69,6 +118,12 @@ public class Conf {
 	}
 	public Seeds getSeeds() {
 		return seeds;
+	}
+	public Extractors getExtractors() {
+		return extractors;
+	}
+	public Filters getFilters() {
+		return filters;
 	}
 	public Pages getPages() {
 		return pages;
