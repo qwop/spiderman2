@@ -52,21 +52,23 @@ public class Context {
 			.map(seed -> new DownloadTask(seed, new Downloader.Request(seed.getUrl())))
 			.forEach(task -> queueManager.append(task));
 		// 构建下载管理器
-		final int size1 = params.getInt("worker.download.size", 1);
-		if (size1 > 0) {
+		final boolean enabled1 = params.getBoolean("worker.download.enabled", true);
+		if (enabled1) {
 			final Downloader downloader = new HttpClientDownloader(params);
 			final int limit = params.getInt("worker.download.result.limit", 0);
 			final Counter counter = new Counter(limit, 0);
-			final DownloadManager downloadManager = new DownloadManager(size1, queueManager, counter, new ConsoleLogger(DownloadManager.class, level), downloader);
+			final int size = params.getInt("worker.download.size", 1);
+			final DownloadManager downloadManager = new DownloadManager(size, queueManager, counter, new ConsoleLogger(DownloadManager.class, level), downloader);
 			this.addManager(downloadManager);
 		}
 		
 		// 构建解析管理器
-		final int size2 = params.getInt("worker.extract.size", 1);
-		if (size2 > 0) {
+		final boolean enabled2 = params.getBoolean("worker.extract.enabled", true);
+		if (enabled2) {
 			final int limit = params.getInt("worker.extract.result.limit", 0);
 			final Counter counter = new Counter(limit, 0);
-			final ExtractManager extractManager = new ExtractManager(size2, queueManager, counter, new ConsoleLogger(ExtractManager.class, level), pages);
+			final int size = params.getInt("worker.extract.size", 1);
+			final ExtractManager extractManager = new ExtractManager(size, queueManager, counter, new ConsoleLogger(ExtractManager.class, level), pages);
 			final String engineName = params.getString("scriptEngine", "nashorn");
 			final ScriptEngine scriptEngine = new ScriptEngineManager().getEngineByName(engineName);
 			extractManager.setScriptEngine(scriptEngine);
@@ -74,11 +76,12 @@ public class Context {
 		}
 		
 		// 构建结果处理管理器
-		final int size3 = params.getInt("worker.result.size", 1);
-		if (size3 > 0) {
+		final boolean enabled3 = params.getBoolean("worker.result.enabled", true);
+		if (enabled3) {
 			final int limit = params.getInt("worker.result.limit", 0);
 			final Counter counter = new Counter(limit, 0);
-			final ResultManager resultManager = new ResultManager(size3, queueManager, counter, new ConsoleLogger(ResultManager.class, level), resultHandler);
+			final int size = params.getInt("worker.result.size", 1);
+			final ResultManager resultManager = new ResultManager(size, queueManager, counter, new ConsoleLogger(ResultManager.class, level), resultHandler);
 			this.addManager(resultManager);
 		}
 	}

@@ -26,7 +26,7 @@ public class ResultManager extends WorkerManager {
 			final ResultTask rtask = (ResultTask)task;
 			final ExtractResult extractResult = rtask.getResult();
 			getLogger().info("消费了第"+count+"个结果: "+extractResult);
-			this.handler.handle(extractResult, getCounter());
+			this.handler.handle(extractResult, count);
 		}
 	}
 

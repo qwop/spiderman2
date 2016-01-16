@@ -72,11 +72,12 @@ public class QueueManager {
 			logger.debug("创建结果队列(ZBus)");
 		} else {
 			// 构建默认队列
-			downloadQueue = new DefaultTaskQueue();
+			final int capacity = params.getInt("queue.capacity");
+			downloadQueue = new DefaultTaskQueue(capacity);
 			logger.debug("创建下载队列(默认)");
-			extractQueue = new DefaultTaskQueue();
+			extractQueue = new DefaultTaskQueue(capacity);
 			logger.debug("创建下载队列(默认)");
-			resultQueue = new DefaultTaskQueue();
+			resultQueue = new DefaultTaskQueue(capacity);
 			logger.debug("创建结果队列(默认)");
 		}
 	}

@@ -1,5 +1,6 @@
 package net.kernal.spiderman.queue;
 
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -12,7 +13,15 @@ import net.kernal.spiderman.worker.Task;
  */
 public class DefaultTaskQueue implements TaskQueue {
 	
-	private BlockingQueue<Task> queue = new LinkedBlockingQueue<Task>(5000);
+	private BlockingQueue<Task> queue;
+	
+	public DefaultTaskQueue(int capacity) {
+		if (capacity <= 0) {
+			queue = new LinkedBlockingQueue<Task>(5000);
+		} else {
+			queue = new ArrayBlockingQueue<Task>(capacity);
+		}
+	}
 	
 	public Task take() {
 		try {
@@ -24,8 +33,9 @@ public class DefaultTaskQueue implements TaskQueue {
 	
 	public void append(Task task) {
 		try {
-			this.queue.put(task);
-		} catch (InterruptedException e) {
+			this.queue.add(task);
+		} catch (Throwable e) {
+			e.printStackTrace();
 		}
 	}
 

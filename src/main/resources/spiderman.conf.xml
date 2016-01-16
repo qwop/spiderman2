@@ -6,13 +6,10 @@
     <!-- 选项配置 -->
     <!--<property key="duration" value="30s" />-->
     <property key="logger.level" value="2" />
-    <property key="worker.download.size" value="5" />
-    <property key="worker.extract.size" value="5" />
-    <property key="worker.result.size" value="5" />
-    <property key="worker.result.limit" value="340" />
-    
-    <!-- 配置 -->
-    <bean id="" class="" />
+    <property key="worker.download.size" value="21" />
+    <property key="worker.extract.size" value="21" />
+    <property key="worker.result.size" value="21" />
+    <property key="worker.result.limit" value="100" />
     
     <!-- 种子入口 -->
     <seed name="Spiderman">http://www.baidu.com/s?wd=%22%E8%9C%98%E8%9B%9B%E4%BE%A0%22</seed>

@@ -52,8 +52,8 @@ public abstract class WorkerManager implements Runnable {
 	 * @param taskQueue
 	 */
 	public WorkerManager(int nWorkers, QueueManager queueManager, Counter counter, Logger logger) {
-		final int n = nWorkers > 0 ? nWorkers : 1;
-		this.threads = (ThreadPoolExecutor)Executors.newFixedThreadPool(n);
+		nWorkers = nWorkers > 0 ? nWorkers : 1;
+		this.threads = (ThreadPoolExecutor)Executors.newFixedThreadPool(nWorkers);
 		this.queueManager = queueManager;
 		this.counter = counter;
 		this.listeners = new ArrayList<Listener>();
@@ -115,8 +115,9 @@ public abstract class WorkerManager implements Runnable {
 			this.clear();
 			logger.debug("退出管理器...");
 			// 统计结果
-			final String fmt = "统计结果 \r\n 耗时:%sms \r\n 计数:%s \r\n 线程池:总数(%s) 运行中(%s) 已完成(%s) \r\n";
-			final String msg = String.format(fmt, counter.getCost(), counter.get(), threads.getCorePoolSize(), threads.getActiveCount(), threads.getCompletedTaskCount());
+			final String fmt = "统计结果 \r\n 耗时:%sms \r\n 计数:%s \r\n 能力:%s/秒 \r\n 工人:总数(%s) 工作中(%s) 已收工(%s) \r\n";
+			final long qps = Math.round((counter.get()*1.0/counter.getCost())*1000);
+			final String msg = String.format(fmt, counter.getCost(), counter.get(), qps, threads.getCorePoolSize(), threads.getActiveCount(), threads.getCompletedTaskCount());
 			logger.debug(msg);
 			listeners.forEach(l -> l.shouldShutdown());
 			this.listeners.clear();

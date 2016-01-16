@@ -23,7 +23,7 @@ public class TestDefault {
 	 * 这个测试代码完全使用Java代码的方式来配置抽取规则，可以看到配置躲起来之后代码不太好看，至少是比较繁杂的。
 	 * 另外一个TestXML例子就使用大部分配置通过XML文件加载，小部分用Java代码处理，看起来会好很多。
 	 */
-	public static void main(String[] args) throws InterruptedException {
+	public static void main(String[] args) {
 		Conf conf = new DefaultConfBuilder() {
 			public void configPages(Pages pages) {
 				pages.add(new Page("最后结果") {
@@ -59,18 +59,18 @@ public class TestDefault {
 				seeds.add(new Seed("http://www.baidu.com/s?wd="+K.urlEncode("\"蜘蛛侠\"")));
 			}
 			public void configParams(Properties params) {
-				params.put("logger.level", Logger.LEVEL_INFO);
+				params.put("logger.level", Logger.LEVEL_DEBUG);
 //				params.put("duration", "30s");
-				params.put("worker.download.size", 10);
-				params.put("worker.extract.size", 10);
-				params.put("worker.result.size", 10);
-				params.put("worker.result.limit", 340);
+				params.put("worker.download.size", 1);
+				params.put("worker.extract.size", 1);
+				params.put("worker.result.size", 1);
+				params.put("worker.result.limit", 100);
 			}
 		}.build();
 		
 		final Context ctx = new Context(conf, (result, c) -> {
-			System.err.println("获得第"+c.get()+"个结果:\r\n"+JSON.toJSONString(result, true));
-		});
+			System.err.println("获得第"+c+"个结果:\r\n"+JSON.toJSONString(result, true));
+		}); 
 		new Spiderman(ctx).go();//别忘记看控制台信息哦，结束之后会有统计信息的
 	}
 	

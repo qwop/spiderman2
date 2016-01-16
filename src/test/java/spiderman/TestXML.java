@@ -18,7 +18,7 @@ public class TestXML {
 	public static void main(String[] args) {
 		final Conf conf = new XMLConfBuilder(new File("src/main/resources/spiderman.conf.xml")).build();
 		final Context ctx = new Context(conf, (result, c) -> {
-			System.err.println("获得第"+c.get()+"个结果：\r\n"+JSON.toJSONString(result, true));
+			System.err.println("获得第"+c+"个结果：\r\n"+JSON.toJSONString(result, true));
 		});
 		new Spiderman(ctx).go();//别忘记看控制台信息哦，结束之后会有统计信息的
 	}
