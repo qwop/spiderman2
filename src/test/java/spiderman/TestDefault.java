@@ -26,13 +26,14 @@ public class TestDefault {
 	public static void main(String[] args) {
 		Conf conf = new DefaultConfBuilder() {
 			public void configPages(Pages pages) {
-				pages.add(new Page("最后结果") {
+				pages.add(new Page("网页内容") {
 					public void config(UrlMatchRules rules, Models models) { 
+						this.setTaskDuplicateCheckEnabled(true);
 						this.setExtractorBuilder(TextExtractor.builder());
 						rules.addNegativeContainsRule("baidu"); 
 					}
 				});
-				pages.add(new Page("百度网页搜索") {
+				pages.add(new Page("百度网页搜索") { 
 					public void config(UrlMatchRules rules, Models models) {
 						this.setExtractorBuilder(HtmlCleanerExtractor.builder());
 						rules.addRegexRule("(?=http://www\\.baidu\\.com/s\\?wd\\=).[^&]*(&pn\\=\\d+)?");
@@ -60,16 +61,21 @@ public class TestDefault {
 			}
 			public void configParams(Properties params) {
 				params.put("logger.level", Logger.LEVEL_DEBUG);
-//				params.put("duration", "30s");
-				params.put("worker.download.size", 1);
-				params.put("worker.extract.size", 1);
-				params.put("worker.result.size", 1);
-				params.put("worker.result.limit", 100);
+				params.put("duration", "10s");// 运行时间
+//				params.put("queue.capacity", 5000);// 队列大小
+				params.put("queue.zbus.enabled", false);
+				params.put("queue.zbus.server", "10.8.60.8:15555");
+				params.put("queue.other.names", "SPIDERMAN_JSON_RESULT");
+				params.put("store.bdb.enabled", false);
+				params.put("store.bdb.file", "src/main/resources/store");
+				params.put("worker.download.size", 1);// 下载线程数
+				params.put("worker.extract.size", 1);// 解析线程数
+				params.put("worker.result.size", 1);// 结果处理线程数
 			}
 		}.build();
 		
-		final Context ctx = new Context(conf, (result, c) -> {
-			System.err.println("获得第"+c+"个结果:\r\n"+JSON.toJSONString(result, true));
+		final Context ctx = new Context(conf, (result, counter, context) -> {
+			System.err.println("获得第"+counter+"个结果:\r\n"+JSON.toJSONString(result, true));
 		}); 
 		new Spiderman(ctx).go();//别忘记看控制台信息哦，结束之后会有统计信息的
 	}

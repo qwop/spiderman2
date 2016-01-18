@@ -11,6 +11,7 @@ import net.kernal.spiderman.K;
 import net.kernal.spiderman.worker.Task;
 import net.kernal.spiderman.worker.Worker;
 import net.kernal.spiderman.worker.WorkerManager;
+import net.kernal.spiderman.worker.WorkerResult;
 import net.kernal.spiderman.worker.download.Downloader;
 import net.kernal.spiderman.worker.extract.conf.Field;
 import net.kernal.spiderman.worker.extract.conf.Model;
@@ -38,15 +39,15 @@ public class ExtractWorker extends Worker {
 		.filter(page -> page.matches(request))//过滤，只要能匹配request的page
 		.forEach(page -> {
 			final Extractor.Builder builder = page.getExtractorBuilder();
-			final String pageName = page.getName();   
+			final String pageName = page.getName();
 			final Models models = page.getModels();
 			final Extractor extractor = builder.build(task, pageName, models.all().toArray(new Model[]{}));
 			
 			// 执行抽取
 			extractor.extract(new Extractor.Callback() {
 				public void onModelExtracted(ModelEntry entry) {
-					final ExtractResult result = new ExtractResult(pageName, entry.getModel().getName(), entry.getProperties());
-					manager.done(task, result);
+					final ExtractResult result = new ExtractResult(pageName, entry.getModel().getName(), entry.getProperties(), request);
+					manager.done(new WorkerResult(page, task, result));
 				}
 				public void onFieldExtracted(FieldEntry entry) {
 					final Field field = entry.getField();
@@ -83,7 +84,7 @@ public class ExtractWorker extends Worker {
 						newValues.parallelStream()
 							.filter(url -> !request.getUrl().equals(url))
 							.map(url -> new Downloader.Request(url))
-							.forEach(req -> manager.done(task, req));
+							.forEach(req -> manager.done(new WorkerResult(page, task, req))); 
 					}
 					
 					// 设置结果

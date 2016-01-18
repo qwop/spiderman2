@@ -29,7 +29,7 @@ public class ConsoleLogger implements Logger {
 		if (level > Logger.LEVEL_WARN) {
 			return;
 		}
-		System.out.println("[Spiderman][警告]["+name+"]"+K.formatNow()+"\r\n"+msg+"\r\n");
+		System.err.println("[Spiderman][警告]["+name+"]"+K.formatNow()+"\r\n"+msg+"\r\n");
 	}
 	
 	public void error(String err, Throwable e) {

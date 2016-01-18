@@ -1,9 +1,11 @@
 package net.kernal.spiderman.worker.extract;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.script.ScriptEngine;
 
+import net.kernal.spiderman.Context;
 import net.kernal.spiderman.Counter;
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Spiderman;
@@ -30,7 +32,7 @@ public class ExtractManager extends WorkerManager {
 			throw new Spiderman.Exception("缺少页面抽取配置");
 		}
 	}
-
+	
 	public ExtractManager setScriptEngine(ScriptEngine scriptEngine) {
 		this.scriptEngine = scriptEngine;
 		return this;
@@ -44,22 +46,21 @@ public class ExtractManager extends WorkerManager {
 		return this.scriptEngine;
 	}
 	
-	protected void handleResult(Task task, WorkerResult result) {
+	protected void handleResult(WorkerResult wr) {
+		final Task task = wr.getTask();
+		final Object result = wr.getResult();
+		final Page page = wr.getPage();
+		final boolean isUnique = page == null ? false : page.isTaskDuplicateCheckEnabled();
 		if (result instanceof ExtractResult) {
 			// 计数器加1
-			long count = getCounter().plus();
-//			int limit = getCounter().getLimit();
-//			if (limit > 0 && count > limit) {
-//				// 通知该结束了
-//				return;
-//			}
+			final long count = getCounter().plus();
 			getLogger().info("解析了第"+count+"个模型");
 			// 将成果放入结果处理队列
 			final ExtractResult extractResult = (ExtractResult)result;
-			getQueueManager().append(new ResultTask(task.getSeed(), extractResult));
+			getQueueManager().append(new ResultTask(task.getSeed(), isUnique, extractResult));
 		} else if (result instanceof Downloader.Request) {
-			Downloader.Request request = (Downloader.Request)result;
-			getQueueManager().append(new DownloadTask(task.getSeed(), request));
+			final Downloader.Request request = (Downloader.Request)result;
+			getQueueManager().append(new DownloadTask(task.getSeed(), isUnique, request));
 		}
 	}
 
@@ -71,8 +72,12 @@ public class ExtractManager extends WorkerManager {
 		return new ExtractWorker(this);
 	}
 	
-	public static interface ResultHandler {
-		public void handle(ExtractResult result, long c);
+	public static interface ResultHandler { 
+		AtomicReference<Context> context = new AtomicReference<Context>();
+		public void handle(ExtractResult result, Counter c);
+		public default void init(Context ctx){
+			context.set(ctx);
+		}
 	}
 
 	protected void clear() {

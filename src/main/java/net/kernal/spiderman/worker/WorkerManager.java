@@ -21,7 +21,7 @@ import net.kernal.spiderman.queue.QueueManager;
 public abstract class WorkerManager implements Runnable {
 
 	private Logger logger;
-	protected Logger getLogger() {
+	public Logger getLogger() {
 		return this.logger;
 	}
 	
@@ -61,18 +61,11 @@ public abstract class WorkerManager implements Runnable {
 	}
 	
 	/**
-	 * 处理工人的工作结果, 子类实现
-	 * @param task
-	 * @param result
-	 */
-	protected abstract void handleResult(Task task, WorkerResult result);
-	/**
 	 * 获取任务，子类实现
 	 */
 	protected abstract Task takeTask();
 	/**
 	 * 获取工人实例，子类实现
-	 * @param task
 	 */
 	protected abstract Worker buildWorker();
 	protected abstract void clear();
@@ -80,9 +73,14 @@ public abstract class WorkerManager implements Runnable {
 	/**
 	 * 接收工人完成工作的通知，然后调用子类去处理结果
 	 */
-	public void done(Task task, WorkerResult result) {
-		this.handleResult(task, result);
+	public void done(WorkerResult workerResult) {
+		this.handleResult(workerResult);
 	}
+	
+	/**
+	 * 处理工人的工作结果, 子类实现
+	 */
+	protected abstract void handleResult(WorkerResult workerResult);
 	
 	/**
 	 * 工作
@@ -92,6 +90,7 @@ public abstract class WorkerManager implements Runnable {
 			throw new Spiderman.Exception(getClass().getSimpleName()+" 缺少队列管理器");
 		}
 		final int nWorkers = threads.getCorePoolSize();
+		logger.debug("我这有"+nWorkers+"个兄弟上班签到");
 		workers = new ArrayList<Worker>(nWorkers);
 		for (int i = 0; i < nWorkers; i++) {
 			final Worker worker = this.buildWorker();
@@ -100,6 +99,7 @@ public abstract class WorkerManager implements Runnable {
 		
 		this.workers.forEach(w -> threads.execute(w));
 		this.counter.await();
+		logger.debug("我这有"+nWorkers+"个兄弟下班签退");
 		this.shutdown();
 	}
 	
@@ -116,7 +116,7 @@ public abstract class WorkerManager implements Runnable {
 			logger.debug("退出管理器...");
 			// 统计结果
 			final String fmt = "统计结果 \r\n 耗时:%sms \r\n 计数:%s \r\n 能力:%s/秒 \r\n 工人:总数(%s) 工作中(%s) 已收工(%s) \r\n";
-			final long qps = Math.round((counter.get()*1.0/counter.getCost())*1000);
+			final long qps = Math.round((counter.get()*1.0/(counter.getCost())*1000));
 			final String msg = String.format(fmt, counter.getCost(), counter.get(), qps, threads.getCorePoolSize(), threads.getActiveCount(), threads.getCompletedTaskCount());
 			logger.debug(msg);
 			listeners.forEach(l -> l.shouldShutdown());

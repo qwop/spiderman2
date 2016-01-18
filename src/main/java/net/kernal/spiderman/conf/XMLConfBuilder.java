@@ -164,7 +164,8 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 			    	final Page page = new Page(pageName) {
 						public void config(UrlMatchRules rules, Models models) {}
 					};
-					
+					final boolean isUnique = values.getBoolean("isUnique", false);
+					page.setTaskDuplicateCheckEnabled(isUnique);
 					// 处理extractor
 					final String extractorName = values.getString("extractor", defaultExtractorAlias.get());
 			    	handleExtractor(page, extractorName);

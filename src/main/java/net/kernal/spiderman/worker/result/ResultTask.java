@@ -10,8 +10,8 @@ public class ResultTask extends Task {
 	
 	private ExtractResult result;
 	
-	public ResultTask(Seed seed, ExtractResult result) {
-		super(seed);
+	public ResultTask(Seed seed, boolean isUnique, ExtractResult result) {
+		super(seed, isUnique);
 		this.result = result;
 	}
 	
@@ -20,7 +20,7 @@ public class ResultTask extends Task {
 	}
 
 	public String getUniqueKey() {
-		return getSeed().getUrl()+"#"+result.getPageName()+"#"+result.getModelName();
+		return "result_"+result.getPageName()+"#"+result.getModelName()+"#"+getSeed().getUrl()+"#"+result.getRequest().getUrl();
 	}
 
 }

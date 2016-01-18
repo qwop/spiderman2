@@ -1,18 +1,25 @@
 package net.kernal.spiderman.worker.download;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Spiderman;
 import net.kernal.spiderman.worker.Task;
 import net.kernal.spiderman.worker.Worker;
 import net.kernal.spiderman.worker.WorkerManager;
+import net.kernal.spiderman.worker.WorkerResult;
 
 public class DownloadWorker extends Worker {
 
 	private Downloader downloader;
+	/** 保存已经重定向过的URL地址 */
+	private Set<String> redirectedLocations;
 	
 	public DownloadWorker(WorkerManager manager, Downloader downloader) {
 		super(manager);
 		this.downloader = downloader;
+		this.redirectedLocations = new HashSet<String>();
 	}
 	
 	public void work(Task t) {
@@ -32,9 +39,13 @@ public class DownloadWorker extends Worker {
 		final int statusCode = response.getStatusCode();
 		final String location = response.getLocation();
 		if (K.isNotBlank(location) && K.isIn(statusCode, 301, 302)) {
-			// 告诉经理完成任务，并将结果传递过去
-			Downloader.Request newRequest = new Downloader.Request(location);
-			this.getManager().done(task, newRequest);
+			// 递归下载
+			if (!redirectedLocations.contains(location)) {
+				redirectedLocations.add(location);
+				final Downloader.Request newRequest = new Downloader.Request(location);
+				final DownloadTask newTask = new DownloadTask(task.getSeed(), false, newRequest);
+				this.work(newTask);
+			}
 			return ;
 		}
 		if (response.getBody() == null || response.getBody().length == 0) {
@@ -56,7 +67,7 @@ public class DownloadWorker extends Worker {
 		}
 		response.setBodyStr(bodyStr);
 		// 告诉经理完成任务，并将结果传递过去
-		this.getManager().done(task, response);
+		this.getManager().done(new WorkerResult(null, task, response));
 	}
 	
 	private String getCharsetFromBodyStr(final String bodyStr) {

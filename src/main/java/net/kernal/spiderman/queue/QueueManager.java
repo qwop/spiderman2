@@ -2,6 +2,8 @@ package net.kernal.spiderman.queue;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import org.zbus.broker.Broker;
@@ -24,16 +26,16 @@ public class QueueManager {
 	
 	private Logger logger;
 	
-	private Map<String, TaskQueue> queues;
-	private TaskQueue downloadQueue;
-	private TaskQueue extractQueue;
-	private TaskQueue resultQueue;
+	private Map<String, Queue<Object>> queues;
+	private Queue<Task> downloadQueue;
+	private Queue<Task> extractQueue;
+	private Queue<Task> resultQueue;
 	
 	private KVStore store;
 	
 	public QueueManager(Properties params, Logger logger) {
 		this.logger = logger;
-		this.queues = new HashMap<String, TaskQueue>();
+		this.queues = new HashMap<String, Queue<Object>>();
 		// 构建存储
 		final boolean bdbEnabled = params.getBoolean("store.bdb.enabled", false);
 		if (bdbEnabled) {
@@ -42,7 +44,10 @@ public class QueueManager {
 				throw new Spiderman.Exception("缺少参数: store.bdb.file, 参考: conf.set(\"store.bdb.file\")");
 			}
 			final String dbName = params.getString("store.bdb.name", "spiderman_store");
-			this.store = new BDbStore(new File(bdbFile), dbName);
+			final File file = new File(bdbFile);
+			file.mkdirs();
+			this.store = new BDbStore(file, dbName);
+			logger.debug("构建KVStore[name="+dbName+", file="+file.getAbsolutePath()+"]存储对象, 使用BDb实现");
 		}
 		
 		// 构建队列
@@ -62,23 +67,37 @@ public class QueueManager {
 		    	throw new Spiderman.Exception("连接ZBus服务失败", e);
 		    }
 		    final String downloadQueueName = params.getString("queue.download.name", "SPIDERMAN_DOWNLOAD_TASK");
-			downloadQueue = new ZBusTaskQueue(broker, downloadQueueName);
+			downloadQueue = new ZBusQueue<Task>(broker, downloadQueueName, true);
 			logger.debug("创建下载队列(ZBus)");
 			final String extractQueueName = params.getString("queue.download.name", "SPIDERMAN_EXTRACT_TASK");
-			extractQueue = new ZBusTaskQueue(broker, extractQueueName);
+			extractQueue = new ZBusQueue<Task>(broker, extractQueueName, true);
 			logger.debug("创建解析队列(ZBus)");
 			final String resultQueueName = params.getString("queue.download.name", "SPIDERMAN_RESULT_TASK");
-			resultQueue = new ZBusTaskQueue(broker, resultQueueName);
+			resultQueue = new ZBusQueue<Task>(broker, resultQueueName, true);
 			logger.debug("创建结果队列(ZBus)");
+			// 创建其他队列
+			final List<String> queueNames = params.getListString("queue.other.names", "", ",");
+			new HashSet<String>(queueNames).parallelStream().filter(n -> K.isNotBlank(n)).forEach(n -> {
+				Queue<Object> queue = new ZBusQueue<Object>(broker, n, false);
+				queues.put(n, queue);
+				logger.debug("创建其他[name="+n+"]队列(ZBus)");
+			});
 		} else {
 			// 构建默认队列
 			final int capacity = params.getInt("queue.capacity");
-			downloadQueue = new DefaultTaskQueue(capacity);
+			downloadQueue = new DefaultQueue<Task>(capacity, logger);
 			logger.debug("创建下载队列(默认)");
-			extractQueue = new DefaultTaskQueue(capacity);
+			extractQueue = new DefaultQueue<Task>(capacity, logger);
 			logger.debug("创建下载队列(默认)");
-			resultQueue = new DefaultTaskQueue(capacity);
+			resultQueue = new DefaultQueue<Task>(capacity, logger);
 			logger.debug("创建结果队列(默认)");
+			// 创建其他队列
+			final List<String> queueNames = params.getListString("queue.other.names", "", ",");
+			new HashSet<String>(queueNames).parallelStream().filter(n -> K.isNotBlank(n)).forEach(n -> {
+				Queue<Object> queue = new DefaultQueue<Object>(capacity, logger);
+				queues.put(n, queue);
+				logger.debug("创建其他[name="+n+"]队列(默认)");
+			});
 		}
 	}
 	
@@ -107,20 +126,28 @@ public class QueueManager {
 		}
 	}
 	
-	public TaskQueue getDownloadQueue() {
+	public Queue<Task> getDownloadQueue() {
 		return this.downloadQueue;
 	}
 	
-	public TaskQueue getExtractQueue() {
+	public Queue<Task> getExtractQueue() {
 		return this.extractQueue;
 	}
 	
-	public TaskQueue getResultQueue() {
+	public Queue<Task> getResultQueue() {
 		return this.resultQueue;
 	}
 	
-	public TaskQueue getQueue(String name) {
+	public Queue<Object> getQueue(String name) {
 		return this.queues.get(name);
+	}
+	
+	public void register(String name, Queue<Object> queue) {
+		if (this.queues.containsKey(name)) {
+			throw new Spiderman.Exception("duplicate name " + name);
+		}
+		
+		this.queues.put(name, queue);
 	}
 	
 	public void shutdown() {
@@ -129,6 +156,12 @@ public class QueueManager {
 		}
 		if (this.extractQueue != null) {
 			this.extractQueue.clear();
+		}
+		if (this.resultQueue != null) {
+			this.resultQueue.clear();
+		}
+		if (this.queues != null && !this.queues.isEmpty()) {
+			this.queues.forEach((k, q) -> q.clear());
 		}
 		if (this.store != null) {
 			this.store.close();

@@ -40,7 +40,10 @@ public abstract class AbstractXPathExtractor extends Extractor {
 			List<Object> mNodes = new ArrayList<Object>();
 			if (K.isNotBlank(modelXpath)) {
 				// 抽取模型
-				mNodes.addAll(this.extractModel(doc, modelXpath));
+				List<Object> mds = this.extractModel(doc, modelXpath);
+				if (mds != null) {
+					mNodes.addAll(mds);
+				}
 			} else {
 				mNodes.add(doc);
 			}

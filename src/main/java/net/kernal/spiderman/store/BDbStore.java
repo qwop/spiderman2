@@ -24,7 +24,6 @@ public class BDbStore implements KVStore {
 		// Open the database. Create it if it does not already exist.
 		DatabaseConfig dbCfg = new DatabaseConfig();
 		dbCfg.setAllowCreate(true);
-		dbCfg.setSortedDuplicates(true);
 		db = env.openDatabase(null, dbName, dbCfg);
 	}
 	

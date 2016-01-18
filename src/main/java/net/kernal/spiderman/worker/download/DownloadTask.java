@@ -1,6 +1,5 @@
 package net.kernal.spiderman.worker.download;
 
-import net.kernal.spiderman.K;
 import net.kernal.spiderman.Seed;
 import net.kernal.spiderman.worker.Task;
 
@@ -10,13 +9,13 @@ public class DownloadTask extends Task {
 	
 	private Downloader.Request request;
 	
-	public DownloadTask(Seed seed, Downloader.Request request) {
-		super(seed);
+	public DownloadTask(Seed seed, boolean isUnique, Downloader.Request request) {
+		super(seed, isUnique);
 		this.request = request;
 	}
 	
 	public String getUniqueKey() {
-		final String key = K.md5(getSeed().getName()+"#"+this.request.getUrl());
+		final String key = "download_"+getSeed().getUrl()+"#"+this.request.getUrl();
 		return key;
 	}
 	

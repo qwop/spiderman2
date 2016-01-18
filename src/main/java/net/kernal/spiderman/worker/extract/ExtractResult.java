@@ -1,11 +1,15 @@
 package net.kernal.spiderman.worker.extract;
 
-import net.kernal.spiderman.Properties;
-import net.kernal.spiderman.worker.WorkerResult;
+import java.io.Serializable;
 
-public class ExtractResult implements WorkerResult {
+import net.kernal.spiderman.Properties;
+import net.kernal.spiderman.worker.download.Downloader;
+
+public class ExtractResult implements Serializable {
 	
 	private static final long serialVersionUID = 2390695820923166121L;
+	
+	private Downloader.Request request;
 	
 	/**
 	 * 所属页面名称
@@ -20,10 +24,11 @@ public class ExtractResult implements WorkerResult {
 	 */
 	private Properties values;
 	
-	public ExtractResult(String pageName, String modelName, Properties values) {
+	public ExtractResult(String pageName, String modelName, Properties values, Downloader.Request request) {
 		this.pageName = pageName;
 		this.modelName = modelName;
 		this.values = values;
+		this.request = request;
 	}
 
 	public String getPageName() {
@@ -36,6 +41,10 @@ public class ExtractResult implements WorkerResult {
 	
 	public Properties getValues() {
 		return this.values;
+	}
+	
+	public Downloader.Request getRequest() {
+		return this.request;
 	}
 
 	@Override

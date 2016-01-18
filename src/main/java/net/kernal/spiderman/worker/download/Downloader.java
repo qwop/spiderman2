@@ -5,7 +5,6 @@ import java.util.Date;
 import java.util.List;
 
 import net.kernal.spiderman.Properties;
-import net.kernal.spiderman.worker.WorkerResult;
 
 /**
  * 下载器抽象
@@ -21,7 +20,7 @@ public interface Downloader {
 	 * @author 赖伟威 l.weiwei@163.com 2015-12-10
 	 *
 	 */
-	public static class Request extends Properties implements Serializable, WorkerResult {
+	public static class Request extends Properties implements Serializable {
 		
 		private static final long serialVersionUID = -5271854259417049190L;
 
@@ -83,7 +82,7 @@ public interface Downloader {
 	 * @author 赖伟威 l.weiwei@163.com 2015-12-01
 	 *
 	 */
-	public static class Response implements Serializable, WorkerResult {
+	public static class Response implements Serializable {
 		
 		private static final long serialVersionUID = -9068800067277456934L;
 

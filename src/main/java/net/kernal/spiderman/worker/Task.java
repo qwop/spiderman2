@@ -13,19 +13,24 @@ public abstract class Task implements Serializable{
 
 	private static final long serialVersionUID = 2506296221733528670L;
 
-	/**
-	 * 种子
-	 */
+	/** 种子 */
 	private Seed seed;
+	/** 是否唯一，不允许重复  */
+	private boolean isUnique;
 	
-	protected Task(Seed seed) {
+	protected Task(Seed seed, boolean isUnique) {
 		this.seed = seed;
+		this.isUnique = isUnique;
 	}
 	
 	public Seed getSeed() {
 		return this.seed;
 	}
-
+	
+	public boolean isUnique() {
+		return isUnique;
+	}
+	
 	public abstract String getUniqueKey();
 	
 }

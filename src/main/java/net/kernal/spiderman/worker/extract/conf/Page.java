@@ -22,11 +22,21 @@ public abstract class Page {
 	private Extractor.Builder extractorBuilder;
 	private UrlMatchRules rules;
 	private Models models;
+	private boolean isTaskDuplicateCheckEnabled;
 	
 	public Page(String name) {
 		this.name = name;
 		this.rules = new UrlMatchRules();
 		this.models = new Models(this.name);
+	}
+	
+	public Page setTaskDuplicateCheckEnabled(boolean bool) {
+		this.isTaskDuplicateCheckEnabled = bool;
+		return this;
+	}
+	
+	public boolean isTaskDuplicateCheckEnabled() {
+		return this.isTaskDuplicateCheckEnabled;
 	}
 	
 	public Page setExtractorBuilder(Extractor.Builder builder) {
@@ -175,5 +185,5 @@ public abstract class Page {
 	public String toString() {
 		return "Page [name=" + name + "]";
 	}
-	
+
 }

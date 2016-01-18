@@ -90,4 +90,11 @@ public class Counter {
 		return cost;
 	}
 	
+	public String toString() {
+		if (limit > 0) {
+			return get()+"/"+limit;
+		}
+		return get()+"";
+	}
+	
 }

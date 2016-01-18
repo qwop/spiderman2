@@ -1,6 +1,7 @@
 package net.kernal.spiderman.worker.download;
 
 import net.kernal.spiderman.Counter;
+import net.kernal.spiderman.Spiderman;
 import net.kernal.spiderman.logger.Logger;
 import net.kernal.spiderman.queue.QueueManager;
 import net.kernal.spiderman.worker.Task;
@@ -8,6 +9,7 @@ import net.kernal.spiderman.worker.Worker;
 import net.kernal.spiderman.worker.WorkerManager;
 import net.kernal.spiderman.worker.WorkerResult;
 import net.kernal.spiderman.worker.extract.ExtractTask;
+import net.kernal.spiderman.worker.extract.conf.Page;
 
 /**
  * 下载工人驱动器 
@@ -38,25 +40,20 @@ public class DownloadManager extends WorkerManager {
 	/**
 	 * 处理结果
 	 */
-	protected void handleResult(Task task, WorkerResult result) {
-		if (result instanceof Downloader.Request) {
-			Downloader.Request request = (Downloader.Request)result;
-			// 放入下载队列
-			getQueueManager().append(new DownloadTask(task.getSeed(), request));
-		} else if (result instanceof Downloader.Response) {
-			// 计数器加1
-			long count = getCounter().plus();
-//			int limit = getCounter().getLimit();
-//			if (limit > 0 && count > limit) {
-//				// 通知该结束了
-//				return;
-//			}
-			
-			Downloader.Response response = (Downloader.Response)result;
-			// 放入解析队列
-			getQueueManager().append(new ExtractTask(task.getSeed(), response));
-			getLogger().info("下载了第"+count+"个网页: "+response);
+	protected void handleResult(WorkerResult wr) {
+		final Object result = wr.getResult();
+		final Task task = wr.getTask();
+		final Page page = wr.getPage();
+		final boolean isUnique = page == null ? false : page.isTaskDuplicateCheckEnabled();
+		if (!(result instanceof Downloader.Response)) {
+			throw new Spiderman.Exception("只接受Downloader.Response类型的结果");
 		}
+		// 计数器加1
+		long count = getCounter().plus();
+		Downloader.Response response = (Downloader.Response)result;
+		// 放入解析队列
+		getQueueManager().append(new ExtractTask(task.getSeed(), isUnique, response));
+		getLogger().info("下载了第"+count+"个网页: "+response);
 	}
 
 	protected void clear() {

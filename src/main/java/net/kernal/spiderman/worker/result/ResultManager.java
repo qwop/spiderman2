@@ -19,15 +19,14 @@ public class ResultManager extends WorkerManager {
 		this.handler = handler;
 	}
 
-	protected void handleResult(Task task, WorkerResult result) {
+	protected void handleResult(WorkerResult wr) {
+		final Task task = wr.getTask();
 		// 计数器加1
-		if (task instanceof ResultTask) {
-			long count = getCounter().plus();
-			final ResultTask rtask = (ResultTask)task;
-			final ExtractResult extractResult = rtask.getResult();
-			getLogger().info("消费了第"+count+"个结果: "+extractResult);
-			this.handler.handle(extractResult, count);
-		}
+		long count = getCounter().plus();
+		final ResultTask rtask = (ResultTask)task;
+		final ExtractResult extractResult = rtask.getResult();
+		getLogger().info("消费了第"+count+"个结果: "+extractResult);
+		this.handler.handle(extractResult, getCounter());
 	}
 
 	protected Task takeTask() {
@@ -37,7 +36,7 @@ public class ResultManager extends WorkerManager {
 	protected Worker buildWorker() {
 		return new Worker(this) {
 			public void work(Task task) {
-				getManager().done(task, null);
+				getManager().done(new WorkerResult(null, task, null));
 			}
 		};
 	}
