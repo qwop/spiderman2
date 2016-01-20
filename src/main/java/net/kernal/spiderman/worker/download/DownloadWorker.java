@@ -5,7 +5,7 @@ import java.util.Set;
 
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Spiderman;
-import net.kernal.spiderman.worker.Task;
+import net.kernal.spiderman.queue.Queue.Element;
 import net.kernal.spiderman.worker.Worker;
 import net.kernal.spiderman.worker.WorkerManager;
 import net.kernal.spiderman.worker.WorkerResult;
@@ -22,7 +22,7 @@ public class DownloadWorker extends Worker {
 		this.redirectedLocations = new HashSet<String>();
 	}
 	
-	public void work(Task t) {
+	public void work(Element t) {
 		if (this.downloader == null) {
 			throw new Spiderman.Exception("缺少下载器");
 		}
@@ -43,7 +43,7 @@ public class DownloadWorker extends Worker {
 			if (!redirectedLocations.contains(location)) {
 				redirectedLocations.add(location);
 				final Downloader.Request newRequest = new Downloader.Request(location);
-				final DownloadTask newTask = new DownloadTask(task.getSeed(), false, newRequest);
+				final DownloadTask newTask = new DownloadTask(task.getSeed(), newRequest);
 				this.work(newTask);
 			}
 			return ;

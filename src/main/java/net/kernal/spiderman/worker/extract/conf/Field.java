@@ -2,9 +2,12 @@ package net.kernal.spiderman.worker.extract.conf;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import net.kernal.spiderman.Properties;
+import net.kernal.spiderman.worker.download.Downloader;
+import net.kernal.spiderman.worker.extract.ExtractTask;
 import net.kernal.spiderman.worker.extract.Extractor;
 
 public class Field extends Properties {
@@ -70,7 +73,52 @@ public class Field extends Properties {
 	}
 	
 	public static interface ValueFilter {
-		public String filter(Extractor e, String v);
+		public String filter(Context ctx);
+		public static class Context extends Properties {
+			private static final long serialVersionUID = -375879158096905566L;
+			private String value;
+			private Extractor extractor;
+			private ExtractTask task;
+			private Downloader.Request request;
+			private Downloader.Response response;
+			private Downloader.Request seed;
+			public Context(Extractor e, Map<String, Properties> models, String v) {
+				this.value = v;
+				this.extractor = e;
+				this.task = e.getTask();
+				this.request = task.getRequest();
+				this.response = task.getResponse();
+				this.seed = task.getSeed();
+				this.put("value", v);
+				this.put("extractor", e);
+				this.put("task", task);
+				this.put("request", request);
+				this.put("response", response);
+				this.put("seed", seed);
+				this.put("models", models);
+			}
+			public String getValue() {
+				return this.value;
+			}
+			public Extractor getExtractor() {
+				return this.extractor;
+			}
+			public static long getSerialversionuid() {
+				return serialVersionUID;
+			}
+			public ExtractTask getTask() {
+				return task;
+			}
+			public Downloader.Request getRequest() {
+				return request;
+			}
+			public Downloader.Response getResponse() {
+				return response;
+			}
+			public Downloader.Request getSeed() {
+				return seed;
+			}
+		}
 	}
 
 	public String toString() {

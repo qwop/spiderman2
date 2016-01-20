@@ -33,6 +33,10 @@ public abstract class DefaultConfBuilder implements Conf.Builder {
 	 */
 	public abstract void configPages(Conf.Pages pages);
 	
+	public void setScript(String script) {
+		conf.setScript(script);
+	}
+	
 	/**
 	 * 构建Spiderman.Conf对象
 	 */

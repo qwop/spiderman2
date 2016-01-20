@@ -22,6 +22,7 @@ public class Conf {
 		filters = new Filters();
 		pages = new Pages();
 		params = new Properties();
+		bindings = new HashMap<String, Object>();
 	}
 	
 	private Seeds seeds;
@@ -29,6 +30,8 @@ public class Conf {
 	private Filters filters;
 	private Pages pages;
 	private Properties params;
+	private Map<String, Object> bindings;
+	private String script;
 	
 	public static class Seeds {
 		private List<Seed> seeds;
@@ -40,18 +43,27 @@ public class Conf {
 			logger.info("添加种子: " + seed);
 			return this;
 		}
+		public Seeds add(String name, String url) {
+			return this.add(new Seed(name, url));
+		}
+		public Seeds add(String url) {
+			return this.add(new Seed(url));
+		}
 		public List<Seed> all() {
 			return this.seeds;
 		}
+	}
+	public static interface Bindings {
+		public void config(Map<String, Object> bindings, Conf conf);
 	}
 	public static class Extractors {
 		private Map<String, Class<Extractor>> extractors;
 		public Extractors() {
 			extractors = new HashMap<String, Class<Extractor>>();
 		}
-		public Extractors register(String alias, Class<Extractor> extractor) {
-			this.extractors.put(alias, extractor);
-			logger.info("注册解析器类: " + alias + ", " + extractor.getName());
+		public Extractors register(String name, Class<Extractor> extractor) {
+			this.extractors.put(name, extractor);
+			logger.info("注册解析器类: " + name + ", " + extractor.getName());
 			return this;
 		}
 		public Map<String, Class<Extractor>> all() {
@@ -63,9 +75,9 @@ public class Conf {
 		public Filters() {
 			filters = new HashMap<String, Field.ValueFilter>();
 		}
-		public Filters register(String alias, Field.ValueFilter ft) {
-			this.filters.put(alias, ft);
-			logger.info("注册过滤器: " + alias + ", " + ft);
+		public Filters register(String name, Field.ValueFilter ft) {
+			this.filters.put(name, ft);
+			logger.info("注册过滤器: " + name + ", " + ft);
 			return this;
 		}
 		public Map<String, Field.ValueFilter> all() {
@@ -100,12 +112,16 @@ public class Conf {
 		seeds.add(seed);
 		return this;
 	}
-	public Conf registerExtractor(String alias, Class<Extractor> extractor) {
-		extractors.register(alias, extractor);
+	public Conf registerExtractor(String name, Class<Extractor> extractor) {
+		extractors.register(name, extractor);
 		return this;
 	}
-	public Conf registerFilter(String alias, Field.ValueFilter filter) {
-		filters.register(alias, filter);
+	public Conf registerFilter(String name, Field.ValueFilter filter) {
+		filters.register(name, filter);
+		return this;
+	}
+	public Conf bindObjectForScript(String name, Object obj) {
+		bindings.put(name, obj);
 		return this;
 	}
 	public Conf addPage(Page page) {
@@ -130,5 +146,14 @@ public class Conf {
 	}
 	public Properties getParams() {
 		return params;
+	}
+	public Map<String, Object> getBindings() {
+		return bindings;
+	}
+	public void setScript(String script) {
+		this.script = script;
+	}
+	public String getScript() {
+		return this.script;
 	}
 }

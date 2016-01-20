@@ -1,6 +1,8 @@
 package net.kernal.spiderman.worker.download;
 
 import java.io.Serializable;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Date;
 import java.util.List;
 
@@ -36,12 +38,25 @@ public interface Downloader {
 		public Request(String url, String httpMethod) {
 			this.url = url;
 			this.method = httpMethod;
+			try {
+				final URL u = new URL(url);
+				StringBuilder sb = new StringBuilder(u.getProtocol());
+				sb.append("://").append(u.getHost());
+				if (u.getPort() > 0) {
+					sb.append(":").append(u.getPort()+"");
+				}
+				baseUrl = sb.append("/").toString();
+			} catch (MalformedURLException e) {
+			}
 		}
 		
 		/**
 		 * 请求链接地址
 		 */
 		private String url;
+		
+		private String baseUrl;
+		
 		/**
 		 * 请求方法GET,POST,PUT,DELETE,HEAD等等
 		 */
@@ -58,6 +73,9 @@ public interface Downloader {
 		
 		public String getUrl() {
 			return url;
+		}
+		public String getBaseUrl() {
+			return this.baseUrl;
 		}
 		public String getMethod() {
 			return method;

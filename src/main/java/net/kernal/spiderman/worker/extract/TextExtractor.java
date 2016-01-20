@@ -26,15 +26,15 @@ public class TextExtractor extends Extractor {
 	public TextExtractor(ExtractTask task,String page, Model... models) {
 		super(task, page, models);
 	}
-
+	
 	public void extract(Extractor.Callback callback){
 		final Downloader.Response response = getTask().getResponse();
 		String html = response.getBodyStr();
 		final Properties fields = new Properties();
 		_TextExtractor te = new _TextExtractor();
 		te.extractHTML(html);
-		String title = te.getTitle();
-		String text = te.getText();
+		final String title = te.getTitle();
+		final String text = te.getText();
 		fields.put("url", response.getRequest().getUrl());
 		fields.put("title", K.trim(title));
 		fields.put("text", K.trim(text));

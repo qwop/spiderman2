@@ -12,15 +12,19 @@ import org.zbus.net.http.Message;
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Spiderman;
 
-public class ZBusQueue<T> implements Queue<T> {
+/**
+ * PS:由于ZBus支持队列元素的重复检查，所以此类不需要继承CheckableQueue
+ * @author 赖伟威 l.weiwei@163.com 2016-01-19
+ *
+ */
+public class ZBusQueue implements Queue {
 
 	private int beatPeriod = 5000;
 	private Broker broker;
 	private Producer producer;
 	private Consumer consumer;
-	private boolean serialize;
 	
-	public ZBusQueue(Broker broker, String mq, boolean serialize) {
+	public ZBusQueue(Broker broker, String mq) {
 		this.broker = broker;
 	    final MqConfig cfg = new MqConfig(); 
 	    cfg.setBroker(broker);
@@ -34,11 +38,9 @@ public class ZBusQueue<T> implements Queue<T> {
 		}
 		
 		this.consumer = new Consumer(cfg);
-		this.serialize = serialize;
 	}
 	
-	@SuppressWarnings("unchecked")
-	public T take() {
+	public Element take() {
 		Message msg = null;
 		while(true){
 			try {
@@ -52,24 +54,16 @@ public class ZBusQueue<T> implements Queue<T> {
 			}
 		}
 		final byte[] data = msg.getBody();
-		T t = null;
-		if (serialize) {
-			t = (T)K.deserialize(data);
-		} else {
-			t = (T)data;
-		}
-		
-		return t;
+		final Element e = (Element)K.deserialize(data);
+		return e;
 	}
 
-	public void append(T t) {
-		byte[] data;
-		if (serialize) {
-			data = K.serialize(t);
-		} else {
-			data = (byte[])t;
-		}
+	public void append(Element e) {
+		byte[] data = K.serialize(e);
 		Message msg = new Message();
+		if (e instanceof AbstractElement) {
+			msg.setHead("key", ((AbstractElement)e).getKey());
+		}
 		msg.setBody(data);
 		try {
 			producer.invokeAsync(msg, new ResultCallback<Message>() {
@@ -77,8 +71,8 @@ public class ZBusQueue<T> implements Queue<T> {
 					// ignore
 				}
 			});
-		} catch (IOException e) {
-			throw new Spiderman.Exception("zbus producer invoke error", e);
+		} catch (IOException ex) {
+			throw new Spiderman.Exception("zbus producer invoke error", ex);
 		}
 	}
 

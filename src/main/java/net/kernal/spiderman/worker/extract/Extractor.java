@@ -2,6 +2,7 @@ package net.kernal.spiderman.worker.extract;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import net.kernal.spiderman.Properties;
@@ -69,16 +70,16 @@ public abstract class Extractor {
 		}
 		public static class FieldEntry {
 			private Field field;
-			private List<Object> values;
+			private Collection<?> values;
 			private Object data;
-			public FieldEntry(Field field, List<Object> values) {
+			public FieldEntry(Field field, Collection<?> values) {
 				this.field = field;
 				this.values = values;
 			}
 			public Field getField() {
 				return this.field;
 			}
-			public List<Object> getValues() {
+			public Collection<?> getValues() {
 				return this.values;
 			}
 			public void setData(Object data) {

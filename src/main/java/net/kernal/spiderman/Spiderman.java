@@ -40,7 +40,8 @@ public class Spiderman {
 		// 往队列里添加种子
 		final boolean isSeedUnique = context.getParams().getBoolean("seed.unique", false);
 		context.getSeeds().all().parallelStream()
-			.map(seed -> new DownloadTask(seed, isSeedUnique, new Downloader.Request(seed.getUrl())))
+			.map(seed -> new Downloader.Request(seed.getUrl()))
+			.map(req -> new DownloadTask(isSeedUnique, req))
 			.forEach(task -> context.getQueueManager().append(task));
 		counter.await();
 		_stop();

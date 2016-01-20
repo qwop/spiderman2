@@ -1,11 +1,32 @@
 package net.kernal.spiderman.queue;
 
-public interface Queue<T> {
+import java.io.Serializable;
 
-	public T take();
+public interface Queue {
+
+	public Element take();
 	
-	public void append(T task);
+	public void append(Element element);
 	
 	public void clear();
+	
+	public static interface Element extends Serializable {
+	}
+	
+	public static abstract class AbstractElement implements Element {
+		
+		private static final long serialVersionUID = 5693140072005182715L;
+		
+		private String key;
+		
+		public AbstractElement(String key) {
+			this.key = key;
+		}
+		
+		public String getKey() {
+			return this.key;
+		}
+		
+	}
 	
 }

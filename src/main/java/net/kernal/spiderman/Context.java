@@ -4,9 +4,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
+import javax.script.Bindings;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
+import javax.script.SimpleBindings;
 
 import net.kernal.spiderman.conf.Conf;
 import net.kernal.spiderman.conf.Conf.Seeds;
@@ -20,6 +24,7 @@ import net.kernal.spiderman.worker.download.HttpClientDownloader;
 import net.kernal.spiderman.worker.extract.ExtractManager;
 import net.kernal.spiderman.worker.extract.ExtractManager.ResultHandler;
 import net.kernal.spiderman.worker.extract.conf.Page;
+import net.kernal.spiderman.worker.extract.conf.filter.ScriptableFilter;
 import net.kernal.spiderman.worker.result.ResultManager;
 
 public class Context {
@@ -29,6 +34,7 @@ public class Context {
 	private Conf conf;
 	private QueueManager queueManager;
 	private List<WorkerManager> managers;
+	private ScriptEngine scriptEngine;
 	
 	public Context(Conf conf) {
 		this(conf, null);
@@ -39,28 +45,36 @@ public class Context {
 		final Properties params = conf.getParams();
 		if (pages.isEmpty()) 
 			throw new Spiderman.Exception("少年,请添加一个页面来让蜘蛛侠行动起来!参考：conf.addPage");
-		
-		ResultHandler handler = rh;
-		if (handler == null) {
-			final String resultHandlerClassName = params.getString("context.result.handler");
-			if (K.isNotBlank(resultHandlerClassName)) {
-				@SuppressWarnings("unchecked")
-				Class<ResultHandler> resultHandlerClass = (Class<ResultHandler>) K.loadClass(resultHandlerClassName);
-				if (resultHandlerClass == null) {
-					throw new Spiderman.Exception("ResultHandler[class="+resultHandlerClassName+"]不存在");
-				}
-				
-				try {
-					handler = resultHandlerClass.newInstance();
-				} catch (InstantiationException | IllegalAccessException e) {
-					throw new Spiderman.Exception("实例化ResultHandler[class="+resultHandlerClassName+"]失败", e);
-				}
+		final String engineName = params.getString("scriptEngine", "nashorn");
+		scriptEngine = new ScriptEngineManager().getEngineByName(engineName);
+		if (scriptEngine == null) 
+			throw new Spiderman.Exception("无法获取脚本引擎对象[name="+engineName+"]");
+		// 若配置了script脚本，执行它
+		final Map<String, Object> bindings = conf.getBindings();
+		final String script = conf.getScript();
+		if (K.isNotBlank(script)) {
+			Bindings bind = new SimpleBindings(bindings);
+			try {
+				bind.put("$seeds", conf.getSeeds());
+				scriptEngine.eval(script, bind);
+			} catch (ScriptException e) {
+				throw new Spiderman.Exception("执行脚本错误", e);
 			}
 		}
-		
-		if (handler != null) {
-			handler.init(this);
-		}
+		// 设置脚本引擎
+		pages.forEach(page -> {
+			page.getModels().all().forEach(p -> {
+				p.getFields().forEach(f -> {
+					f.getFilters().stream()
+						.filter(ft -> ft instanceof ScriptableFilter)
+						.map(ft -> (ScriptableFilter)ft)
+						.forEach(ft -> {
+							ft.setBindings(bindings);
+							ft.setScriptEngine(scriptEngine);
+						});
+				});
+			});
+		});
 		
 		this.conf = conf;
 		this.managers = new ArrayList<WorkerManager>();
@@ -96,9 +110,6 @@ public class Context {
 			final int size = params.getInt("worker.extract.size", 1);
 			final Logger consoleLogger = new ConsoleLogger(ExtractManager.class, level);
 			final ExtractManager extractManager = new ExtractManager(size, queueManager, counter, consoleLogger, pages);
-			final String engineName = params.getString("scriptEngine", "nashorn");
-			final ScriptEngine scriptEngine = new ScriptEngineManager().getEngineByName(engineName);
-			extractManager.setScriptEngine(scriptEngine);
 			logger.debug("构建解析管理器");
 			this.addManager(extractManager);
 		}
@@ -106,6 +117,27 @@ public class Context {
 		// 构建结果处理管理器
 		final boolean enabled3 = params.getBoolean("worker.result.enabled", true);
 		if (enabled3) {
+			ResultHandler handler = rh;
+			if (handler == null) {
+				final String resultHandlerClassName = params.getString("worker.result.handler");
+				if (K.isNotBlank(resultHandlerClassName)) {
+					Class<ResultHandler> resultHandlerClass = K.loadClass(resultHandlerClassName);
+					if (resultHandlerClass == null) {
+						throw new Spiderman.Exception("ResultHandler[class="+resultHandlerClassName+"]不存在");
+					}
+					
+					try {
+						handler = resultHandlerClass.newInstance();
+					} catch (InstantiationException | IllegalAccessException e) {
+						throw new Spiderman.Exception("实例化ResultHandler[class="+resultHandlerClassName+"]失败", e);
+					}
+				}
+			}
+			
+			if (handler != null) {
+				handler.init(this);
+			}
+			
 			final int limit = params.getInt("worker.result.limit", 0);
 			final Counter counter = new Counter(limit, 0);
 			final int size = params.getInt("worker.result.size", 1);
@@ -137,10 +169,25 @@ public class Context {
 		return this.queueManager;
 	}
 	
+	public Logger getLogger() {
+		return this.logger;
+	}
+	
 	public void shutdown() {
 		this.queueManager.shutdown();
 		this.managers.clear();
 		logger.debug("退出...");
+	}
+	
+	public static void main(String[] args) throws ScriptException {
+		ScriptEngine e = new ScriptEngineManager().getEngineByName("nashorn");
+		Bindings bind = new SimpleBindings();
+		Conf conf = new Conf();
+		bind.put("$seeds", conf.getSeeds());
+		final String script = "var kws = Java.type('net.kernal.spiderman.K').readLine('src/main/resources/keywords.txt'); for(var i=0; i<kws.length; i++) { $seeds.add(kws[i]); }";
+		Object v = e.eval(script, bind);
+		System.out.println("v->"+v);
+		System.out.println("seeds->"+conf.getSeeds().all());
 	}
 	
 }

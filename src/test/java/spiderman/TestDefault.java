@@ -49,9 +49,9 @@ public class TestDefault {
 							.set("isArray", true)
 							.set("isDistinct", true)
 							.set("isForNewTask", true)
-							.addFilter((e, v) -> {
-								final String pn = K.findOneByRegex(v, "&pn\\=\\d+");
-								return K.isBlank(pn) ? v : e.getTask().getSeed().getUrl()+pn;
+							.addFilter(ctx -> {
+								final String pn = K.findOneByRegex(ctx.getValue(), "&pn\\=\\d+");
+								return K.isBlank(pn) ? ctx.getValue() : ctx.getSeed().getUrl()+pn;
 							});
 					}
 				});
@@ -62,19 +62,19 @@ public class TestDefault {
 			public void configParams(Properties params) {
 				params.put("logger.level", Logger.LEVEL_DEBUG);
 				params.put("duration", "10s");// 运行时间
-//				params.put("queue.capacity", 5000);// 队列大小
-				params.put("queue.zbus.enabled", false);
-				params.put("queue.zbus.server", "10.8.60.8:15555");
-				params.put("queue.other.names", "SPIDERMAN_JSON_RESULT");
-				params.put("store.bdb.enabled", false);
-				params.put("store.bdb.file", "src/main/resources/store");
 				params.put("worker.download.size", 1);// 下载线程数
 				params.put("worker.extract.size", 1);// 解析线程数
 				params.put("worker.result.size", 1);// 结果处理线程数
+				params.put("queue.capacity", 5000);// 队列大小
+				params.put("queue.zbus.enabled", false);// 队列是否使用ZBus实现
+				params.put("queue.zbus.server", "10.8.60.8:15555");// ZBus服务地址
+				params.put("queue.other.names", "SPIDERMAN_JSON_RESULT");// 创建其他队列,多个用逗号隔开
+				params.put("queue.element.repeatable", false);// 队列元素是否允许重复,默认允许。若不允许，需用到重复检查器
+				params.put("queue.checker.bdb.file", "src/main/resources/store");// 检查器需用到BDb来存储
 			}
 		}.build();
 		
-		final Context ctx = new Context(conf, (result, counter, context) -> {
+		final Context ctx = new Context(conf, (result, counter) -> {
 			System.err.println("获得第"+counter+"个结果:\r\n"+JSON.toJSONString(result, true));
 		}); 
 		new Spiderman(ctx).go();//别忘记看控制台信息哦，结束之后会有统计信息的

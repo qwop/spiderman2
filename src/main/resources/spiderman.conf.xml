@@ -1,22 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <spiderman>
-    <!-- 引入脚本文件 -->
-    <script src="src/main/resources/lib.js" />
-    
-    <!-- 选项配置 -->
-    <!-- 
-    <property key="duration" value="10s" />
-     -->
+    <!-- 运行时间 0 表示永久 -->
+    <property key="duration" value="0" />
+    <!-- 日志级别 INFO DEBUG WARN ERROR OFF -->
     <property key="logger.level" value="DEBUG" />
+    <!-- 下载线程数 -->
     <property key="worker.download.size" value="1" />
+    <!-- 页面抽取线程数 -->
     <property key="worker.extract.size" value="1" />
+    <!-- 结果处理线程数 -->
     <property key="worker.result.size" value="1" />
-    <property key="store.bdb.enabled" value="true" />
-    <property key="store.bdb.file" value="src/main/resources/store" />
+    <!-- 自定义结果回调处理类 -->
+    <property key="worker.result.handler" value="spiderman.ResultHandler" />
+    <!-- 队列大小，0表示无界 -->
+    <property key="queue.capacity" value="5000" />
+    <!-- 队列元素是否允许重复，默认允许，若不允许，则使用重复检查器在元素入队列前进行检查 -->
+    <property key="queue.element.repeatable" value="false" />
+    <!-- 检查器需要用到BDb存储 -->
+    <property key="queue.checker.bdb.file" value="src/main/resources/store" />
+    <!-- 队列是否使用ZBus实现, 默认否，若是，可支持分布式处理 -->
     <property key="queue.zbus.enabled" value="true" />
+    <!-- ZBus服务地址 {IP或域名}:{端口号} -->
     <property key="queue.zbus.server" value="10.8.60.8:15555" />
+    <!-- 注册创建其他队列备用 -->
     <property key="queue.other.names" value="SPIDERMAN_JSON_RESULT" />
-    <property key="context.result.handler" value="spiderman.ResultHandler" />
     
     <!-- 种子入口 -->
     <seed name="Spiderman">http://www.baidu.com/s?wd=%22%E8%9C%98%E8%9B%9B%E4%BE%A0%22</seed>
@@ -35,39 +42,41 @@
         
         <!-- 定义过滤器别名, 可以在field节点的filter属性使用 -->
         <filter alias="resetUrl" class="spiderman.ResetPageUrlFilter" />
+        <!-- 要抽取的页面 -->
         <page name="网页内容" extractor="Text" isUnique="1">
+        	<!-- 页面匹配规则 -->
 			<url-match-rule type="!contains" value="baidu" />
-		</page>
-		<page name="百度网页搜索" isUnique="1">
-			<url-match-rule type="regex"><![CDATA[(?=http://www\.baidu\.com/s\?wd\=).[^&]*(&pn\=\d+)?]]></url-match-rule>
-			<model>
-				<field name="详情URl" isForNewTask="1" isArray="1" xpath="//div[@id='content_left']//div[@class='result c-container ']//h3//a[@href]" attr="href" /> 
-				<field name="分页URL" isForNewTask="1" isArray="1" isDistinct="1" filter="resetUrl" xpath="//div[@id='page']//a[@href]" attr="href" />
-			</model>
-		</page>
-		<page name="百度新闻搜索" isUnique="1">
-			<url-match-rule type="regex"><![CDATA[http://news\.baidu\.com/ns\?word\=.[^&]*(&pn\=\d+)?]]></url-match-rule>
-			<model>
-				<field name="详情URl" isForNewTask="1" isArray="1" xpath="//div[@id='content_left']//div[@class='result']//h3//a[@href]" attr="href" /> 
-				<field name="分页URL" isForNewTask="1" isArray="1" isDistinct="1" filter="resetUrl" xpath="//p[@id='page']//a[@href]" attr="href" />
-			</model>
-		</page>
-		<page name="百度知道搜索" isUnique="1">
-			<url-match-rule type="regex"><![CDATA[http://zhidao\.baidu\.com/search\?word\=.[^&]*(&pn\=\d+)?]]></url-match-rule>
-			<model>
-				<field name="详情URl" isForNewTask="1" isArray="1" xpath="//div[@class='list']//dl//dt//a[@href]" attr="href" /> 
-				<field name="分页URL" isForNewTask="1" isArray="1" isDistinct="1" filter="resetUrl" xpath="//div[@class='pager']//a[@href]" attr="href" />
-			</model>
 		</page>
 		<page name="百度知道内容" isUnique="1">
 			<url-match-rule type="startsWith" value="http://zhidao.baidu.com/question/" />
 			<model>
 				<field name="title" xpath="//h1[@accuse='qTitle']//span/text()" />
 				<field name="question" xpath="//pre[@class='line mt-5 q-content']/text()" />
-				<field name="answers" isArray="true" xpath="//div[@class='line content']/text()">
-					<!-- <filter type="script">$this.replace('分享','').replace('评论','').replace('|','')</filter> -->
+				<field name="answers" xpath="//div[@class='line content']/text()" isArray="1">
+					<filter type="script">$this.replace('分享','').replace('评论','').replace('|','')</filter>
 				</field>
 				<field name="bestAnswer" xpath="//div[@class='wgt-quality mod-shadow']//div[@class='quality-content-detail content']/text()" />
+			</model>
+		</page>
+		<page name="百度网页搜索">
+			<url-match-rule type="regex"><![CDATA[(?=http://www\.baidu\.com/s\?wd\=).[^&]*(&pn\=\d+)?]]></url-match-rule>
+			<model>
+				<field name="详情URl" isForNewTask="1" isArray="1" xpath="//div[@id='content_left']//div[@class='result c-container ']//h3//a[@href]" attr="href" /> 
+				<field name="分页URL" isForNewTask="1" isArray="1" isDistinct="1" filter="resetUrl" xpath="//div[@id='page']//a[@href]" attr="href" />
+			</model>
+		</page>
+		<page name="百度新闻搜索">
+			<url-match-rule type="regex"><![CDATA[http://news\.baidu\.com/ns\?word\=.[^&]*(&pn\=\d+)?]]></url-match-rule>
+			<model>
+				<field name="详情URl" isForNewTask="1" isArray="1" xpath="//div[@id='content_left']//div[@class='result']//h3//a[@href]" attr="href" /> 
+				<field name="分页URL" isForNewTask="1" isArray="1" isDistinct="1" filter="resetUrl" xpath="//p[@id='page']//a[@href]" attr="href" />
+			</model>
+		</page>
+		<page name="百度知道搜索">
+			<url-match-rule type="regex"><![CDATA[http://zhidao\.baidu\.com/search\?word\=.[^&]*(&pn\=\d+)?]]></url-match-rule>
+			<model>
+				<field name="详情URl" isForNewTask="1" isArray="1" xpath="//div[@class='list']//dl//dt//a[@href]" attr="href" /> 
+				<field name="分页URL" isForNewTask="1" isArray="1" isDistinct="1" filter="resetUrl" xpath="//div[@class='pager']//a[@href]" attr="href" />
 			</model>
 		</page>
 	</extract>

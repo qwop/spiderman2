@@ -101,26 +101,25 @@ public class HttpClientDownloader implements Downloader {
 		String method = request.getMethod();
 		String url = request.getUrl();
 		final HttpRequestBase req;
-		if (K.HTTP_POST.equals(method)) {
-			req = new HttpPost(url);
-		} else {
-			req = new HttpGet(url);
-		}
-		
-		RequestConfig reqCfg = buildRequestConfig(request);
-		req.setConfig(reqCfg);
-		
-		headers.forEach((k,v) -> req.addHeader(k, v));
-		if (request.getHeaders() != null) {
-			request.getHeaders().parallelStream().forEach(h -> req.addHeader(h.getName(), h.getValue()));
-		}
-		if (request.getCookies() != null) {
-			request.getCookies().parallelStream().forEach(c -> keepCookie(c));
-		}
-		
 		final Response response = new Response(request);
 		HttpResponse resp = null;
 		try {
+			if (K.HTTP_POST.equals(method)) {
+				req = new HttpPost(url);
+			} else {
+				req = new HttpGet(url);
+			}
+			
+			RequestConfig reqCfg = buildRequestConfig(request);
+			req.setConfig(reqCfg);
+			
+			headers.forEach((k,v) -> req.addHeader(k, v));
+			if (request.getHeaders() != null) {
+				request.getHeaders().parallelStream().forEach(h -> req.addHeader(h.getName(), h.getValue()));
+			}
+			if (request.getCookies() != null) {
+				request.getCookies().parallelStream().forEach(c -> keepCookie(c));
+			}
 			HttpClientContext ctx = HttpClientContext.create();
 			resp = this.httpClient.execute(req, ctx);
 			// get status

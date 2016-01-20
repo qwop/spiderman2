@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.zbus.kit.log.Logger;
 
-import net.kernal.spiderman.worker.Task;
 import net.kernal.spiderman.worker.download.Downloader;
 import net.kernal.spiderman.worker.extract.Extractor;
 import net.kernal.spiderman.worker.extract.conf.rule.ContainsRule;
@@ -153,11 +152,6 @@ public abstract class Page {
 			this.policy = policy;
 		}
 
-		public static interface KeyGenerator {
-			public Object gen(Task task, Object value);
-		}
-
-		@Override
 		public String toString() {
 			return "UrlMatchRules [policy=" + policy + ", rules=" + rules + "]";
 		}

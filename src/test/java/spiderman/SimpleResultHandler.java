@@ -1,7 +1,6 @@
 package spiderman;
 
 import java.util.Date;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.alibaba.fastjson.JSON;
@@ -16,17 +15,12 @@ import net.kernal.spiderman.queue.Queue.Element;
 import net.kernal.spiderman.worker.extract.ExtractResult;
 import net.kernal.spiderman.worker.result.ResultTask;
 
-/**
- * 结果处理器
- * @author 赖伟威 l.weiwei@163.com 2016-01-19
- *
- */
-public class ResultHandler implements net.kernal.spiderman.worker.extract.ExtractManager.ResultHandler {
+public class SimpleResultHandler implements net.kernal.spiderman.worker.extract.ExtractManager.ResultHandler {
 
 	private static class MapElement extends Properties implements Element {
 		private static final long serialVersionUID = 7024458991944966847L;
 	}
-	
+	 
 	/** 结果计数器 */
 	private final AtomicLong counter = new AtomicLong(0);
 	
@@ -43,14 +37,7 @@ public class ResultHandler implements net.kernal.spiderman.worker.extract.Extrac
 		final Properties fields = result.getValues();
 		final String title;
 		final String content;
-		if ("百度知道内容".equals(pageName)) {
-			title = fields.getString("title");
-			// merge field
-			final List<String> lines = fields.getListString("answers");
-			lines.add(fields.getString("question"));
-			lines.add(fields.getString("bestAnswer"));
-			content = K.join(lines, "\r\n\r\n");
-		} else if ("网页内容".equals(pageName)) {
+		if ("网页内容".equals(pageName)) {
 			final String text = fields.getString("text");
 			if ("*推测您提供的网页为非主题型网页，目前暂不处理！:-)".equals(text)) {
 				return;

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * HashMap Help类
@@ -13,6 +14,19 @@ import java.util.Map;
 public class Properties extends HashMap<String, Object> {
 	
 	private static final long serialVersionUID = 1L;
+	
+	public final static Properties from(String[] args) {
+		final Properties r = new Properties();
+		Stream.of(args)
+			.reduce((a, b) -> {
+				if (a.startsWith("-")) {
+					r.put(a, b);
+				}
+				return b;
+			});
+		
+		return r;
+	}
 	
 	public Properties getProperties(String key) {
 		Object v = this.get(key);
@@ -260,7 +274,7 @@ public class Properties extends HashMap<String, Object> {
 		}
 		
 		//否则按给定的split进行分隔变成数组返回
-		String[] arr = this.getString(key, defaultVal).split(split);
+		String[] arr = this.getString(key, defaultVal == null ? "" : defaultVal).split(split);
 		for (String s : arr){
 			list.add(s);
 		}

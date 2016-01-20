@@ -1,5 +1,7 @@
 package net.kernal.spiderman.worker;
 
+import net.kernal.spiderman.queue.Queue.Element;
+
 /**
  * 我们可爱的工人们.
  * 1. 从任务队列管理器里申领任务
@@ -30,7 +32,7 @@ public abstract class Worker implements Runnable {
 		return this.result;
 	}
 	
-	public abstract void work(Task task);
+	public abstract void work(Element task);
 	
 	public void run() {
 		final Thread thread = Thread.currentThread();
@@ -39,7 +41,7 @@ public abstract class Worker implements Runnable {
 				manager.getLogger().info(thread.getName() + " 退出获取任务的循环");
 				break;
 			}
-			final Task task = manager.takeTask();
+			final Element task = manager.takeTask();
 			if (task == null) {
 				continue;
 			}

@@ -3,13 +3,10 @@ package net.kernal.spiderman.worker.extract;
 import java.io.Serializable;
 
 import net.kernal.spiderman.Properties;
-import net.kernal.spiderman.worker.download.Downloader;
 
 public class ExtractResult implements Serializable {
 	
 	private static final long serialVersionUID = 2390695820923166121L;
-	
-	private Downloader.Request request;
 	
 	/**
 	 * 所属页面名称
@@ -24,11 +21,10 @@ public class ExtractResult implements Serializable {
 	 */
 	private Properties values;
 	
-	public ExtractResult(String pageName, String modelName, Properties values, Downloader.Request request) {
+	public ExtractResult(String pageName, String modelName, Properties values) {
 		this.pageName = pageName;
 		this.modelName = modelName;
 		this.values = values;
-		this.request = request;
 	}
 
 	public String getPageName() {
@@ -43,10 +39,6 @@ public class ExtractResult implements Serializable {
 		return this.values;
 	}
 	
-	public Downloader.Request getRequest() {
-		return this.request;
-	}
-
 	@Override
 	public String toString() {
 		return "ExtractResult [page=" + pageName + ", model=" + modelName + ", fields=" + values + "]";

@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
@@ -356,6 +357,11 @@ public class K {
     	SimpleDateFormat sdf = new SimpleDateFormat(format);
     	return sdf.format(time);
     }
+    
+    public static List<String> readLine(String path) {
+		return readLine(new File(path));
+	}
+    
     public static List<String> readLine(File f) {
 		return readLine(f, "utf-8");
 	}
@@ -396,15 +402,16 @@ public class K {
 		return lines.toString();
 	}
 	
-	public final static Class<?> loadClass(final String className) {
+	@SuppressWarnings("unchecked")
+	public final static <T> Class<T> loadClass(final String className) {
 		try {
-			return Thread.currentThread().getContextClassLoader().loadClass(className);
+			return (Class<T>) Thread.currentThread().getContextClassLoader().loadClass(className);
 		} catch (ClassNotFoundException e) {
 			throw new RuntimeException(e);
 		}
 	}
 	
-	public final static byte[] serialize(Object object) {
+	public final static byte[] serialize(Serializable object) {
 		ObjectOutputStream oos = null;
 		ByteArrayOutputStream bos = null;
 		try {
@@ -461,5 +468,16 @@ public class K {
 
         return input;
     }
+	
+	public final static String join(Collection<String> collection, String connect) {
+		final StringBuilder sb = new StringBuilder();
+		collection.forEach(line -> {
+			if (sb.length() > 0) {
+				sb.append(connect);
+			}
+			sb.append(line);
+		});
+		return sb.toString();
+	}
 	
 }

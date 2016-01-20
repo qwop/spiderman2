@@ -50,14 +50,19 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 			.set("xpath", "//seed")
 			.set("isAutoExtractAttrs", true);
 		seed.addField("text").set("xpath", "./text()");
+		// Script模型
+		Model script = new Model("script")
+			.set("xpath", "//script")
+			.set("isAutoExtractAttrs", true);
+		script.addField("text").set("xpath", "./text()");
 		// Extractor定义
 		Model extractors = new Model("extractor")
-			.set("xpath", "//extractor[@alias]")
+			.set("xpath", "//extractor[@name]")
 			.set("isArray", true)
 			.set("isAutoExtractAttrs", true);
 		// Filter定义
 		Model filters = new Model("filter")
-			.set("xpath", "//filter[@alias]")
+			.set("xpath", "//filter[@name]")
 			.set("isArray", true)
 			.set("isAutoExtractAttrs", true);
 		// Page模型
@@ -89,6 +94,7 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 		// 抽取器
 		extractor.addModel(property);
 		extractor.addModel(seed);
+		extractor.addModel(script);
 		extractor.addModel(extractors);
 		extractor.addModel(filters);
 		extractor.addModel(page);
@@ -110,6 +116,11 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 		return this;
 	}
 	
+	public XMLConfBuilder bindObjectForScript(String name, Object obj) {
+		this.conf.bindObjectForScript(name, obj);
+		return this;
+	}
+	
 	public XMLConfBuilder set(String key, Object value){
 		this.conf.getParams().put(key, value);
 		return this;
@@ -118,7 +129,7 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 	public Conf build() {
 		super.build();
 		// 开始解析
-		final AtomicReference<String> defaultExtractorAlias = new AtomicReference<String>();
+		final AtomicReference<String> defaultExtractorNames = new AtomicReference<String>();
 		extractor.extract(new Callback() {
 			public void onModelExtracted(ModelEntry entry) {
 				final Properties values = entry.getProperties();
@@ -129,35 +140,49 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 			    case "seed":
 			    	conf.addSeed(values.getString("name"), values.getString("url", values.getString("text")));
 				    break;
+			    case "script":
+			    	final String bindingsClassName = values.getString("bindings");
+			    	if (K.isNotBlank(bindingsClassName)) {
+			    		Class<Conf.Bindings> bindingsClass = K.loadClass(bindingsClassName);
+			    		if (bindingsClass != null) {
+			    			Conf.Bindings bindings;
+							try {
+								bindings = bindingsClass.newInstance();
+							} catch (InstantiationException | IllegalAccessException e) {
+								throw new Spiderman.Exception("实例化"+bindingsClassName+"失败", e);
+							}
+			    			bindings.config(conf.getBindings(), conf);
+			    		}
+			    	}
+			    	conf.setScript(values.getString("value", values.getString("text")));
+			    	break;
 			    case "extractor":
-			    	final String alias = values.getString("alias");
+			    	final String name = values.getString("name");
 			    	final String className = values.getString("class");
 			    	final boolean isDefault = values.getBoolean("isDefault", false);
-			    	if (K.isBlank(alias) || K.isBlank(className)) {
+			    	if (K.isBlank(name) || K.isBlank(className)) {
 			    		break;
 			    	}
-			    	if (K.isBlank(defaultExtractorAlias.get()) && isDefault) {
-			    		defaultExtractorAlias.set(alias);
+			    	if (K.isBlank(defaultExtractorNames.get()) && isDefault) {
+			    		defaultExtractorNames.set(name);
 			    	}
-			    	@SuppressWarnings("unchecked")
-					final Class<Extractor> cls = (Class<Extractor>) K.loadClass(className);
-			    	conf.registerExtractor(alias, cls);
+					final Class<Extractor> cls = K.loadClass(className);
+			    	conf.registerExtractor(name, cls);
 			    	break;
 			    case "filter":
-			    	final String alias2 = values.getString("alias");
+			    	final String name2 = values.getString("name");
 			    	final String className2 = values.getString("class");
-			    	if (K.isBlank(alias2) || K.isBlank(className2)) {
+			    	if (K.isBlank(name2) || K.isBlank(className2)) {
 			    		break;
 			    	}
-			    	@SuppressWarnings("unchecked")
-					final Class<Field.ValueFilter> ftCls = (Class<Field.ValueFilter>) K.loadClass(className2);
+					final Class<Field.ValueFilter> ftCls = K.loadClass(className2);
 			    	Field.ValueFilter filter;
 					try {
 						filter = ftCls.newInstance();
 					} catch (Exception e) {
 						throw new Spiderman.Exception("过滤器[class="+ftCls.getName()+"]实例化失败", e); 
 					}
-			    	conf.registerFilter(alias2, filter);
+			    	conf.registerFilter(name2, filter);
 			    	break;
 			    case "extract-page":
 			    	final String pageName = values.getString("name");
@@ -167,7 +192,7 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 					final boolean isUnique = values.getBoolean("isUnique", false);
 					page.setTaskDuplicateCheckEnabled(isUnique);
 					// 处理extractor
-					final String extractorName = values.getString("extractor", defaultExtractorAlias.get());
+					final String extractorName = values.getString("extractor", defaultExtractorNames.get());
 			    	handleExtractor(page, extractorName);
 					
 					// handle url match rule
@@ -210,11 +235,11 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 									final Field field = model.addField(fieldName);
 									field.putAll(f);
 									// 处理Filters
-									String ftAlias = f.getString("filter");
-									if (K.isNotBlank(ftAlias)) {
-										Field.ValueFilter rft = conf.getFilters().all().get(ftAlias);
+									String ftName = f.getString("filter");
+									if (K.isNotBlank(ftName)) {
+										Field.ValueFilter rft = conf.getFilters().all().get(ftName);
 										if (rft == null) {
-											throw new Spiderman.Exception("页面[name="+pageName+"].模型[name="+modelName+"].Field[name="+fieldName+"]配置的属性[filter="+ftAlias+"]不存在");
+											throw new Spiderman.Exception("页面[name="+pageName+"].模型[name="+modelName+"].Field[name="+fieldName+"]配置的属性[filter="+ftName+"]不存在");
 										}
 										field.addFilter(rft);
 									}
@@ -251,7 +276,7 @@ public class XMLConfBuilder extends DefaultConfBuilder {
     	final Map<String, Class<Extractor>> extractors = conf.getExtractors().all();
     	final Class<? extends Extractor> extractorClass = extractors.get(extractorName);
     	if (extractorClass == null) {
-    		throw new Spiderman.Exception("页面[name="+pageName+"]指定的extractor[alias="+extractorName+"]不存在");
+    		throw new Spiderman.Exception("页面[name="+pageName+"]指定的extractor[name="+extractorName+"]不存在");
     	}
     	final Constructor<? extends Extractor> ct;
 		try {
@@ -274,5 +299,6 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 	public void configParams(Properties params) { }
 	public void configSeeds(Seeds seeds) { }
 	public void configPages(Pages pages) { }
+	public void configBindings(Map<String, Object> bindings) {}
 	
 }

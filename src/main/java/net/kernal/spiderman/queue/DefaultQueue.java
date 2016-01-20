@@ -11,23 +11,24 @@ import net.kernal.spiderman.logger.Logger;
  * @author 赖伟威 l.weiwei@163.com 2015-12-10
  *
  */
-public class DefaultQueue<T> implements Queue<T> {
+public class DefaultQueue extends CheckableQueue {
 	
 	private Logger logger;
-	private BlockingQueue<T> queue;
+	private BlockingQueue<Element> queue;
 	
-	public DefaultQueue(int capacity, Logger logger) {
+	public DefaultQueue(Checker checker, int capacity, Logger logger) {
+		super(checker);
 		this.logger = logger;
 		if (capacity <= 0) {
-			queue = new LinkedTransferQueue<T>();
-			logger.debug(getClass().getName()+" 使用无边界LinkedTransferQueue");
+			queue = new LinkedTransferQueue<Element>();
+			logger.debug(getClass().getName()+" 使用无边界LinkedEransferQueue");
 		} else {
-			queue = new ArrayBlockingQueue<T>(capacity);
+			queue = new ArrayBlockingQueue<Element>(capacity);
 			logger.debug(getClass().getName()+" 使用有边界ArrayBlockingQueue");
 		}
 	}
 	
-	public T take() {
+	public Element take() {
 		try {
 			return this.queue.take();
 		} catch (InterruptedException e) {
@@ -35,7 +36,7 @@ public class DefaultQueue<T> implements Queue<T> {
 		return null;
 	}
 	
-	public void append(T t) {
+	public void appendChecked(Element t) {
 		try {
 			this.queue.put(t);
 		} catch (InterruptedException e) {
@@ -45,6 +46,10 @@ public class DefaultQueue<T> implements Queue<T> {
 	public void clear() {
 		logger.debug(getClass().getName()+" 队列元素剩余数:"+queue.size());
 		queue.clear();
+		Checker checker = getChecker();
+		if (checker != null && checker instanceof RepeatableChecker) {
+			((RepeatableChecker)checker).clear();
+		}
 	}
 	
 }
