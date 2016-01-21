@@ -42,9 +42,7 @@ public class BDbStore implements KVStore {
 	}
 	
 	public void close() {
-		this.env.sync();
 		this.db.close();
-		this.env.cleanLog();
 		this.env.close();
 	}
 

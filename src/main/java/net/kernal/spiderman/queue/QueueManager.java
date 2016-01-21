@@ -14,7 +14,6 @@ import net.kernal.spiderman.Properties;
 import net.kernal.spiderman.Spiderman;
 import net.kernal.spiderman.logger.Logger;
 import net.kernal.spiderman.queue.CheckableQueue.Checker;
-import net.kernal.spiderman.queue.Queue.Element;
 import net.kernal.spiderman.store.KVStore;
 import net.kernal.spiderman.worker.download.DownloadTask;
 import net.kernal.spiderman.worker.extract.ExtractResult;
@@ -69,34 +68,32 @@ public class QueueManager {
 				logger.debug("创建其他[name="+n+"]队列(ZBus)");
 			});
 		} else {
-			// 构建默认队列
 			// 队列元素是否可以重复
-			final boolean isRepeatable = params.getBoolean("queue.element.repeatable", true);
 			final Checker checker;
+			final boolean isRepeatable = params.getBoolean("queue.element.repeatable", true);
 			if (!isRepeatable) {
-				// 若不可重复，则需要构建检查器来实现（此外还需要将元素存储）
-				// 构建重复检查器
+				// 若不可重复，则需要构建检查器来实现
 				checker = new RepeatableChecker(params, logger);
 				logger.debug("构建队列元素重复检查器RepeatableChecker");
 			} else {
-				checker = new Checker(){
-					public boolean check(Element e) {
-						return true;//默认全部通过
-					}
-				};
+				checker = null;
 			}
+			// 构建默认队列
 			final int capacity = params.getInt("queue.capacity");
-			downloadQueue = new DefaultQueue(checker, capacity, logger);
+			final Queue queue1 = new DefaultQueue(capacity, logger);
+			downloadQueue = checker == null ? queue1 : new CheckableQueue(queue1, checker);
 			logger.debug("创建下载队列(默认)");
-			extractQueue = new DefaultQueue(checker, capacity, logger);
+			final Queue queue2 = new DefaultQueue(capacity, logger);
+			extractQueue = checker == null ? queue2 : new CheckableQueue(queue2, checker);
 			logger.debug("创建下载队列(默认)");
-			resultQueue = new DefaultQueue(checker, capacity, logger);
+			final Queue queue3 = new DefaultQueue(capacity, logger);
+			resultQueue = checker == null ? queue3 : new CheckableQueue(queue3, checker);
 			logger.debug("创建结果队列(默认)");
 			// 创建其他队列
 			final List<String> queueNames = params.getListString("queue.other.names", "", ",");
 			new HashSet<String>(queueNames).parallelStream().filter(n -> K.isNotBlank(n)).forEach(n -> {
-				Queue queue = new DefaultQueue(checker, capacity, logger);
-				queues.put(n, queue);
+				Queue queue = new DefaultQueue(capacity, logger);
+				queues.put(n, checker == null ? queue : new CheckableQueue(queue, checker));
 				logger.debug("创建其他[name="+n+"]队列(默认)");
 			});
 		}

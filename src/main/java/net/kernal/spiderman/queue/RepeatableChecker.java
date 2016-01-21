@@ -40,7 +40,7 @@ public class RepeatableChecker implements CheckableQueue.Checker {
 			
 			if (store.contains(key)) {
 				// key重复了
-				logger.info("元素[key="+key+"]重复了");
+				logger.info("队列元素重复[key="+key+"]");
 				return false;
 			}
 			// 将key存储起来

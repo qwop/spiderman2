@@ -1,6 +1,5 @@
 package net.kernal.spiderman.conf;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.lang.reflect.Constructor;
 import java.util.List;
@@ -33,7 +32,7 @@ import net.kernal.spiderman.worker.extract.conf.rule.StartsWithRule;
 public class XMLConfBuilder extends DefaultConfBuilder {
 	
 	private Extractor extractor;
-	public XMLConfBuilder(File file) {
+	public XMLConfBuilder(String file) {
 		super();
 		try {
 			this.extractor = new XMLExtractor(file);
@@ -195,6 +194,17 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 					final String extractorName = values.getString("extractor", defaultExtractorNames.get());
 			    	handleExtractor(page, extractorName);
 					
+			    	// 处理scope＝page的filter
+			    	final String filterName = values.getString("filter");
+			    	if (K.isNotBlank(filterName)) {
+			    		Field.ValueFilter ft = conf.getFilters().all().get(filterName);
+			    		if (ft == null) {
+			    			throw new Spiderman.Exception("页面[name="+pageName+"]指定的的filter[name="+filterName+"]不存在");
+			    		}
+			    		// 设置页面内的全局过滤器，每个Model和Field都要执行
+			    		page.setFilter(ft);
+			    	}
+			    	
 					// handle url match rule
 					final Properties rule = values.getProperties("url-match-rule");
 					if (rule == null) {

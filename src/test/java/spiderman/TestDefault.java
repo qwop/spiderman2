@@ -1,7 +1,5 @@
 package spiderman;
 
-import com.alibaba.fastjson.JSON;
-
 import net.kernal.spiderman.Context;
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Properties;
@@ -17,12 +15,12 @@ import net.kernal.spiderman.worker.extract.TextExtractor;
 import net.kernal.spiderman.worker.extract.conf.Model;
 import net.kernal.spiderman.worker.extract.conf.Page;
 
+/**
+ * 这个测试代码完全使用Java代码的方式来配置抽取规则，可以看到配置躲起来之后代码不太好看，至少是比较繁杂的。
+ * 另外一个TestXML例子就使用大部分配置通过XML文件加载，小部分用Java代码处理，看起来会好很多。
+ */
 public class TestDefault {
 	
-	/**
-	 * 这个测试代码完全使用Java代码的方式来配置抽取规则，可以看到配置躲起来之后代码不太好看，至少是比较繁杂的。
-	 * 另外一个TestXML例子就使用大部分配置通过XML文件加载，小部分用Java代码处理，看起来会好很多。
-	 */
 	public static void main(String[] args) {
 		Conf conf = new DefaultConfBuilder() {
 			public void configPages(Pages pages) {
@@ -49,10 +47,7 @@ public class TestDefault {
 							.set("isArray", true)
 							.set("isDistinct", true)
 							.set("isForNewTask", true)
-							.addFilter(ctx -> {
-								final String pn = K.findOneByRegex(ctx.getValue(), "&pn\\=\\d+");
-								return K.isBlank(pn) ? ctx.getValue() : ctx.getSeed().getUrl()+pn;
-							});
+							.addFilter(new MyFilter());
 					}
 				});
 			}
@@ -60,23 +55,21 @@ public class TestDefault {
 				seeds.add(new Seed("http://www.baidu.com/s?wd="+K.urlEncode("\"蜘蛛侠\"")));
 			}
 			public void configParams(Properties params) {
-				params.put("logger.level", Logger.LEVEL_DEBUG);
-				params.put("duration", "10s");// 运行时间
-				params.put("worker.download.size", 1);// 下载线程数
-				params.put("worker.extract.size", 1);// 解析线程数
-				params.put("worker.result.size", 1);// 结果处理线程数
+				params.put("logger.level", Logger.LEVEL_INFO);
+				params.put("duration", "60s");// 运行时间
+				params.put("worker.download.size", 10);// 下载线程数
+				params.put("worker.extract.size", 10);// 解析线程数
+				params.put("worker.result.size", 10);// 结果处理线程数
 				params.put("queue.capacity", 5000);// 队列大小
 				params.put("queue.zbus.enabled", false);// 队列是否使用ZBus实现
 				params.put("queue.zbus.server", "10.8.60.8:15555");// ZBus服务地址
 				params.put("queue.other.names", "SPIDERMAN_JSON_RESULT");// 创建其他队列,多个用逗号隔开
 				params.put("queue.element.repeatable", false);// 队列元素是否允许重复,默认允许。若不允许，需用到重复检查器
-				params.put("queue.checker.bdb.file", "src/main/resources/store");// 检查器需用到BDb来存储
+				params.put("queue.checker.bdb.file", "store/checker");// 检查器需用到BDb来存储
 			}
 		}.build();
 		
-		final Context ctx = new Context(conf, (result, counter) -> {
-			System.err.println("获得第"+counter+"个结果:\r\n"+JSON.toJSONString(result, true));
-		}); 
+		final Context ctx = new Context(conf, new MyResultHandler()); 
 		new Spiderman(ctx).go();//别忘记看控制台信息哦，结束之后会有统计信息的
 	}
 	

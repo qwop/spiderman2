@@ -1,7 +1,5 @@
 package net.kernal.spiderman.client;
 
-import java.io.File;
-
 import net.kernal.spiderman.Context;
 import net.kernal.spiderman.Properties;
 import net.kernal.spiderman.Spiderman;
@@ -19,8 +17,7 @@ public class Bootstrap {
 	public static void main(String[] args) {
 		final Properties params = Properties.from(args);// 将参数里的 -k1 v1 -k2 v2 转成 map
 		final String xml = params.getString("-conf", "spiderman-bootstrap.xml");// 获得XML配置文件路径
-		final Conf conf = new XMLConfBuilder(new File(xml)).build();// 通过XMLBuilder构建CONF对象
-		conf.bindObjectForScript("$seeds", conf.getSeeds());// 绑定种子集合对象给脚本用来添加种子用
+		final Conf conf = new XMLConfBuilder(xml).build();// 通过XMLBuilder构建CONF对象
 		new Spiderman(new Context(conf)).go();//启动，别忘记看控制台信息哦，结束之后会有统计信息的
 	}
 	

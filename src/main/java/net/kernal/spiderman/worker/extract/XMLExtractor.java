@@ -1,8 +1,6 @@
 package net.kernal.spiderman.worker.extract;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -48,16 +46,16 @@ public class XMLExtractor extends AbstractXPathExtractor {
 		this(new ByteArrayInputStream(task.getResponse().getBody()), task, null, models);
 	}
 	
-	public XMLExtractor(File file, Model... models) throws FileNotFoundException {
-		this(new FileInputStream(file), null, null, models);
+	public XMLExtractor(String file, Model... models) throws FileNotFoundException {
+		this(K.asStream(file), null, null, models);
 	}
 	
 	public XMLExtractor(ExtractTask task, String page, Model... models) {
 		this(new ByteArrayInputStream(task.getResponse().getBody()), task, page, models);
 	}
 	
-	public XMLExtractor(File file, String page, Model... models) throws FileNotFoundException {
-		this(new FileInputStream(file), null, page, models);
+	public XMLExtractor(String file, String page, Model... models) throws FileNotFoundException {
+		this(K.asStream(file), null, page, models);
 	}
 	
 	public XMLExtractor(InputStream is, ExtractTask task, String page, Model... models) {
@@ -201,7 +199,7 @@ public class XMLExtractor extends AbstractXPathExtractor {
 			.set("isArray", true);
 		filter.addField("text").set("xpath", "./text()");
 		// 抽取器
-		Extractor extractor = new XMLExtractor(new File("src/main/resources/spiderman.conf.xml"));
+		Extractor extractor = new XMLExtractor("spiderman.bootstrap.xml");
 		extractor.addModel(property);
 		extractor.addModel(seed);
 		extractor.addModel(extractors);

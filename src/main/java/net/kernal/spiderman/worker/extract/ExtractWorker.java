@@ -68,6 +68,9 @@ public class ExtractWorker extends Worker {
 					
 					// 处理过滤器
 					final List<Field.ValueFilter> filters = new ArrayList<Field.ValueFilter>();
+					if (page.getFilter() != null) {
+						filters.add(page.getFilter());// 设置全局过滤器
+					}
 					filters.add(new TrimFilter());// 添加一个trim过滤器
 					filters.addAll(field.getFilters());// 添加多个子元素配置的过滤器
 					

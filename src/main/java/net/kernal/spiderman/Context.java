@@ -49,34 +49,11 @@ public class Context {
 		scriptEngine = new ScriptEngineManager().getEngineByName(engineName);
 		if (scriptEngine == null) 
 			throw new Spiderman.Exception("无法获取脚本引擎对象[name="+engineName+"]");
-		// 若配置了script脚本，执行它
-		final Map<String, Object> bindings = conf.getBindings();
-		final String script = conf.getScript();
-		if (K.isNotBlank(script)) {
-			Bindings bind = new SimpleBindings(bindings);
-			try {
-				bind.put("$seeds", conf.getSeeds());
-				scriptEngine.eval(script, bind);
-			} catch (ScriptException e) {
-				throw new Spiderman.Exception("执行脚本错误", e);
-			}
-		}
-		// 设置脚本引擎
-		pages.forEach(page -> {
-			page.getModels().all().forEach(p -> {
-				p.getFields().forEach(f -> {
-					f.getFilters().stream()
-						.filter(ft -> ft instanceof ScriptableFilter)
-						.map(ft -> (ScriptableFilter)ft)
-						.forEach(ft -> {
-							ft.setBindings(bindings);
-							ft.setScriptEngine(scriptEngine);
-						});
-				});
-			});
-		});
-		
 		this.conf = conf;
+		// process script
+		this.processScript();
+		
+		// build manager
 		this.managers = new ArrayList<WorkerManager>();
 		final byte level;
 		final String levelStr = params.getString("logger.level");
@@ -125,7 +102,6 @@ public class Context {
 					if (resultHandlerClass == null) {
 						throw new Spiderman.Exception("ResultHandler[class="+resultHandlerClassName+"]不存在");
 					}
-					
 					try {
 						handler = resultHandlerClass.newInstance();
 					} catch (InstantiationException | IllegalAccessException e) {
@@ -177,6 +153,34 @@ public class Context {
 		this.queueManager.shutdown();
 		this.managers.clear();
 		logger.debug("退出...");
+	}
+	
+	private void processScript() {
+		// 若配置了script脚本，执行它
+		final Map<String, Object> bindings = conf.getBindings();
+		final String script = conf.getScript();
+		if (K.isNotBlank(script)) {
+			try {
+				final Bindings bind = new SimpleBindings(bindings);
+				scriptEngine.eval(script, bind);
+			} catch (ScriptException e) {
+				throw new Spiderman.Exception("执行脚本错误", e);
+			}
+		}
+		// 设置脚本引擎
+		conf.getPages().all().forEach(page -> {
+			page.getModels().all().forEach(p -> {
+				p.getFields().forEach(f -> {
+					f.getFilters().stream()
+						.filter(ft -> ft instanceof ScriptableFilter)
+						.map(ft -> (ScriptableFilter)ft)
+						.forEach(ft -> {
+							ft.setBindings(bindings);
+							ft.setScriptEngine(scriptEngine);
+						});
+				});
+			});
+		});
 	}
 	
 	public static void main(String[] args) throws ScriptException {

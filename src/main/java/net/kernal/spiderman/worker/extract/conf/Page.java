@@ -22,11 +22,20 @@ public abstract class Page {
 	private UrlMatchRules rules;
 	private Models models;
 	private boolean isTaskDuplicateCheckEnabled;
+	private Field.ValueFilter filter;//全局Filter，所有Model的所有Field都需要执行
 	
 	public Page(String name) {
 		this.name = name;
 		this.rules = new UrlMatchRules();
 		this.models = new Models(this.name);
+	}
+	
+	public Page setFilter(Field.ValueFilter filter) {
+		this.filter = filter;
+		return this;
+	}
+	public Field.ValueFilter getFilter() {
+		return this.filter;
 	}
 	
 	public Page setTaskDuplicateCheckEnabled(boolean bool) {

@@ -6,11 +6,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -25,6 +27,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.zbus.kit.FileKit;
 
 /**
  * 工具类(Kit)
@@ -358,19 +362,72 @@ public class K {
     	return sdf.format(time);
     }
     
+    public static File loadFile(String resource) {
+		ClassLoader classLoader = null;
+		try {
+			Method method = Thread.class.getMethod("getContextClassLoader");
+			classLoader = (ClassLoader) method.invoke(Thread.currentThread());
+		} catch (Exception e) {
+		}
+		if (classLoader == null) {
+			classLoader = K.class.getClassLoader();
+		}
+		try {
+			if (classLoader != null) {
+				URL url = classLoader.getResource(resource);
+				if (url == null) {
+					return null;
+				}
+				return new File(url.toURI());
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		return null;
+	} 
+    
+    public static InputStream asStream(String resource) {
+		ClassLoader classLoader = null;
+		try {
+			Method method = Thread.class.getMethod("getContextClassLoader");
+			classLoader = (ClassLoader) method.invoke(Thread.currentThread());
+		} catch (Exception e) {
+		}
+		if (classLoader == null) {
+			classLoader = K.class.getClassLoader();
+		}
+		try {
+			if (classLoader != null) {
+				URL url = classLoader.getResource(resource);
+				if (url == null) {
+					return null;
+				}
+				if (url.toString().startsWith("jar:file:")) { 
+					return FileKit.class.getResourceAsStream(resource.startsWith("/") ? resource : "/" + resource);
+				} 
+				
+				return new FileInputStream(new File(url.toURI()));
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		return null;
+	} 
+    
     public static List<String> readLine(String path) {
-		return readLine(new File(path));
+    	final InputStream is = K.asStream(path);
+		return readLine(is);
 	}
     
-    public static List<String> readLine(File f) {
-		return readLine(f, "utf-8");
+    public static List<String> readLine(InputStream is) {
+		return readLine(is, "utf-8");
 	}
 	
-	public static List<String> readLine(File f, String charset) {
+	private static List<String> readLine(InputStream is, String charset) {
 		List<String> result = new ArrayList<String>();
 		BufferedReader reader = null;
 		try {
-			reader = new BufferedReader(new InputStreamReader(new FileInputStream(f), charset));
+			reader = new BufferedReader(new InputStreamReader(is, charset));
 			String line = null;
 			while ((line = reader.readLine()) != null)
 				result.add(line);
@@ -389,13 +446,13 @@ public class K {
 		return result;
 	}
 	
-	public static String readFile(File f) {
-		return readFile(f, null);
+	public static String readFile(InputStream is) {
+		return readFile(is, null);
 	}
 	
-	public static String readFile(File file,String charset) {
+	public static String readFile(InputStream is,String charset) {
 		StringBuilder lines = new StringBuilder();
-		K.readLine(file, charset).forEach(line -> {
+		K.readLine(is, charset).forEach(line -> {
 			if (lines.length() > 0) lines.append("\r\n");
 			lines.append(line);
 		});

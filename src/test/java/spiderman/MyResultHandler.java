@@ -21,7 +21,7 @@ import net.kernal.spiderman.worker.result.ResultTask;
  * @author 赖伟威 l.weiwei@163.com 2016-01-19
  *
  */
-public class ResultHandler implements net.kernal.spiderman.worker.extract.ExtractManager.ResultHandler {
+public class MyResultHandler implements net.kernal.spiderman.worker.extract.ExtractManager.ResultHandler {
 
 	private static class MapElement extends Properties implements Element {
 		private static final long serialVersionUID = 7024458991944966847L;

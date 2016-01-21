@@ -11,13 +11,12 @@ import net.kernal.spiderman.logger.Logger;
  * @author 赖伟威 l.weiwei@163.com 2015-12-10
  *
  */
-public class DefaultQueue extends CheckableQueue {
+public class DefaultQueue implements Queue {
 	
 	private Logger logger;
 	private BlockingQueue<Element> queue;
 	
-	public DefaultQueue(Checker checker, int capacity, Logger logger) {
-		super(checker);
+	public DefaultQueue(int capacity, Logger logger) {
 		this.logger = logger;
 		if (capacity <= 0) {
 			queue = new LinkedTransferQueue<Element>();
@@ -36,20 +35,16 @@ public class DefaultQueue extends CheckableQueue {
 		return null;
 	}
 	
-	public void appendChecked(Element t) {
+	public void append(Element e) {
 		try {
-			this.queue.put(t);
-		} catch (InterruptedException e) {
+			this.queue.put(e);
+		} catch (InterruptedException ex) {
 		}
 	}
 
 	public void clear() {
 		logger.debug(getClass().getName()+" 队列元素剩余数:"+queue.size());
 		queue.clear();
-		Checker checker = getChecker();
-		if (checker != null && checker instanceof RepeatableChecker) {
-			((RepeatableChecker)checker).clear();
-		}
 	}
-	
+
 }
