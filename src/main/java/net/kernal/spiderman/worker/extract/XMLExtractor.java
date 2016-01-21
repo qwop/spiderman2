@@ -46,7 +46,7 @@ public class XMLExtractor extends AbstractXPathExtractor {
 		this(new ByteArrayInputStream(task.getResponse().getBody()), task, null, models);
 	}
 	
-	public XMLExtractor(String file, Model... models) throws FileNotFoundException {
+	public XMLExtractor(String file, Model... models) {
 		this(K.asStream(file), null, null, models);
 	}
 	
@@ -54,7 +54,7 @@ public class XMLExtractor extends AbstractXPathExtractor {
 		this(new ByteArrayInputStream(task.getResponse().getBody()), task, page, models);
 	}
 	
-	public XMLExtractor(String file, String page, Model... models) throws FileNotFoundException {
+	public XMLExtractor(String file, String page, Model... models) {
 		this(K.asStream(file), null, page, models);
 	}
 	

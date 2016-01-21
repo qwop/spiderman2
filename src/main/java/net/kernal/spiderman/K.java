@@ -29,8 +29,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.zbus.kit.FileKit;
-
 /**
  * 工具类(Kit)
  * @author 赖伟威 l.weiwei@163.com 2015-12-10
@@ -404,7 +402,7 @@ public class K {
 					throw new FileNotFoundException(resource);
 				}
 				if (url.toString().startsWith("jar:file:")) { 
-					return FileKit.class.getResourceAsStream(resource.startsWith("/") ? resource : "/" + resource);
+					return K.class.getResourceAsStream(resource.startsWith("/") ? resource : "/" + resource);
 				} 
 				
 				return new FileInputStream(new File(url.toURI()));

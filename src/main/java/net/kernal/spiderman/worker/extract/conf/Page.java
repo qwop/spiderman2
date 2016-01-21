@@ -2,8 +2,7 @@ package net.kernal.spiderman.worker.extract.conf;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.zbus.kit.log.Logger;
+import java.util.logging.Logger;
 
 import net.kernal.spiderman.worker.download.Downloader;
 import net.kernal.spiderman.worker.extract.Extractor;
