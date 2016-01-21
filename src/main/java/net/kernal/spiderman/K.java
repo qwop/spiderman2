@@ -5,6 +5,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -400,7 +401,7 @@ public class K {
 			if (classLoader != null) {
 				URL url = classLoader.getResource(resource);
 				if (url == null) {
-					return null;
+					throw new FileNotFoundException(resource);
 				}
 				if (url.toString().startsWith("jar:file:")) { 
 					return FileKit.class.getResourceAsStream(resource.startsWith("/") ? resource : "/" + resource);

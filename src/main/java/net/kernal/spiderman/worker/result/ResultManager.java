@@ -24,7 +24,9 @@ public class ResultManager extends WorkerManager {
 		final long count = counter.plus();
 		final ResultTask rtask = (ResultTask)wr.getTask();
 		getLogger().info("消费了第"+count+"个结果: "+rtask.getResult());
-		this.handler.handle(rtask, counter);
+		if (this.handler != null) {
+			this.handler.handle(rtask, counter);
+		}
 	}
 
 	protected Element takeTask() {

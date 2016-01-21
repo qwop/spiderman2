@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
@@ -133,6 +132,10 @@ public class Context {
 		return this;
 	}
 	
+	public Conf getConf() {
+		return this.conf;
+	}
+	
 	public Properties getParams() {
 		return this.conf.getParams();
 	}
@@ -157,12 +160,13 @@ public class Context {
 	
 	private void processScript() {
 		// 若配置了script脚本，执行它
-		final Map<String, Object> bindings = conf.getBindings();
+		final Bindings bindings = new SimpleBindings();
+		final ScriptBindings sb = conf.getScriptBindings();
 		final String script = conf.getScript();
 		if (K.isNotBlank(script)) {
 			try {
-				final Bindings bind = new SimpleBindings(bindings);
-				scriptEngine.eval(script, bind);
+				sb.config(bindings, this);
+				scriptEngine.eval(script, bindings);
 			} catch (ScriptException e) {
 				throw new Spiderman.Exception("执行脚本错误", e);
 			}
@@ -181,6 +185,10 @@ public class Context {
 				});
 			});
 		});
+	}
+	
+	public static interface ScriptBindings {
+		public void config(Bindings bindings, Context ctx);
 	}
 	
 	public static void main(String[] args) throws ScriptException {

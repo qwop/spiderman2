@@ -1,11 +1,11 @@
 package net.kernal.spiderman.conf;
 
-import java.io.FileNotFoundException;
 import java.lang.reflect.Constructor;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
+import net.kernal.spiderman.Context.ScriptBindings;
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Properties;
 import net.kernal.spiderman.Spiderman;
@@ -35,11 +35,7 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 	private Extractor extractor;
 	public XMLConfBuilder(String file) {
 		super();
-		try {
-			this.extractor = new XMLExtractor(file);
-		} catch (FileNotFoundException e) {
-			throw new Spiderman.Exception("初始化XMLConfBuilder失败", e);
-		}
+		this.extractor = new XMLExtractor(file);
 		
 		// Property模型
 		Model property = new Model("property")
@@ -116,11 +112,6 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 		return this;
 	}
 	
-	public XMLConfBuilder bindObjectForScript(String name, Object obj) {
-		this.conf.bindObjectForScript(name, obj);
-		return this;
-	}
-	
 	public XMLConfBuilder set(String key, Object value){
 		this.conf.getParams().put(key, value);
 		return this;
@@ -143,15 +134,15 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 			    case "script":
 			    	final String bindingsClassName = values.getString("bindings");
 			    	if (K.isNotBlank(bindingsClassName)) {
-			    		Class<Conf.Bindings> bindingsClass = K.loadClass(bindingsClassName);
+			    		Class<ScriptBindings> bindingsClass = K.loadClass(bindingsClassName);
 			    		if (bindingsClass != null) {
-			    			Conf.Bindings bindings;
+			    			ScriptBindings bindings;
 							try {
 								bindings = bindingsClass.newInstance();
 							} catch (InstantiationException | IllegalAccessException e) {
 								throw new Spiderman.Exception("实例化"+bindingsClassName+"失败", e);
 							}
-			    			bindings.config(conf.getBindings(), conf);
+							conf.setScriptBindings(bindings);
 			    		}
 			    	}
 			    	conf.setScript(values.getString("value", values.getString("text")));

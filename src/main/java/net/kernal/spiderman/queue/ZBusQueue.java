@@ -66,7 +66,7 @@ public class ZBusQueue implements Queue {
 		}
 		msg.setBody(data);
 		try {
-			producer.invokeAsync(msg, new ResultCallback<Message>() {
+			producer.sendAsync(msg, new ResultCallback<Message>() {
 				public void onReturn(Message result) {
 					// ignore
 				}

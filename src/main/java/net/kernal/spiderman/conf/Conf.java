@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 
 import net.kernal.spiderman.Properties;
 import net.kernal.spiderman.Seed;
+import net.kernal.spiderman.Context.ScriptBindings;
 import net.kernal.spiderman.worker.extract.Extractor;
 import net.kernal.spiderman.worker.extract.conf.Field;
 import net.kernal.spiderman.worker.extract.conf.Page;
@@ -22,7 +23,6 @@ public class Conf {
 		filters = new Filters();
 		pages = new Pages();
 		params = new Properties();
-		bindings = new HashMap<String, Object>();
 	}
 	
 	private Seeds seeds;
@@ -30,8 +30,8 @@ public class Conf {
 	private Filters filters;
 	private Pages pages;
 	private Properties params;
-	private Map<String, Object> bindings;
 	private String script;
+	private ScriptBindings bindings;
 	
 	public static class Seeds {
 		private List<Seed> seeds;
@@ -52,9 +52,6 @@ public class Conf {
 		public List<Seed> all() {
 			return this.seeds;
 		}
-	}
-	public static interface Bindings {
-		public void config(Map<String, Object> bindings, Conf conf);
 	}
 	public static class Extractors {
 		private Map<String, Class<Extractor>> extractors;
@@ -120,9 +117,8 @@ public class Conf {
 		filters.register(name, filter);
 		return this;
 	}
-	public Conf bindObjectForScript(String name, Object obj) {
-		bindings.put(name, obj);
-		return this;
+	public ScriptBindings getScriptBindings() {
+		return this.bindings;
 	}
 	public Conf addPage(Page page) {
 		pages.add(page);
@@ -147,8 +143,8 @@ public class Conf {
 	public Properties getParams() {
 		return params;
 	}
-	public Map<String, Object> getBindings() {
-		return bindings;
+	public void setScriptBindings(ScriptBindings bindings) {
+		this.bindings = bindings;
 	}
 	public void setScript(String script) {
 		this.script = script;
