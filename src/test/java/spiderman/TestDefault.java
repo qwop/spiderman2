@@ -1,5 +1,7 @@
 package spiderman;
 
+import com.alibaba.fastjson.JSON;
+
 import net.kernal.spiderman.Context;
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Properties;
@@ -22,7 +24,7 @@ import net.kernal.spiderman.worker.extract.conf.Page;
 public class TestDefault {
 	
 	public static void main(String[] args) {
-		Conf conf = new DefaultConfBuilder() {
+		final Conf conf = new DefaultConfBuilder() {
 			public void configPages(Pages pages) {
 				pages.add(new Page("网页内容") {
 					public void config(UrlMatchRules rules, Models models) { 
@@ -47,7 +49,11 @@ public class TestDefault {
 							.set("isArray", true)
 							.set("isDistinct", true)
 							.set("isForNewTask", true)
-							.addFilter(new MyFilter());
+							.addFilter(ctx -> {
+								final String v = ctx.getValue();
+								final String pn = K.findOneByRegex(v, "&pn\\=\\d+");
+								return K.isBlank(pn) ? v : ctx.getSeed().getUrl()+pn;
+							});
 					}
 				});
 			}
@@ -60,16 +66,14 @@ public class TestDefault {
 				params.put("worker.download.size", 10);// 下载线程数
 				params.put("worker.extract.size", 10);// 解析线程数
 				params.put("worker.result.size", 10);// 结果处理线程数
-				params.put("queue.capacity", 5000);// 队列大小
-				params.put("queue.zbus.enabled", false);// 队列是否使用ZBus实现
-				params.put("queue.zbus.server", "10.8.60.8:15555");// ZBus服务地址
-				params.put("queue.other.names", "SPIDERMAN_JSON_RESULT");// 创建其他队列,多个用逗号隔开
 				params.put("queue.element.repeatable", false);// 队列元素是否允许重复,默认允许。若不允许，需用到重复检查器
 				params.put("queue.checker.bdb.file", "store/checker");// 检查器需用到BDb来存储
 			}
 		}.build();
 		
-		final Context ctx = new Context(conf, new MyResultHandler()); 
+		final Context ctx = new Context(conf,  (result, c) -> {
+			System.err.println(String.format("获得第%s个结果: %s", c, JSON.toJSONString(result, true)));
+		}); 
 		new Spiderman(ctx).go();//别忘记看控制台信息哦，结束之后会有统计信息的
 	}
 	
