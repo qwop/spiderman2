@@ -40,7 +40,8 @@ public class MyResultHandler implements net.kernal.spiderman.worker.extract.Extr
 		final String url = task.getRequest().getUrl();
 		final ExtractResult result = task.getResult();
 		final String pageName = result.getPageName();
-		final Properties fields = result.getValues();
+		final String modelName = result.getModelName();
+		final Properties fields = result.getFields();
 		final String title;
 		final String content;
 		if ("百度知道内容".equals(pageName)) {
@@ -74,7 +75,7 @@ public class MyResultHandler implements net.kernal.spiderman.worker.extract.Extr
 		// 往队列放最终结果，提供给其他消费者使用
 		queue.append(map);
 		final long count = counter.incrementAndGet();
-		final String info = String.format("发布第%s个结果[page=%s]: %s", count, pageName, JSON.toJSONString(map, true));
+		final String info = String.format("发布第%s个结果[page=%s, model=%s, url=%s]:\r\n %s", count, pageName, modelName, url, JSON.toJSONString(map, true));
 		ctx.getLogger().warn(info);
 	} 
 

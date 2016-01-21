@@ -12,6 +12,7 @@ import net.kernal.spiderman.conf.Conf.Pages;
 import net.kernal.spiderman.conf.Conf.Seeds;
 import net.kernal.spiderman.conf.DefaultConfBuilder;
 import net.kernal.spiderman.logger.Logger;
+import net.kernal.spiderman.worker.extract.ExtractResult;
 import net.kernal.spiderman.worker.extract.HtmlCleanerExtractor;
 import net.kernal.spiderman.worker.extract.TextExtractor;
 import net.kernal.spiderman.worker.extract.conf.Model;
@@ -21,7 +22,7 @@ import net.kernal.spiderman.worker.extract.conf.Page;
  * 这个测试代码完全使用Java代码的方式来配置抽取规则，可以看到配置躲起来之后代码不太好看，至少是比较繁杂的。
  * 另外一个TestXML例子就使用大部分配置通过XML文件加载，小部分用Java代码处理，看起来会好很多。
  */
-public class TestDefault {
+public class TestAPI {
 	
 	public static void main(String[] args) {
 		final Conf conf = new DefaultConfBuilder() {
@@ -71,8 +72,12 @@ public class TestDefault {
 			}
 		}.build();
 		
-		final Context ctx = new Context(conf,  (result, c) -> {
-			System.err.println(String.format("获得第%s个结果: %s", c, JSON.toJSONString(result, true)));
+		final Context ctx = new Context(conf,  (task, c) -> {
+			final ExtractResult er = task.getResult();
+			final String json =  JSON.toJSONString(er.getFields(), true);
+			final String fmt = "获取第%s个[page=%s, model=%s, url=%s]结果：\r\n%s";
+			System.err.println(String.format(fmt, c, er.getPageName(), er.getModelName(), task.getRequest().getUrl(), json));
+		    
 		}); 
 		new Spiderman(ctx).go();//别忘记看控制台信息哦，结束之后会有统计信息的
 	}

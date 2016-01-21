@@ -21,6 +21,7 @@ import net.kernal.spiderman.worker.extract.conf.Page;
 import net.kernal.spiderman.worker.extract.conf.filter.ScriptableFilter;
 import net.kernal.spiderman.worker.extract.conf.rule.ContainsRule;
 import net.kernal.spiderman.worker.extract.conf.rule.EndsWithRule;
+import net.kernal.spiderman.worker.extract.conf.rule.EqualsRule;
 import net.kernal.spiderman.worker.extract.conf.rule.RegexRule;
 import net.kernal.spiderman.worker.extract.conf.rule.StartsWithRule;
 
@@ -218,6 +219,9 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 					
 					final String value = rule.getString("value", rule.getString("text"));
 					switch(type) {
+					case "equals":
+						page.getRules().add(new EqualsRule(value).setNegativeEnabled(isNegativeEnabled));
+						break;
 					case "regex":
 						page.getRules().add(new RegexRule(value).setNegativeEnabled(isNegativeEnabled));
 						break;

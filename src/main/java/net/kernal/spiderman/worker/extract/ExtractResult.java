@@ -19,12 +19,12 @@ public class ExtractResult implements Serializable {
 	/**
 	 * 字段值
 	 */
-	private Properties values;
+	private Properties fields;
 	
-	public ExtractResult(String pageName, String modelName, Properties values) {
+	public ExtractResult(String pageName, String modelName, Properties fields) {
 		this.pageName = pageName;
 		this.modelName = modelName;
-		this.values = values;
+		this.fields = fields;
 	}
 
 	public String getPageName() {
@@ -35,13 +35,13 @@ public class ExtractResult implements Serializable {
 		return this.modelName;
 	}
 	
-	public Properties getValues() {
-		return this.values;
+	public Properties getFields() {
+		return this.fields;
 	}
 	
 	@Override
 	public String toString() {
-		return "ExtractResult [page=" + pageName + ", model=" + modelName + ", fields=" + values + "]";
+		return "ExtractResult [page=" + pageName + ", model=" + modelName + ", fields=" + fields + "]";
 	}
 	
 }

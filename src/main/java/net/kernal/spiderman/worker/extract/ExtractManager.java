@@ -66,7 +66,7 @@ public class ExtractManager extends WorkerManager {
 		public default void init(Context ctx){
 			context.set(ctx);
 		}
-		public void handle(ResultTask result, Counter c);
+		public void handle(ResultTask task, Counter c);
 	}
 
 	protected void clear() {

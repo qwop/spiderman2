@@ -14,57 +14,52 @@
 
 快速开始
 ```
-final Conf conf = new DefaultConfBuilder() {
-	public void configPages(Pages pages) {
-		pages.add(new Page("网页内容") {
-			public void config(UrlMatchRules rules, Models models) { 
-				this.setTaskDuplicateCheckEnabled(true);
-				this.setExtractorBuilder(TextExtractor.builder());
-				rules.addNegativeContainsRule("baidu"); 
-			}
+/** 网易国内新闻采集 */
+public class TestGeneral {
+	public static void main(String[] args) {
+		final String xml = "general-example.xml";
+		final Conf conf = new XMLConfBuilder(xml).build();// 通过XMLBuilder构建CONF对象
+		final Context ctx = new Context(conf, (task, c) -> {
+			final ExtractResult er = task.getResult();
+			final String json =  JSON.toJSONString(er.getFields(), true);
+			final String fmt = "获取第%s个[page=%s, model=%s, url=%s]结果：\r\n%s";
+			System.err.println(String.format(fmt, c, er.getPageName(), er.getModelName(), task.getRequest().getUrl(), json));
 		});
-		pages.add(new Page("百度网页搜索") { 
-			public void config(UrlMatchRules rules, Models models) {
-				this.setExtractorBuilder(HtmlCleanerExtractor.builder());
-				rules.addRegexRule("(?=http://www\\.baidu\\.com/s\\?wd\\=).[^&]*(&pn\\=\\d+)?");
-				Model model = models.addModel("demo");
-				model.addField("详情URL")
-					.set("xpath", "//div[@id='content_left']//div[@class='result c-container ']//h3//a[@href]")
-					.set("attribute", "href")
-					.set("isArray", true)
-					.set("isForNewTask", true);
-				model.addField("分页URL")
-					.set("xpath", "//div[@id='page']//a[@href]")
-					.set("attr", "href")
-					.set("isArray", true)
-					.set("isDistinct", true)
-					.set("isForNewTask", true)
-					.addFilter(ctx -> {
-						final String v = ctx.getValue();
-						final String pn = K.findOneByRegex(v, "&pn\\=\\d+");
-						return K.isBlank(pn) ? v : ctx.getSeed().getUrl()+pn;
-					});
-			}
-		});
+		new Spiderman(ctx).go();//启动，别忘记看控制台信息哦，结束之后会有统计信息的
 	}
-	public void configSeeds(Seeds seeds) {
-		seeds.add(new Seed("http://www.baidu.com/s?wd="+K.urlEncode("\"蜘蛛侠\"")));
-	}
-	public void configParams(Properties params) {
-		params.put("logger.level", Logger.LEVEL_INFO);
-		params.put("duration", "60s");// 运行时间
-		params.put("worker.download.size", 10);// 下载线程数
-		params.put("worker.extract.size", 10);// 解析线程数
-		params.put("worker.result.size", 10);// 结果处理线程数
-		params.put("queue.element.repeatable", false);// 队列元素是否允许重复,默认允许。若不允许，需用到重复检查器
-		params.put("queue.checker.bdb.file", "store/checker");// 检查器需用到BDb来存储
-	}
-}.build();
-
-final Context ctx = new Context(conf,  (result, c) -> {
-	System.err.println(String.format("获得第%s个结果: %s", c, JSON.toJSONString(result, true)));
-}); 
-new Spiderman(ctx).go();//别忘记看控制台信息哦，结束之后会有统计信息的
+}
 ```
 
-更多例子请参考 src/test/java/TestDefault.java 和 src/test/java/TestXML.java 以及 src/main/resources/xxx-example.xml
+general-example.xml
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<spiderman name="网易国内新闻采集">
+    <property key="duration" value="60s" /><!-- 运行时间 0 表示永久，可以给 {n}s {n}m {n}h {n}d -->
+    <property key="logger.level" value="INFO" /><!-- 日志级别 INFO DEBUG WARN ERROR OFF -->
+    <property key="worker.download.size" value="10" /><!-- 下载线程数 -->
+    <property key="worker.extract.size" value="10" /><!-- 页面抽取线程数 -->
+    <property key="worker.result.size" value="10" /><!-- 结果处理线程数 -->
+    <property key="queue.element.repeatable" value="false" /><!-- 队列元素是否允许重复，默认允许，若不允许，则使用重复检查器在元素入队列前进行检查 -->
+    <property key="queue.checker.bdb.file" value="store/checker" /><!-- 检查器需要用到BDb存储 -->
+    <seed url="http://news.163.com/domestic/" /><!-- 写死种子入口的方式 -->
+    <extract><!-- 页面抽取规则 -->
+        <extractor name="Text" class="net.kernal.spiderman.worker.extract.TextExtractor" isDefault="1" /><!-- 正文抽取器 -->
+        <extractor name="Links" class="net.kernal.spiderman.worker.extract.LinksExtractor" /><!-- 链接抽取器 -->
+        <page name="新闻内容" isUnique="1">
+			<url-match-rule type="regex" value="^http://news\.163\.com/\d+/\d+/\d+/.*\.html#f\=dlist$" />
+		</page>
+		<page name="更多链接" isUnique="1" extractor="Links">
+			<url-match-rule type="regex">
+			^http://news\.163\.com/((domestic/)|(special/0001124J/guoneinews_\d+\.html#headList))$
+			</url-match-rule>
+		</page>
+	</extract>
+</spiderman>
+```
+
+更多例子请参考 
+> src/test/java/TestAPI.java
+> src/test/java/TestGeneral.java
+> src/test/java/TestAdvanced.java
+> src/main/resources/*-example.xml
+

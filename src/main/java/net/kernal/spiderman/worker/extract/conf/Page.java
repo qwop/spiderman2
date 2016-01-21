@@ -9,6 +9,7 @@ import net.kernal.spiderman.worker.download.Downloader;
 import net.kernal.spiderman.worker.extract.Extractor;
 import net.kernal.spiderman.worker.extract.conf.rule.ContainsRule;
 import net.kernal.spiderman.worker.extract.conf.rule.EndsWithRule;
+import net.kernal.spiderman.worker.extract.conf.rule.EqualsRule;
 import net.kernal.spiderman.worker.extract.conf.rule.RegexRule;
 import net.kernal.spiderman.worker.extract.conf.rule.StartsWithRule;
 import net.kernal.spiderman.worker.extract.conf.rule.UrlMatchRule;
@@ -122,7 +123,9 @@ public abstract class Page {
 		public UrlMatchRules() {
 			this.rules = new ArrayList<UrlMatchRule>();
 		}
-		
+		public void addNegativeEqualsRule(String url) {
+			this.rules.add(new EqualsRule(url).setNegativeEnabled(true));
+		}
 		public void addNegativeRegexRule(String regex) {
 			this.rules.add(new RegexRule(regex).setNegativeEnabled(true));
 		}
@@ -134,6 +137,9 @@ public abstract class Page {
 		}
 		public void addNegativeContainsRule(String chars) {
 			this.rules.add(new ContainsRule(chars).setNegativeEnabled(true));
+		}
+		public void addEqualsRule(String url) {
+			this.rules.add(new EqualsRule(url));
 		}
 		public void addRegexRule(String regex) {
 			this.rules.add(new RegexRule(regex));

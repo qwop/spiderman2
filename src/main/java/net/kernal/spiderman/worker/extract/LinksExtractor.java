@@ -3,8 +3,10 @@ package net.kernal.spiderman.worker.extract;
 import java.util.Collection;
 
 import net.kernal.spiderman.K;
+import net.kernal.spiderman.Properties;
 import net.kernal.spiderman.worker.download.Downloader;
 import net.kernal.spiderman.worker.extract.Extractor.Callback.FieldEntry;
+import net.kernal.spiderman.worker.extract.Extractor.Callback.ModelEntry;
 import net.kernal.spiderman.worker.extract.conf.Field;
 import net.kernal.spiderman.worker.extract.conf.Model;
 
@@ -22,8 +24,15 @@ public class LinksExtractor extends Extractor {
 			field.set("isForNewTask", true);
 			field.set("isArray", true);
 			field.set("isDistinct", true);
-			final FieldEntry entry = new FieldEntry(field, urls);
-			callback.onFieldExtracted(entry);
+			final FieldEntry fieldEntry = new FieldEntry(field, urls);
+			callback.onFieldExtracted(fieldEntry);
+			
+			final Model model = new Model(getPage(), "");
+			final Properties fields = new Properties();
+			fields.put("links", fieldEntry.getData());
+			fields.put("url", response.getRequest().getUrl());
+			final ModelEntry modelEntry = new ModelEntry(model, fields);
+			callback.onModelExtracted(modelEntry);
 		}
 	}
 
