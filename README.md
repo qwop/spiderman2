@@ -58,8 +58,8 @@ general-example.xml
 ```
 
 更多例子请参考 
-> src/test/java/TestAPI.java
-> src/test/java/TestGeneral.java
-> src/test/java/TestAdvanced.java
-> src/main/resources/*-example.xml
+* src/test/java/TestAPI.java
+* src/test/java/TestGeneral.java
+* src/test/java/TestAdvanced.java
+* src/main/resources/*-example.xml
 
