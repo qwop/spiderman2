@@ -45,10 +45,10 @@ general-example.xml
     <extract><!-- 页面抽取规则 -->
         <extractor name="Text" class="net.kernal.spiderman.worker.extract.TextExtractor" isDefault="1" /><!-- 正文抽取器 -->
         <extractor name="Links" class="net.kernal.spiderman.worker.extract.LinksExtractor" /><!-- 链接抽取器 -->
-        <page name="新闻内容" isUnique="1">
+        <page name="内容页" isUnique="1" extractor="Text"><!-- 若不配置extractor则使用默认的 -->
 			<url-match-rule type="regex" value="^http://news\.163\.com/\d+/\d+/\d+/.*\.html#f\=dlist$" />
 		</page>
-		<page name="更多链接" isUnique="1" extractor="Links">
+		<page name="列表页" isUnique="1" extractor="Links">
 			<url-match-rule type="regex">
 			^http://news\.163\.com/((domestic/)|(special/0001124J/guoneinews_\d+\.html#headList))$
 			</url-match-rule>

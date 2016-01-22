@@ -10,12 +10,12 @@
     <property key="queue.checker.bdb.file" value="store/checker" /><!-- 检查器需要用到BDb存储 -->
     <seed url="http://news.163.com/domestic/" /><!-- 写死种子入口的方式 -->
     <extract><!-- 页面抽取规则 -->
-        <extractor name="Text" class="net.kernal.spiderman.worker.extract.TextExtractor" isDefault="1" /><!-- 正文抽取器 -->
+        <extractor name="Text" class="net.kernal.spiderman.worker.extract.TextExtractor" isDefault="1" /><!-- 正文抽取器,默认 -->
         <extractor name="Links" class="net.kernal.spiderman.worker.extract.LinksExtractor" /><!-- 链接抽取器 -->
-        <page name="新闻内容" isUnique="1">
+        <page name="内容页" isUnique="1" extractor="Text"><!-- 此处不配置extractor也行，因为Text抽取器是默认的 -->
 			<url-match-rule type="regex" value="^http://news\.163\.com/\d+/\d+/\d+/.*\.html#f\=dlist$" />
 		</page>
-		<page name="更多链接" isUnique="1" extractor="Links">
+		<page name="列表页" isUnique="1" extractor="Links">
 			<url-match-rule type="regex">
 			^http://news\.163\.com/((domestic/)|(special/0001124J/guoneinews_\d+\.html#headList))$
 			</url-match-rule>

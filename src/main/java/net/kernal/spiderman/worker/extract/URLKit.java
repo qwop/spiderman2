@@ -21,26 +21,23 @@ import net.kernal.spiderman.worker.extract.util.IframeLinkFinder;
  */
 public final class URLKit {
 
-	public static Collection<String> links(final Downloader.Response response){
+	public static Collection<String> links(final Downloader.Response response) {
 		return links(response.getBodyStr(), response.getRequest().getBaseUrl());
 	}
-	
+
 	public static Collection<String> links(String html, String baseUrl) {
 		final Collection<String> urls = new HashSet<String>();
 		try {
-		  urls.addAll(new DefaultLinkFinder(html).getLinks());
-		  urls.addAll(new IframeLinkFinder(html).getLinks());
-		  urls.addAll(new FrameLinkFinder(html).getLinks());
-		}catch (Exception e){
-		  e.printStackTrace();
+			urls.addAll(new DefaultLinkFinder(html).getLinks());
+			urls.addAll(new IframeLinkFinder(html).getLinks());
+			urls.addAll(new FrameLinkFinder(html).getLinks());
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		
-		return urls.parallelStream()
-			.map(url -> URLKit.normalize(baseUrl, url))
-			.collect(Collectors.toList());
+
+		return urls.parallelStream().map(url -> URLKit.normalize(baseUrl, url)).collect(Collectors.toList());
 	}
-	
-	
+
 	public static String normalize(final String baseUrl, final String relativeUrl) {
 		if (baseUrl == null) {
 			throw new IllegalArgumentException("Base URL must not be null");
@@ -48,7 +45,7 @@ public final class URLKit {
 		if (relativeUrl == null) {
 			throw new IllegalArgumentException("Relative URL must not be null");
 		}
-		
+
 		final Url url = normalize(parseUrl(baseUrl.trim()), relativeUrl.trim());
 
 		return url.toString();

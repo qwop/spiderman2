@@ -10,6 +10,11 @@ import net.kernal.spiderman.worker.extract.Extractor.Callback.ModelEntry;
 import net.kernal.spiderman.worker.extract.conf.Field;
 import net.kernal.spiderman.worker.extract.conf.Model;
 
+/**
+ * 链接抽取器
+ * @author 赖伟威 l.weiwei@163.com 2016-01-21
+ *
+ */
 public class LinksExtractor extends Extractor {
 
 	public LinksExtractor(ExtractTask task, String page, Model... models) {
