@@ -152,6 +152,7 @@ public class XMLExtractor extends AbstractXPathExtractor {
 		return r;
 	}
 
+	// test configure XML
 	public static void main(String[] args) throws FileNotFoundException {
 		// Property模型
 		Model property = new Model("property")
@@ -199,7 +200,7 @@ public class XMLExtractor extends AbstractXPathExtractor {
 			.set("isArray", true);
 		filter.addField("text").set("xpath", "./text()");
 		// 抽取器
-		Extractor extractor = new XMLExtractor("spiderman.bootstrap.xml");
+		final Extractor extractor = new XMLExtractor("spiderman.bootstrap.xml");
 		extractor.addModel(property);
 		extractor.addModel(seed);
 		extractor.addModel(extractors);
@@ -207,7 +208,7 @@ public class XMLExtractor extends AbstractXPathExtractor {
 		extractor.addModel(page);
 		extractor.extract(new Callback() {
 			public void onModelExtracted(ModelEntry entry) {
-				System.out.println(entry.getModel().getName()+"->\r\n"+JSON.toJSONString(entry.getProperties(), true)+"\r\n\r\n");
+				System.out.println(entry.getModel().getName()+"->\r\n"+JSON.toJSONString(entry.getFields(), true)+"\r\n\r\n");
 			}
 			public void onFieldExtracted(FieldEntry entry) {
 			}

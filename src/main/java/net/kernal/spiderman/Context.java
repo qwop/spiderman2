@@ -65,11 +65,13 @@ public class Context {
 		
 		// 构建队列管理器
 		queueManager = new QueueManager(params, new ConsoleLogger(QueueManager.class, level));
+		final int limitOfResult = params.getInt("worker.result.limit", 0);
+		
 		// 构建下载管理器
+		final Downloader downloader = new HttpClientDownloader(params);
 		final boolean enabled1 = params.getBoolean("worker.download.enabled", true);
 		if (enabled1) {
-			final Downloader downloader = new HttpClientDownloader(params);
-			final int limit = params.getInt("worker.download.result.limit", 0);
+			final int limit = params.getInt("worker.download.result.limit", limitOfResult);
 			final Counter counter = new Counter(limit, 0);
 			final int size = params.getInt("worker.download.size", 1);
 			final Logger consoleLogger = new ConsoleLogger(DownloadManager.class, level);
@@ -81,11 +83,11 @@ public class Context {
 		// 构建解析管理器
 		final boolean enabled2 = params.getBoolean("worker.extract.enabled", true);
 		if (enabled2) {
-			final int limit = params.getInt("worker.extract.result.limit", 0);
+			final int limit = params.getInt("worker.extract.result.limit", limitOfResult);
 			final Counter counter = new Counter(limit, 0);
 			final int size = params.getInt("worker.extract.size", 1);
 			final Logger consoleLogger = new ConsoleLogger(ExtractManager.class, level);
-			final ExtractManager extractManager = new ExtractManager(size, queueManager, counter, consoleLogger, pages);
+			final ExtractManager extractManager = new ExtractManager(size, queueManager, counter, consoleLogger, pages, downloader);
 			logger.debug("构建解析管理器");
 			this.addManager(extractManager);
 		}
@@ -112,9 +114,7 @@ public class Context {
 			if (handler != null) {
 				handler.init(this);
 			}
-			
-			final int limit = params.getInt("worker.result.limit", 0);
-			final Counter counter = new Counter(limit, 0);
+			final Counter counter = new Counter(limitOfResult, 0);
 			final int size = params.getInt("worker.result.size", 1);
 			final Logger consoleLogger = new ConsoleLogger(ResultManager.class, level);
 			final ResultManager resultManager = new ResultManager(size, queueManager, counter, consoleLogger, handler);

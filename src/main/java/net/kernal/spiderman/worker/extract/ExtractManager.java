@@ -8,9 +8,8 @@ import net.kernal.spiderman.Counter;
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Spiderman;
 import net.kernal.spiderman.logger.Logger;
-import net.kernal.spiderman.queue.Queue.Element;
 import net.kernal.spiderman.queue.QueueManager;
-import net.kernal.spiderman.worker.AbstractTask;
+import net.kernal.spiderman.worker.Task;
 import net.kernal.spiderman.worker.Worker;
 import net.kernal.spiderman.worker.WorkerManager;
 import net.kernal.spiderman.worker.WorkerResult;
@@ -22,13 +21,15 @@ import net.kernal.spiderman.worker.result.ResultTask;
 public class ExtractManager extends WorkerManager {
 	
 	private List<Page> pages;
+	private Downloader downloader;
 	
-	public ExtractManager(int nWorkers, QueueManager queueManager, Counter counter, Logger logger, List<Page> pages) {
+	public ExtractManager(int nWorkers, QueueManager queueManager, Counter counter, Logger logger, List<Page> pages, Downloader downloader) {
 		super(nWorkers, queueManager, counter, logger);
 		this.pages = pages;
 		if (K.isEmpty(pages)) {
 			throw new Spiderman.Exception("缺少页面抽取配置");
 		}
+		this.downloader = downloader;
 	}
 	
 	public List<Page> getPages() {
@@ -36,10 +37,10 @@ public class ExtractManager extends WorkerManager {
 	}
 	
 	protected void handleResult(WorkerResult wr) {
-		final AbstractTask task = wr.getTask();
+		final Task task = wr.getTask();
 		final Object result = wr.getResult();
 		final Page page = wr.getPage();
-		final boolean isUnique = page == null ? false : page.isTaskDuplicateCheckEnabled();
+		final boolean isUnique = page == null ? false : page.isUnique();
 		if (result instanceof ExtractResult) {
 			// 计数器加1
 			final long count = getCounter().plus();
@@ -53,12 +54,12 @@ public class ExtractManager extends WorkerManager {
 		}
 	}
 
-	protected Element takeTask() {
-		return getQueueManager().getExtractQueue().take();
+	protected Task takeTask() {
+		return (Task)getQueueManager().getExtractQueue().take();
 	}
 
 	protected Worker buildWorker() {
-		return new ExtractWorker(this);
+		return new ExtractWorker(pages, this, downloader);
 	}
 	
 	public static interface ResultHandler { 

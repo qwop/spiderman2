@@ -9,10 +9,10 @@ public class WorkerResult implements Serializable {
 	private static final long serialVersionUID = -7049032302488600282L;
 	
 	private Page page;
-	private AbstractTask task;
+	private Task task;
 	private Object result;
 	
-	public WorkerResult(Page page, AbstractTask task, Object result) {
+	public WorkerResult(Page page, Task task, Object result) {
 		this.page = page;
 		this.task = task;
 		this.result = result;
@@ -22,7 +22,7 @@ public class WorkerResult implements Serializable {
 		return this.page;
 	}
 	
-	public AbstractTask getTask() {
+	public Task getTask() {
 		return this.task;
 	}
 	

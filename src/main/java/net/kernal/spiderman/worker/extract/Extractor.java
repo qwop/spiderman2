@@ -56,16 +56,16 @@ public abstract class Extractor {
 		
 		public static class ModelEntry {
 			private Model model;
-			private Properties properties;
-			public ModelEntry(Model model, Properties properties) {
+			private Properties fields;
+			public ModelEntry(Model model, Properties fields) {
 				this.model = model;
-				this.properties = properties;
+				this.fields = fields;
 			}
 			public Model getModel() {
 				return this.model;
 			}
-			public Properties getProperties() {
-				return this.properties;
+			public Properties getFields() {
+				return this.fields;
 			}
 		}
 		public static class FieldEntry {

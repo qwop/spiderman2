@@ -3,7 +3,7 @@ package net.kernal.spiderman.worker;
 import net.kernal.spiderman.queue.Queue;
 import net.kernal.spiderman.worker.download.Downloader;
 
-public abstract class AbstractTask extends Queue.AbstractElement {
+public abstract class Task extends Queue.AbstractElement {
 
 	private static final long serialVersionUID = 2506296221733528670L;
 
@@ -12,11 +12,11 @@ public abstract class AbstractTask extends Queue.AbstractElement {
 	/** 请求 */
 	private Downloader.Request request;
 	
-	protected AbstractTask(String key, Downloader.Request seed) {
+	protected Task(String key, Downloader.Request seed) {
 		this(key, seed, seed);
 	}
 	
-	protected AbstractTask(String key, Downloader.Request seed, Downloader.Request request) {
+	protected Task(String key, Downloader.Request seed, Downloader.Request request) {
 		super(key);
 		this.seed = seed;
 		this.request = request;

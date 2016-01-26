@@ -25,6 +25,7 @@ public class LinksExtractor extends Extractor {
 		final Downloader.Response response = getTask().getResponse();
 		final Collection<?> urls = URLKit.links(response);
 		if (K.isNotEmpty(urls)) {
+			final Model model = new Model(getPage(), "");
 			Field field = new Field(getPage(), null, "urls");
 			field.set("isForNewTask", true);
 			field.set("isArray", true);
@@ -32,7 +33,6 @@ public class LinksExtractor extends Extractor {
 			final FieldEntry fieldEntry = new FieldEntry(field, urls);
 			callback.onFieldExtracted(fieldEntry);
 			
-			final Model model = new Model(getPage(), "");
 			final Properties fields = new Properties();
 			fields.put("links", fieldEntry.getData());
 			fields.put("url", response.getRequest().getUrl());

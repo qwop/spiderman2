@@ -1,6 +1,7 @@
 package net.kernal.spiderman.worker;
 
-import net.kernal.spiderman.queue.Queue.Element;
+import net.kernal.spiderman.logger.ConsoleLogger;
+import net.kernal.spiderman.logger.Logger;
 
 /**
  * 我们可爱的工人们.
@@ -20,6 +21,10 @@ public abstract class Worker implements Runnable {
 		this.manager = manager;
 	}
 	
+	protected Logger getLogger() {
+		return manager != null ? manager.getLogger() : new ConsoleLogger(getClass(), Logger.LEVEL_DEBUG);
+	}
+	
 	protected WorkerManager getManager() {
 		return this.manager;
 	}
@@ -32,22 +37,22 @@ public abstract class Worker implements Runnable {
 		return this.result;
 	}
 	
-	public abstract void work(Element task);
+	public abstract void work(Task task);
 	
 	public void run() {
 		final Thread thread = Thread.currentThread();
 		while (true) {
 			if (stop || thread.isInterrupted()) {
-				manager.getLogger().info(thread.getName() + " 退出获取任务的循环");
+				getLogger().info(thread.getName() + " 退出获取任务的循环");
 				break;
 			}
-			final Element task = manager.takeTask();
+			final Task task = manager.takeTask();
 			if (task == null) {
 				continue;
 			}
-			manager.getLogger().info(thread.getName() + " 获取任务: " + task);
+			getLogger().info(thread.getName() + " 获取任务: " + task);
 			this.work(task);
-			manager.getLogger().info(thread.getName() + " 结束任务: " + task);
+			getLogger().info(thread.getName() + " 结束任务: " + task);
 		}
 	}
 	
@@ -56,7 +61,7 @@ public abstract class Worker implements Runnable {
 	 */
 	public void stop() {
 		this.stop = true;
-		manager.getLogger().info(Thread.currentThread().getName() + " 收工");
+		getLogger().info(Thread.currentThread().getName() + " 收工");
 	}
 	
 }

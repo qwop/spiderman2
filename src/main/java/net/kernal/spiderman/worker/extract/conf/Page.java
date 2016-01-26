@@ -21,13 +21,19 @@ public abstract class Page {
 	private Extractor.Builder extractorBuilder;
 	private UrlMatchRules rules;
 	private Models models;
-	private boolean isTaskDuplicateCheckEnabled;
+	private boolean isUnique;// 页面是否唯一
 	private Field.ValueFilter filter;//全局Filter，所有Model的所有Field都需要执行
+	
+	public Page(String name, Extractor.Builder extractorBuilder) {
+		this(name);
+		this.extractorBuilder = extractorBuilder;
+	}
 	
 	public Page(String name) {
 		this.name = name;
 		this.rules = new UrlMatchRules();
 		this.models = new Models(this.name);
+		this.config(rules, models);
 	}
 	
 	public Page setFilter(Field.ValueFilter filter) {
@@ -38,13 +44,13 @@ public abstract class Page {
 		return this.filter;
 	}
 	
-	public Page setTaskDuplicateCheckEnabled(boolean bool) {
-		this.isTaskDuplicateCheckEnabled = bool;
+	public Page setIsUnique(boolean bool) {
+		this.isUnique = bool;
 		return this;
 	}
 	
-	public boolean isTaskDuplicateCheckEnabled() {
-		return this.isTaskDuplicateCheckEnabled;
+	public boolean isUnique() {
+		return this.isUnique;
 	}
 	
 	public Page setExtractorBuilder(Extractor.Builder builder) {
@@ -84,7 +90,7 @@ public abstract class Page {
 		return this.extractorBuilder;
 	}
 	
-	public abstract void config(UrlMatchRules rules, Models models);
+	protected abstract void config(UrlMatchRules rules, Models models);
 	
 	public static class Builder {
 		private Page page;
@@ -182,7 +188,7 @@ public abstract class Page {
 		public Model addModel(String name) {
 			Model model = new Model(page, name);
 			this.models.add(model);
-			logger.info("添加Model配置: " + page);
+			logger.info("添加Model配置: [page=" + page + ", model=" + name + "]");
 			return model;
 		}
 		public List<Model> all() {

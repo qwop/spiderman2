@@ -107,7 +107,6 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 	}
 	
 	public XMLConfBuilder addPage(Page page) {
-		page.config(page.getRules(), page.getModels());
 		this.conf.getPages().add(page);
 		return this;
 	}
@@ -123,16 +122,16 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 		final AtomicReference<String> defaultExtractorNames = new AtomicReference<String>();
 		extractor.extract(new Callback() {
 			public void onModelExtracted(ModelEntry entry) {
-				final Properties values = entry.getProperties();
+				final Properties fields = entry.getFields();
 				switch(entry.getModel().getName()) {
 				case "property":
-			    	conf.set(values.getString("key"), values.getString("value", values.getString("text")));
+			    	conf.set(fields.getString("key"), fields.getString("value", fields.getString("text")));
 				    break;
 			    case "seed":
-			    	conf.addSeed(values.getString("name"), values.getString("url", values.getString("text")));
+			    	conf.addSeed(fields.getString("name"), fields.getString("url", fields.getString("text")));
 				    break;
 			    case "script":
-			    	final String bindingsClassName = values.getString("bindings");
+			    	final String bindingsClassName = fields.getString("bindings");
 			    	if (K.isNotBlank(bindingsClassName)) {
 			    		Class<ScriptBindings> bindingsClass = K.loadClass(bindingsClassName);
 			    		if (bindingsClass != null) {
@@ -145,12 +144,12 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 							conf.setScriptBindings(bindings);
 			    		}
 			    	}
-			    	conf.setScript(values.getString("value", values.getString("text")));
+			    	conf.setScript(fields.getString("value", fields.getString("text")));
 			    	break;
 			    case "extractor":
-			    	final String name = values.getString("name");
-			    	final String className = values.getString("class");
-			    	final boolean isDefault = values.getBoolean("isDefault", false);
+			    	final String name = fields.getString("name");
+			    	final String className = fields.getString("class");
+			    	final boolean isDefault = fields.getBoolean("isDefault", false);
 			    	if (K.isBlank(name) || K.isBlank(className)) {
 			    		break;
 			    	}
@@ -161,8 +160,8 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 			    	conf.registerExtractor(name, cls);
 			    	break;
 			    case "filter":
-			    	final String name2 = values.getString("name");
-			    	final String className2 = values.getString("class");
+			    	final String name2 = fields.getString("name");
+			    	final String className2 = fields.getString("class");
 			    	if (K.isBlank(name2) || K.isBlank(className2)) {
 			    		break;
 			    	}
@@ -176,18 +175,18 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 			    	conf.registerFilter(name2, filter);
 			    	break;
 			    case "extract-page":
-			    	final String pageName = values.getString("name");
+			    	final String pageName = fields.getString("name");
 			    	final Page page = new Page(pageName) {
 						public void config(UrlMatchRules rules, Models models) {}
 					};
-					final boolean isUnique = values.getBoolean("isUnique", false);
-					page.setTaskDuplicateCheckEnabled(isUnique);
+					final boolean isUnique = fields.getBoolean("isUnique", false);
+					page.setIsUnique(isUnique);
 					// 处理extractor
-					final String extractorName = values.getString("extractor", defaultExtractorNames.get());
+					final String extractorName = fields.getString("extractor", defaultExtractorNames.get());
 			    	handleExtractor(page, extractorName);
 					
 			    	// 处理scope＝page的filter
-			    	final String filterName = values.getString("filter");
+			    	final String filterName = fields.getString("filter");
 			    	if (K.isNotBlank(filterName)) {
 			    		Field.ValueFilter ft = conf.getFilters().all().get(filterName);
 			    		if (ft == null) {
@@ -198,7 +197,7 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 			    	}
 			    	
 					// handle url match rule
-					final Properties rule = values.getProperties("url-match-rule");
+					final Properties rule = fields.getProperties("url-match-rule");
 					if (rule == null) {
 						throw new Spiderman.Exception("页面[name="+pageName+"]缺少URL匹配规则的配置");
 					}
@@ -227,15 +226,15 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 						break;
 					}
 					// handle model
-					List<Properties> models = values.getListProperties("model");
+					List<Properties> models = fields.getListProperties("model");
 					if (K.isNotEmpty(models)) {
 						models.forEach(mdl -> { 
 							final String modelName = mdl.getString("name");
 							final Model model = page.getModels().addModel(modelName);
 							model.putAll(mdl);
-							final List<Properties> fields = mdl.getListProperties("field");
-							if (K.isNotEmpty(fields)) {
-								fields.forEach(f -> {
+							final List<Properties> _fields = mdl.getListProperties("field");
+							if (K.isNotEmpty(_fields)) {
+								_fields.forEach(f -> {
 									final String fieldName = f.getString("name");
 									final Field field = model.addField(fieldName);
 									field.putAll(f);

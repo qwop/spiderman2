@@ -9,25 +9,26 @@ import net.kernal.spiderman.logger.Logger;
 /**
  * 默认的任务队列实现
  * @author 赖伟威 l.weiwei@163.com 2015-12-10
+ * @param <E>
  *
  */
-public class DefaultQueue implements Queue {
+public class DefaultQueue<E> implements Queue<E> {
 	
 	private Logger logger;
-	private BlockingQueue<Element> queue;
+	private BlockingQueue<E> queue;
 	
 	public DefaultQueue(int capacity, Logger logger) {
 		this.logger = logger;
 		if (capacity <= 0) {
-			queue = new LinkedTransferQueue<Element>();
+			queue = new LinkedTransferQueue<E>();
 			logger.debug(getClass().getName()+" 使用无边界LinkedEransferQueue");
 		} else {
-			queue = new ArrayBlockingQueue<Element>(capacity);
+			queue = new ArrayBlockingQueue<E>(capacity);
 			logger.debug(getClass().getName()+" 使用有边界ArrayBlockingQueue");
 		}
 	}
 	
-	public Element take() {
+	public E take() {
 		try {
 			return this.queue.take();
 		} catch (InterruptedException e) {
@@ -35,7 +36,7 @@ public class DefaultQueue implements Queue {
 		return null;
 	}
 	
-	public void append(Element e) {
+	public void append(E e) {
 		try {
 			this.queue.put(e);
 		} catch (InterruptedException ex) {

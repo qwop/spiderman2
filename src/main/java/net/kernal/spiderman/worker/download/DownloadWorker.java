@@ -5,7 +5,7 @@ import java.util.Set;
 
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Spiderman;
-import net.kernal.spiderman.queue.Queue.Element;
+import net.kernal.spiderman.worker.Task;
 import net.kernal.spiderman.worker.Worker;
 import net.kernal.spiderman.worker.WorkerManager;
 import net.kernal.spiderman.worker.WorkerResult;
@@ -16,24 +16,19 @@ public class DownloadWorker extends Worker {
 	/** 保存已经重定向过的URL地址 */
 	private Set<String> redirectedLocations;
 	
+	public DownloadWorker(Downloader downloader) {
+		this(null, downloader);
+	}
 	public DownloadWorker(WorkerManager manager, Downloader downloader) {
 		super(manager);
 		this.downloader = downloader;
 		this.redirectedLocations = new HashSet<String>();
 	}
 	
-	public void work(Element t) {
-		if (this.downloader == null) {
-			throw new Spiderman.Exception("缺少下载器");
-		}
-		if (t == null) {
-			throw new Spiderman.Exception("缺少任务对象");
-		}
-		final DownloadTask task = (DownloadTask)t;
-		final Downloader.Request request = task.getRequest();
+	public Downloader.Response download(Downloader.Request request) {
 		final Downloader.Response response = this.downloader.download(request);
 		if (response == null) {
-			return;
+			return null;
 		}
 		// 处理重定向
 		final int statusCode = response.getStatusCode();
@@ -43,13 +38,12 @@ public class DownloadWorker extends Worker {
 			if (!redirectedLocations.contains(location)) {
 				redirectedLocations.add(location);
 				final Downloader.Request newRequest = new Downloader.Request(location);
-				final DownloadTask newTask = new DownloadTask(task.getSeed(), newRequest);
-				this.work(newTask);
+				this.download(newRequest);
 			}
-			return ;
+			return null;
 		}
 		if (response.getBody() == null || response.getBody().length == 0) {
-			return;
+			return null;
 		}
 		// 处理响应体文本编码问题
 		String charsetName = K.getCharsetName(response.getCharset());
@@ -63,9 +57,25 @@ public class DownloadWorker extends Worker {
 		final String bodyStr = K.byteToString(response.getBody(), charsetName); 
 		// 若内容为空，结束任务
 		if (K.isBlank(bodyStr)) {
-			return;
+			return null;
 		}
 		response.setBodyStr(bodyStr);
+		return response;
+	}
+	
+	public void work(Task t) {
+		if (this.downloader == null) {
+			throw new Spiderman.Exception("缺少下载器");
+		}
+		if (t == null) {
+			throw new Spiderman.Exception("缺少任务对象");
+		}
+		final DownloadTask task = (DownloadTask)t;
+		final Downloader.Request request = task.getRequest();
+		final Downloader.Response response = this.download(request);
+		if (response == null) {
+			return;
+		}
 		// 告诉经理完成任务，并将结果传递过去
 		this.getManager().done(new WorkerResult(null, task, response));
 	}

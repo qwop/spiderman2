@@ -8,7 +8,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import net.kernal.spiderman.Counter;
 import net.kernal.spiderman.Spiderman;
 import net.kernal.spiderman.logger.Logger;
-import net.kernal.spiderman.queue.Queue.Element;
 import net.kernal.spiderman.queue.QueueManager;
 
 /**
@@ -64,7 +63,7 @@ public abstract class WorkerManager implements Runnable {
 	/**
 	 * 获取任务，子类实现
 	 */
-	protected abstract Element takeTask();
+	protected abstract Task takeTask();
 	/**
 	 * 获取工人实例，子类实现
 	 */

@@ -45,7 +45,6 @@ public abstract class DefaultConfBuilder implements Conf.Builder {
 		this.configSeeds(conf.getSeeds());
 		this.configPages(conf.getPages());
 		for (Page page : conf.getPages().all()) {
-			page.config(page.getRules(), page.getModels());
 			if (page.getExtractorBuilder() == null) {
 				throw new Spiderman.Exception("页面[name="+page.getName()+"]缺少可以构建抽取器的对象，请设置一个 models.setExtractorBuilder");
 			}

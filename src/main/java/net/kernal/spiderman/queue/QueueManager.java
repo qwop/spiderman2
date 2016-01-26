@@ -14,7 +14,9 @@ import net.kernal.spiderman.Properties;
 import net.kernal.spiderman.Spiderman;
 import net.kernal.spiderman.logger.Logger;
 import net.kernal.spiderman.queue.CheckableQueue.Checker;
+import net.kernal.spiderman.queue.Queue.Element;
 import net.kernal.spiderman.store.KVStore;
+import net.kernal.spiderman.worker.Task;
 import net.kernal.spiderman.worker.download.DownloadTask;
 import net.kernal.spiderman.worker.extract.ExtractResult;
 import net.kernal.spiderman.worker.extract.ExtractTask;
@@ -24,16 +26,16 @@ public class QueueManager {
 	
 	private Logger logger;
 	
-	private Map<String, Queue> queues;
-	private Queue downloadQueue;
-	private Queue extractQueue;
-	private Queue resultQueue;
+	private Map<String, Queue<Element>> queues;
+	private Queue<Task> downloadQueue;
+	private Queue<Task> extractQueue;
+	private Queue<Task> resultQueue;
 	
 	private KVStore store;
 	
 	public QueueManager(Properties params, Logger logger) {
 		this.logger = logger;
-		this.queues = new HashMap<String, Queue>();
+		this.queues = new HashMap<String, Queue<Element>>();
 		
 		// 构建队列
 		final boolean zbusEnabled = params.getBoolean("queue.zbus.enabled", false);
@@ -52,18 +54,18 @@ public class QueueManager {
 		    	throw new Spiderman.Exception("连接ZBus服务失败", e);
 		    }
 		    final String downloadQueueName = params.getString("queue.download.name", "SPIDERMAN_DOWNLOAD_TASK");
-			downloadQueue = new ZBusQueue(broker, downloadQueueName);
+			downloadQueue = new ZBusQueue<Task>(broker, downloadQueueName);
 			logger.debug("创建下载队列(ZBus)");
 			final String extractQueueName = params.getString("queue.download.name", "SPIDERMAN_EXTRACT_TASK");
-			extractQueue = new ZBusQueue(broker, extractQueueName);
+			extractQueue = new ZBusQueue<Task>(broker, extractQueueName);
 			logger.debug("创建解析队列(ZBus)");
 			final String resultQueueName = params.getString("queue.download.name", "SPIDERMAN_RESULT_TASK");
-			resultQueue = new ZBusQueue(broker, resultQueueName);
+			resultQueue = new ZBusQueue<Task>(broker, resultQueueName);
 			logger.debug("创建结果队列(ZBus)");
 			// 创建其他队列
 			final List<String> queueNames = params.getListString("queue.other.names", "", ",");
 			new HashSet<String>(queueNames).parallelStream().filter(n -> K.isNotBlank(n)).forEach(n -> {
-				Queue queue = new ZBusQueue(broker, n);
+				Queue<Element> queue = new ZBusQueue<Element>(broker, n);
 				queues.put(n, queue);
 				logger.debug("创建其他[name="+n+"]队列(ZBus)");
 			});
@@ -80,26 +82,26 @@ public class QueueManager {
 			}
 			// 构建默认队列
 			final int capacity = params.getInt("queue.capacity");
-			final Queue queue1 = new DefaultQueue(capacity, logger);
-			downloadQueue = checker == null ? queue1 : new CheckableQueue(queue1, checker);
+			final Queue<Task> queue1 = new DefaultQueue<Task>(capacity, logger);
+			downloadQueue = checker == null ? queue1 : new CheckableQueue<Task>(queue1, checker);
 			logger.debug("创建下载队列(默认)");
-			final Queue queue2 = new DefaultQueue(capacity, logger);
-			extractQueue = checker == null ? queue2 : new CheckableQueue(queue2, checker);
+			final Queue<Task> queue2 = new DefaultQueue<Task>(capacity, logger);
+			extractQueue = checker == null ? queue2 : new CheckableQueue<Task>(queue2, checker);
 			logger.debug("创建下载队列(默认)");
-			final Queue queue3 = new DefaultQueue(capacity, logger);
-			resultQueue = checker == null ? queue3 : new CheckableQueue(queue3, checker);
+			final Queue<Task> queue3 = new DefaultQueue<Task>(capacity, logger);
+			resultQueue = checker == null ? queue3 : new CheckableQueue<Task>(queue3, checker);
 			logger.debug("创建结果队列(默认)");
 			// 创建其他队列
 			final List<String> queueNames = params.getListString("queue.other.names", "", ",");
 			new HashSet<String>(queueNames).parallelStream().filter(n -> K.isNotBlank(n)).forEach(n -> {
-				Queue queue = new DefaultQueue(capacity, logger);
-				queues.put(n, checker == null ? queue : new CheckableQueue(queue, checker));
+				Queue<Element> queue = new DefaultQueue<Element>(capacity, logger);
+				queues.put(n, checker == null ? queue : new CheckableQueue<Element>(queue, checker));
 				logger.debug("创建其他[name="+n+"]队列(默认)");
 			});
 		}
 	}
 	
-	public void append(Queue.Element task) {
+	public void append(Task task) {
 		if (task instanceof DownloadTask) {
 			this.downloadQueue.append(task);
 			final DownloadTask dtask = (DownloadTask)task;
@@ -116,23 +118,23 @@ public class QueueManager {
 		}
 	}
 	
-	public Queue getDownloadQueue() {
+	public Queue<Task> getDownloadQueue() {
 		return this.downloadQueue;
 	}
 	
-	public Queue getExtractQueue() {
+	public Queue<Task> getExtractQueue() {
 		return this.extractQueue;
 	}
 	
-	public Queue getResultQueue() {
+	public Queue<Task> getResultQueue() {
 		return this.resultQueue;
 	}
 	
-	public Queue getQueue(String name) {
+	public Queue<Element> getQueue(String name) {
 		return this.queues.get(name);
 	}
 	
-	public void register(String name, Queue queue) {
+	public void register(String name, Queue<Element> queue) {
 		if (this.queues.containsKey(name)) {
 			throw new Spiderman.Exception("duplicate name " + name);
 		}

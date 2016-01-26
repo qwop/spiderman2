@@ -28,7 +28,7 @@ public class Bootstrap {
 			final ExtractResult er = task.getResult();
 			final String url = task.getRequest().getUrl();
 			final String json =  JSON.toJSONString(er.getFields(), true);
-			final String fmt = "获取第%s个[page=%s, model=%s, url=%s]结果：\r\n%s";
+			final String fmt = "\r\n获取第%s个[page=%s, model=%s, url=%s]结果：\r\n%s\r\n";
 			System.err.println(String.format(fmt, c, er.getPageName(), er.getModelName(), url, json));
 		}
 	}

@@ -1,9 +1,9 @@
 package net.kernal.spiderman.worker.extract;
 
-import net.kernal.spiderman.worker.AbstractTask;
+import net.kernal.spiderman.worker.Task;
 import net.kernal.spiderman.worker.download.Downloader;
 
-public class ExtractTask extends AbstractTask {
+public class ExtractTask extends Task {
 
 	private static final long serialVersionUID = 7914255707423166114L;
 	

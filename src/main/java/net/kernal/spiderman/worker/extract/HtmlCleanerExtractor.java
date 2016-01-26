@@ -93,6 +93,7 @@ public class HtmlCleanerExtractor extends AbstractXPathExtractor {
 			} else if (isSerialize) {
 				StringWriter sw = new StringWriter();
 				CleanerProperties prop = htmlCleaner.getProperties();
+				prop.setOmitXmlDeclaration(true);
 				SimpleXmlSerializer ser = new SimpleXmlSerializer(prop);
 				try {
 					ser.write(tagNode, sw, getTask().getResponse().getCharset(), true);
@@ -129,7 +130,7 @@ public class HtmlCleanerExtractor extends AbstractXPathExtractor {
 		extractor.addModel(page);
 		extractor.extract(new Callback(){
 			public void onModelExtracted(ModelEntry entry) {
-				System.out.println(entry.getModel().getName()+"->\r\n"+JSON.toJSONString(entry.getProperties(), true)+"\r\n\r\n");
+				System.out.println(entry.getModel().getName()+"->\r\n"+JSON.toJSONString(entry.getFields(), true)+"\r\n\r\n");
 			}
 			public void onFieldExtracted(FieldEntry entry) {
 			}

@@ -1,6 +1,7 @@
 package net.kernal.spiderman.worker.extract;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -11,11 +12,14 @@ import java.util.stream.Collectors;
 
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Properties;
-import net.kernal.spiderman.queue.Queue.Element;
+import net.kernal.spiderman.Spiderman;
+import net.kernal.spiderman.worker.Task;
 import net.kernal.spiderman.worker.Worker;
 import net.kernal.spiderman.worker.WorkerManager;
 import net.kernal.spiderman.worker.WorkerResult;
+import net.kernal.spiderman.worker.download.DownloadWorker;
 import net.kernal.spiderman.worker.download.Downloader;
+import net.kernal.spiderman.worker.extract.Extractor.Callback.ModelEntry;
 import net.kernal.spiderman.worker.extract.conf.Field;
 import net.kernal.spiderman.worker.extract.conf.Field.ValueFilter;
 import net.kernal.spiderman.worker.extract.conf.Model;
@@ -23,25 +27,54 @@ import net.kernal.spiderman.worker.extract.conf.Page;
 import net.kernal.spiderman.worker.extract.conf.Page.Models;
 import net.kernal.spiderman.worker.extract.conf.filter.TrimFilter;
 
+/**
+ * 页面抽取工人
+ * @author 赖伟威 l.weiwei@163.com 2016-01-02
+ *
+ */
 public class ExtractWorker extends Worker {
 	
-	private ExtractManager manager;
+	private List<Page> pages;
+	private DownloadWorker downloadWorker;
 	
-	public ExtractWorker(WorkerManager manager) {
-		super(manager);
-		this.manager = (ExtractManager)manager;
+	public ExtractWorker(List<Page> pages, Downloader downloader) {
+		this(pages, null ,downloader);
 	}
 	
-	public void work(Element t) {
+	public ExtractWorker(List<Page> pages, DownloadWorker downloadWorker) {
+		this(pages, null ,downloadWorker);
+	}
+	
+	public ExtractWorker(List<Page> pages, WorkerManager manager, Downloader downloader) {
+		this(pages, manager, new DownloadWorker(downloader));
+	}
+	
+	public ExtractWorker(List<Page> pages, WorkerManager manager, DownloadWorker downloadWorker) {
+		super(manager);
+		this.downloadWorker = downloadWorker;
+		this.pages = pages;
+	}
+	public void work(Task t) {
+		final WorkerManager manager = getManager();
+		this.work(t, (page, result) -> {
+			final WorkerResult extractResult = new WorkerResult(page, t, result);
+			if (manager != null) {
+				manager.done(extractResult);
+			}
+		});
+	}
+	public void work(Task t, Callback callback) {
+		final WorkerManager manager = getManager();
 		final ExtractTask task = (ExtractTask)t;
-		final List<Page> pages = manager.getPages();
 		final Downloader.Response response = task.getResponse();
 		final Downloader.Request request = response.getRequest();
-		
-		pages.parallelStream()//多线程来做
+		this.pages.parallelStream()//多线程来做
 		.filter(page -> page.matches(request))//过滤，只要能匹配request的page
 		.forEach(page -> {
 			final Extractor.Builder builder = page.getExtractorBuilder();
+			if (builder == null) {
+				throw new Spiderman.Exception("页面[name="+page.getName()+"]缺少可以构建抽取器的对象，请设置一个 models.setExtractorBuilder");
+			}
 			final String pageName = page.getName();
 			final Models models = page.getModels();
 			final Extractor extractor = builder.build(task, pageName, models.all().toArray(new Model[]{}));
@@ -54,11 +87,23 @@ public class ExtractWorker extends Worker {
 					if (K.isBlank(modelName)) {
 						modelName = "no-name";
 					} 
-					final Properties fields = entry.getProperties();
+					final Properties fields = entry.getFields();
 					modelsCtx.put(modelName, fields);
 					final ExtractResult result = new ExtractResult(pageName, modelName, fields);
-					manager.done(new WorkerResult(page, task, result));
+					// 处理isForNextPage的field
+					final Field fieldForNextPageUrl = entry.getModel().getFieldForNextPageUrl();
+					final Field fieldForNextPageContent = entry.getModel().getFieldForNextPageContent();
+					if (fieldForNextPageUrl != null) {
+						final List<String> contents = new ArrayList<String>();
+						// 解析下一页
+						extractNextPage(entry, contents, task, builder, this);
+						if (K.isNotEmpty(contents) && fieldForNextPageContent != null) {
+							result.getFields().put(fieldForNextPageContent.getName(), contents);
+						}
+					}
+					callback.onResultExtracted(page, result);
 				}
+				
 				public void onFieldExtracted(FieldEntry entry) {
 					final Field field = entry.getField();
 					final boolean isArray = field.getBoolean("isArray", false);
@@ -94,14 +139,55 @@ public class ExtractWorker extends Worker {
 						newValues.parallelStream()
 							.filter(url -> !request.getUrl().equals(url))
 							.map(url -> new Downloader.Request(url))
-							.forEach(req -> manager.done(new WorkerResult(page, task, req))); 
+							.forEach(req -> {
+								if (manager != null) {
+									manager.done(new WorkerResult(page, task, req));
+								}
+							}); 
 					}
 					
 					// 设置结果
-					entry.setData(isArray ? newValues.stream().collect(Collectors.toList()) : newValues.stream().findFirst().get());
+					final Object data = isArray ? newValues.stream().collect(Collectors.toList()) : newValues.stream().findFirst().get();
+					entry.setData(data);
 				}
 			});
 		});
 	}
-
+	
+	private void extractNextPage(final ModelEntry entry, final List<String> appender, Task task, Extractor.Builder builder, Extractor.Callback callback) {
+		final Properties fields = entry.getFields();
+		final Model model = entry.getModel();
+		final Field fieldForNextPageUrl = model.getFieldForNextPageUrl();
+		final Field fieldForNextPageContent = model.getFieldForNextPageContent();
+		// 将当前页的字段值追加到appender里
+		if (fieldForNextPageContent != null) {
+			appender.add(fields.getString(fieldForNextPageContent.getName()));
+		}
+		
+		final String nextPageUrl = fields.getString(fieldForNextPageUrl.getName());
+		if (K.isBlank(nextPageUrl)) {
+			return;
+		}
+		// 下载
+		final Downloader.Response nextResponse = downloadWorker.download(new Downloader.Request(nextPageUrl));
+		final ExtractTask nextTask = new ExtractTask(true, task.getSeed(), nextResponse);
+		final Model nextModel = new Model(model.getPage(), model.getName(), Arrays.asList(fieldForNextPageUrl, fieldForNextPageContent));
+		nextModel.putAll(model);
+		final Extractor nextExtractor = builder.build(nextTask, model.getPage(), nextModel);
+		// 解析
+		nextExtractor.extract(new Extractor.Callback(){
+			public void onModelExtracted(ModelEntry entry) {
+				// 递归
+				extractNextPage(entry, appender, task, builder, callback);
+			}
+			public void onFieldExtracted(FieldEntry entry) {
+				callback.onFieldExtracted(entry);
+			}
+		});
+	}
+	
+	public static interface Callback {
+		public void onResultExtracted(Page page, ExtractResult result);
+	}
+	
 }

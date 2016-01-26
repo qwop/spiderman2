@@ -3,9 +3,8 @@ package net.kernal.spiderman.worker.download;
 import net.kernal.spiderman.Counter;
 import net.kernal.spiderman.Spiderman;
 import net.kernal.spiderman.logger.Logger;
-import net.kernal.spiderman.queue.Queue.Element;
 import net.kernal.spiderman.queue.QueueManager;
-import net.kernal.spiderman.worker.AbstractTask;
+import net.kernal.spiderman.worker.Task;
 import net.kernal.spiderman.worker.Worker;
 import net.kernal.spiderman.worker.WorkerManager;
 import net.kernal.spiderman.worker.WorkerResult;
@@ -27,8 +26,8 @@ public class DownloadManager extends WorkerManager {
 	/**
 	 * 从队列里获取任务
 	 */
-	protected Element takeTask() {
-		return getQueueManager().getDownloadQueue().take();
+	protected Task takeTask() {
+		return (Task)getQueueManager().getDownloadQueue().take();
 	}
 
 	/**
@@ -43,9 +42,9 @@ public class DownloadManager extends WorkerManager {
 	 */
 	protected void handleResult(WorkerResult wr) {
 		final Object result = wr.getResult();
-		final AbstractTask task = wr.getTask();
+		final Task task = wr.getTask();
 		final Page page = wr.getPage();
-		final boolean isUnique = page == null ? false : page.isTaskDuplicateCheckEnabled();
+		final boolean isUnique = page == null ? false : page.isUnique();
 		if (!(result instanceof Downloader.Response)) {
 			throw new Spiderman.Exception("只接受Downloader.Response类型的结果");
 		}

@@ -34,7 +34,7 @@ public class MyResultHandler implements net.kernal.spiderman.worker.extract.Extr
 		// context对象利用了接口默认实现方法初始化获得
 		final Context ctx = context.get();
 		// 获取队列对象，我们要往该队列放结果
-		final Queue queue = ctx.getQueueManager().getQueue("SPIDERMAN_JSON_RESULT");
+		final Queue<Element> queue = ctx.getQueueManager().getQueue("SPIDERMAN_JSON_RESULT");
 		
 		final String key = task.getKey();
 		final String url = task.getRequest().getUrl();

@@ -11,13 +11,14 @@ import org.zbus.net.http.Message;
 
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Spiderman;
+import net.kernal.spiderman.queue.Queue.Element;
 
 /**
  * PS:由于ZBus支持队列元素的重复检查，所以此类不需要继承CheckableQueue
  * @author 赖伟威 l.weiwei@163.com 2016-01-19
  *
  */
-public class ZBusQueue implements Queue {
+public class ZBusQueue<E extends Element> implements Queue<E> {
 
 	private int beatPeriod = 5000;
 	private Broker broker;
@@ -40,7 +41,8 @@ public class ZBusQueue implements Queue {
 		this.consumer = new Consumer(cfg);
 	}
 	
-	public Element take() {
+	@SuppressWarnings("unchecked")
+	public E take() {
 		Message msg = null;
 		while(true){
 			try {
@@ -54,8 +56,7 @@ public class ZBusQueue implements Queue {
 			}
 		}
 		final byte[] data = msg.getBody();
-		final Element e = (Element)K.deserialize(data);
-		return e;
+		return (E)K.deserialize(data);
 	}
 
 	public void append(Element e) {

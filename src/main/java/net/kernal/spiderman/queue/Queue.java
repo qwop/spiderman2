@@ -2,11 +2,11 @@ package net.kernal.spiderman.queue;
 
 import java.io.Serializable;
 
-public interface Queue {
+public interface Queue<E> {
 
-	public Element take();
+	public E take();
 	
-	public void append(Element element);
+	public void append(E element);
 	
 	public void clear();
 	

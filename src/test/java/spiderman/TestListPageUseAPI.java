@@ -22,14 +22,14 @@ import net.kernal.spiderman.worker.extract.conf.Page;
  * 这个测试代码完全使用Java代码的方式来配置抽取规则，可以看到配置躲起来之后代码不太好看，至少是比较繁杂的。
  * 另外一个TestXML例子就使用大部分配置通过XML文件加载，小部分用Java代码处理，看起来会好很多。
  */
-public class TestAPI {
+public class TestListPageUseAPI {
 	
 	public static void main(String[] args) {
 		final Conf conf = new DefaultConfBuilder() {
 			public void configPages(Pages pages) {
 				pages.add(new Page("网页内容") {
 					public void config(UrlMatchRules rules, Models models) { 
-						this.setTaskDuplicateCheckEnabled(true);
+						this.setIsUnique(true);
 						this.setExtractorBuilder(TextExtractor.builder());
 						rules.addNegativeContainsRule("baidu"); 
 					}

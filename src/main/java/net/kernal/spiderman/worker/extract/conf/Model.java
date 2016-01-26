@@ -37,6 +37,9 @@ public class Model extends Properties {
 		return this;
 	}
 	public Field addField(String name)  {
+		if (name == null) {
+			throw new NullPointerException("name");
+		}
 		Field field = new Field(page, this.name, name);
 		this.fields.add(field);
 		logger.info("添加字段配置: " + field);
@@ -44,6 +47,18 @@ public class Model extends Properties {
 	}
 	public List<Field> getFields() {
 		return this.fields;
+	}
+	
+	public Field getFieldForNextPageUrl() {
+		return this.fields.parallelStream()
+				.filter(field -> field.getName().equals(getString("fieldNameForNextPageUrl")))
+				.findFirst().orElse(null);
+	}
+	
+	public Field getFieldForNextPageContent() {
+		return this.fields.parallelStream()
+				.filter(field -> field.getName().equals(getString("fieldNameForNextPageContent")))
+				.findFirst().orElse(null);
 	}
 	
 	public String toString() {

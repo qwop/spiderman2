@@ -9,7 +9,7 @@
     <property key="queue.capacity" value="5000" /><!-- 队列大小，0表示无界 -->
     <property key="queue.element.repeatable" value="false" /><!-- 队列元素是否允许重复，默认允许，若不允许，则使用重复检查器在元素入队列前进行检查 -->
     <property key="queue.checker.bdb.file" value="store/checker" /><!-- 检查器需要用到BDb存储 -->
-    <property key="queue.zbus.enabled" value="true" /><!-- 队列是否使用ZBus实现, 默认否，若是，可支持分布式处理 -->
+    <property key="queue.zbus.enabled" value="false" /><!-- 队列是否使用ZBus实现, 默认否，若是，可支持分布式处理 -->
     <property key="queue.zbus.server" value="10.8.60.8:15555" /><!-- ZBus服务地址 {IP或域名}:{端口号} -->
     <property key="queue.other.names" value="SPIDERMAN_JSON_RESULT" /><!-- 注册创建其他队列备用 -->
     <!-- <seed>URL地址</seed> --><!-- 写死种子入口的方式 -->
