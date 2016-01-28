@@ -8,6 +8,7 @@ import net.kernal.spiderman.worker.Worker;
 import net.kernal.spiderman.worker.WorkerManager;
 import net.kernal.spiderman.worker.WorkerResult;
 import net.kernal.spiderman.worker.extract.ExtractManager.ResultHandler;
+import net.kernal.spiderman.worker.extract.ExtractResult;
 
 public class ResultManager extends WorkerManager {
 
@@ -23,7 +24,8 @@ public class ResultManager extends WorkerManager {
 		final Counter counter = getCounter();
 		final long count = counter.plus();
 		final ResultTask rtask = (ResultTask)wr.getTask();
-		getLogger().info("消费了第"+count+"个结果[page="+rtask.getResult().getPageName()+", model="+rtask.getResult().getModelName()+", url="+rtask.getRequest().getUrl()+", seed="+rtask.getSeed().getUrl()+"]");
+		final ExtractResult result = rtask.getResult();
+		getLogger().info("消费了第"+count+"个结果[seed="+rtask.getSeed().getName()+",page="+result.getPageName()+", model="+result.getModelName()+", url="+rtask.getRequest().getUrl()+", source="+rtask.getSourceUrl()+"]");
 		if (this.handler != null) {
 			this.handler.handle(rtask, counter);
 		}

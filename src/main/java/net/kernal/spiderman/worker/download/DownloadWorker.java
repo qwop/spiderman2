@@ -12,20 +12,30 @@ import net.kernal.spiderman.worker.WorkerResult;
 
 public class DownloadWorker extends Worker {
 
+	private long delay;
 	private Downloader downloader;
 	/** 保存已经重定向过的URL地址 */
 	private Set<String> redirectedLocations;
-	
 	public DownloadWorker(Downloader downloader) {
-		this(null, downloader);
+		this(downloader, 0);
 	}
-	public DownloadWorker(WorkerManager manager, Downloader downloader) {
+	public DownloadWorker(Downloader downloader, long delay) {
+		this(null, downloader, delay);
+	}
+	public DownloadWorker(WorkerManager manager, Downloader downloader, long delay) {
 		super(manager);
 		this.downloader = downloader;
 		this.redirectedLocations = new HashSet<String>();
+		this.delay = delay;
 	}
 	
 	public Downloader.Response download(Downloader.Request request) {
+		if (delay > 0) {
+			try {
+				Thread.sleep(delay);
+			} catch (InterruptedException e) {
+			}
+		}
 		final Downloader.Response response = this.downloader.download(request);
 		if (response == null) {
 			return null;
@@ -38,9 +48,8 @@ public class DownloadWorker extends Worker {
 			if (!redirectedLocations.contains(location)) {
 				redirectedLocations.add(location);
 				final Downloader.Request newRequest = new Downloader.Request(location);
-				this.download(newRequest);
+				return this.download(newRequest);
 			}
-			return null;
 		}
 		if (response.getBody() == null || response.getBody().length == 0) {
 			return null;

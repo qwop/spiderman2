@@ -1,8 +1,8 @@
 package net.kernal.spiderman.worker.result;
 
 import net.kernal.spiderman.worker.Task;
-import net.kernal.spiderman.worker.download.Downloader;
 import net.kernal.spiderman.worker.extract.ExtractResult;
+import net.kernal.spiderman.worker.extract.ExtractTask;
 
 public class ResultTask extends Task {
 
@@ -10,8 +10,8 @@ public class ResultTask extends Task {
 	
 	private ExtractResult result;
 	
-	public ResultTask(boolean isUnique, Downloader.Request seed, Downloader.Request request, ExtractResult result) {
-		super(isUnique?"result_"+result.getPageName()+"#"+result.getModelName()+"#"+seed.getUrl()+"#"+request.getUrl():null, seed, request);
+	public ResultTask(ExtractTask task, boolean isUnique, ExtractResult result) {
+		super(task.getSeed(), task.getSource(), isUnique?"result_"+result.getPageName()+"#"+result.getModelName()+"#"+task.getSeed().getUrl()+"#"+task.getRequest().getUrl():null, task.getRequest());
 		this.result = result;
 	}
 	

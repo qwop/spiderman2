@@ -8,7 +8,9 @@ public class MyFilter implements ValueFilter {
 	public String filter(Context ctx) {
 		final String v = ctx.getValue();
 		final String pn = K.findOneByRegex(v, "&pn\\=\\d+");
-		return K.isBlank(pn) ? v : ctx.getSeed().getUrl()+pn;
+		if ("&pn=0".equals(pn) || K.isBlank(pn))
+			return null;
+		return ctx.getSeed().getUrl()+pn;
 	}
 
 }

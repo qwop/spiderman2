@@ -3,12 +3,13 @@ package net.kernal.spiderman.worker.extract;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Properties;
@@ -17,6 +18,7 @@ import net.kernal.spiderman.worker.Task;
 import net.kernal.spiderman.worker.Worker;
 import net.kernal.spiderman.worker.WorkerManager;
 import net.kernal.spiderman.worker.WorkerResult;
+import net.kernal.spiderman.worker.download.DownloadTask;
 import net.kernal.spiderman.worker.download.DownloadWorker;
 import net.kernal.spiderman.worker.download.Downloader;
 import net.kernal.spiderman.worker.extract.Extractor.Callback.ModelEntry;
@@ -46,7 +48,7 @@ public class ExtractWorker extends Worker {
 	}
 	
 	public ExtractWorker(List<Page> pages, WorkerManager manager, Downloader downloader) {
-		this(pages, manager, new DownloadWorker(downloader));
+		this(pages, manager, new DownloadWorker(downloader, 0));
 	}
 	
 	public ExtractWorker(List<Page> pages, WorkerManager manager, DownloadWorker downloadWorker) {
@@ -66,6 +68,7 @@ public class ExtractWorker extends Worker {
 	public void work(Task t, Callback callback) {
 		final WorkerManager manager = getManager();
 		final ExtractTask task = (ExtractTask)t;
+		final Collection<String> links = task.getSourceUrlsAndLinks();
 		final Downloader.Response response = task.getResponse();
 		final Downloader.Request request = response.getRequest();
 		this.pages.parallelStream()//多线程来做
@@ -109,6 +112,7 @@ public class ExtractWorker extends Worker {
 					final boolean isArray = field.getBoolean("isArray", false);
 					final boolean isForNewTask = field.getBoolean("isForNewTask", false);
 					final boolean isDistinct = field.getBoolean("isDistinct", false);
+					final boolean isSorted = field.getBoolean("isSorted", false);
 					final Collection<?> values = entry.getValues();
 					
 					// 处理过滤器
@@ -120,41 +124,66 @@ public class ExtractWorker extends Worker {
 					filters.addAll(field.getFilters());// 添加多个子元素配置的过滤器
 					
 					// 执行过滤, 得到过滤后的新值
-					Collection<String> newValues = (isForNewTask||isDistinct) ? new HashSet<String>(values.size()) : new ArrayList<String>(values.size());
+					final Collection<String> newValues = (isForNewTask||isDistinct) ? new HashSet<String>(values.size()) : new ArrayList<String>(values.size());
 					values.parallelStream()
 						.filter(v -> v instanceof String).map(v -> (String)v)// 保证值是String类型
 						.forEach(v -> {
 							AtomicReference<String> v2 = new AtomicReference<String>(v);
 							filters.forEach(ft -> {
 								String nv = ft.filter(new ValueFilter.Context(extractor, modelsCtx, v));
-								if (K.isNotBlank(nv)) {
-									v2.set(nv);// 将上一个结果作为下一个参数过滤
-								}
+								v2.set(nv);// 将上一个结果作为下一个参数过滤
 							});
-							newValues.add(v2.get());
+							final String nv = v2.get();
+							if (K.isNotBlank(nv)) {
+								newValues.add(nv);
+							}
 						});
 					
 					// 新URL入队列
 					if (isForNewTask) {
+						final Collection<String> newLinks = new HashSet<String>();
 						newValues.parallelStream()
-							.filter(url -> !request.getUrl().equals(url))
-							.map(url -> new Downloader.Request(url))
-							.forEach(req -> {
-								if (manager != null) {
-									manager.done(new WorkerResult(page, task, req));
+							.filter(url -> !request.getUrl().equals(url))// 排除自己
+							.filter(url -> { // 排除sources和links
+								final AtomicBoolean repeat = new AtomicBoolean(false);
+								if (!repeat.get() && K.isNotEmpty(links)) {
+									for (String link : links){
+										if (link.equals(url)) {
+											repeat.set(true);
+											break;
+										}
+									}
 								}
+								return !repeat.get();
+							})
+							.forEach(url -> {
+								// 收集links
+								newLinks.add(url);
 							}); 
+						if (K.isNotEmpty(newLinks)) {
+							task.getLinks().addAll(newLinks);
+							if (manager != null) {
+								newLinks.parallelStream()
+									.map(link -> new Downloader.Request(link))
+									.forEach(req -> manager.done(new WorkerResult(page, task, req)));
+							}
+							newValues.clear();
+							newValues.addAll(newLinks);
+						}
 					}
-					
 					// 设置结果
-					final Object data = isArray ? newValues.stream().collect(Collectors.toList()) : newValues.stream().findFirst().get();
+					List<String> finalList = new ArrayList<String>(newValues);
+					if (isSorted) {
+						Collections.sort(finalList);
+					}
+					final Object data = isArray ? finalList : finalList.stream().findFirst().get();
 					entry.setData(data);
 				}
 			});
 		});
 	}
 	
-	private void extractNextPage(final ModelEntry entry, final List<String> appender, Task task, Extractor.Builder builder, Extractor.Callback callback) {
+	private void extractNextPage(final ModelEntry entry, final List<String> appender, ExtractTask task, Extractor.Builder builder, Extractor.Callback callback) {
 		final Properties fields = entry.getFields();
 		final Model model = entry.getModel();
 		final Field fieldForNextPageUrl = model.getFieldForNextPageUrl();
@@ -169,8 +198,10 @@ public class ExtractWorker extends Worker {
 			return;
 		}
 		// 下载
-		final Downloader.Response nextResponse = downloadWorker.download(new Downloader.Request(nextPageUrl));
-		final ExtractTask nextTask = new ExtractTask(true, task.getSeed(), nextResponse);
+		final Downloader.Request nextRequest = new Downloader.Request(nextPageUrl);
+		final Downloader.Response nextResponse = downloadWorker.download(nextRequest);
+		final DownloadTask downloadTask = new DownloadTask(task, true, nextRequest);
+		final ExtractTask nextTask = new ExtractTask(downloadTask, true, nextResponse);
 		final Model nextModel = new Model(model.getPage(), model.getName(), Arrays.asList(fieldForNextPageUrl, fieldForNextPageContent));
 		nextModel.putAll(model);
 		final Extractor nextExtractor = builder.build(nextTask, model.getPage(), nextModel);

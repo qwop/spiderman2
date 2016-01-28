@@ -47,10 +47,10 @@ public class ExtractManager extends WorkerManager {
 			getLogger().info("解析了第"+count+"个模型");
 			// 将成果放入结果处理队列
 			final ExtractResult extractResult = (ExtractResult)result;
-			getQueueManager().append(new ResultTask(isUnique, task.getSeed(), task.getRequest(), extractResult));
+			getQueueManager().append(new ResultTask((ExtractTask)task, isUnique, extractResult));
 		} else if (result instanceof Downloader.Request) {
 			final Downloader.Request request = (Downloader.Request)result;
-			getQueueManager().append(new DownloadTask(isUnique, task.getSeed(), request));
+			getQueueManager().append(new DownloadTask((ExtractTask)task, isUnique, request));
 		}
 	}
 

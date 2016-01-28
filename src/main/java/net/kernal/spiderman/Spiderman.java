@@ -8,7 +8,6 @@ import net.kernal.spiderman.logger.ConsoleLogger;
 import net.kernal.spiderman.logger.Logger;
 import net.kernal.spiderman.worker.WorkerManager;
 import net.kernal.spiderman.worker.download.DownloadTask;
-import net.kernal.spiderman.worker.download.Downloader;
 
 /**
  * 客户端类 
@@ -38,10 +37,9 @@ public class Spiderman {
 		logger.debug("开始行动...");
 		managers.forEach(m -> threads.execute(m));
 		// 往队列里添加种子
-		final boolean isSeedUnique = context.getParams().getBoolean("seed.unique", false);
+		final boolean isUnique = context.getParams().getBoolean("seed.unique", false);
 		context.getSeeds().all().parallelStream()
-			.map(seed -> new Downloader.Request(seed.getUrl()))
-			.map(req -> new DownloadTask(isSeedUnique, req))
+			.map(seed -> new DownloadTask(seed, isUnique))
 			.forEach(task -> context.getQueueManager().append(task));
 		counter.await();
 		_stop();

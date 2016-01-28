@@ -17,10 +17,12 @@ import net.kernal.spiderman.worker.extract.conf.Page;
 public class DownloadManager extends WorkerManager {
 	
 	private Downloader downloader;
+	private long delay;
 	
-	public DownloadManager(int nWorkers, QueueManager queueManager, Counter counter, Logger logger, Downloader downloader) {
+	public DownloadManager(int nWorkers, QueueManager queueManager, Counter counter, Logger logger, Downloader downloader, long delay) {
 		super(nWorkers, queueManager, counter, logger);
 		this.downloader = downloader;
+		this.delay = delay;
 	}
 	
 	/**
@@ -34,7 +36,7 @@ public class DownloadManager extends WorkerManager {
 	 * 构建工人对象
 	 */
 	protected Worker buildWorker() {
-		return new DownloadWorker(this, downloader);
+		return new DownloadWorker(this, downloader, delay);
 	}
 	
 	/**
@@ -52,7 +54,7 @@ public class DownloadManager extends WorkerManager {
 		long count = getCounter().plus();
 		Downloader.Response response = (Downloader.Response)result;
 		// 放入解析队列
-		getQueueManager().append(new ExtractTask(isUnique, task.getSeed(), response));
+		getQueueManager().append(new ExtractTask((DownloadTask)task, isUnique, response));
 		getLogger().info("下载了第"+count+"个网页: "+response);
 	}
 

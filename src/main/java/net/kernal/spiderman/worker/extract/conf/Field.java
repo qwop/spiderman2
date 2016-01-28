@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import net.kernal.spiderman.Properties;
+import net.kernal.spiderman.Seed;
 import net.kernal.spiderman.worker.download.Downloader;
 import net.kernal.spiderman.worker.extract.ExtractTask;
 import net.kernal.spiderman.worker.extract.Extractor;
@@ -81,13 +82,15 @@ public class Field extends Properties {
 			private ExtractTask task;
 			private Downloader.Request request;
 			private Downloader.Response response;
-			private Downloader.Request seed;
+			private Downloader.Request source;
+			private Seed seed;
 			public Context(Extractor e, Map<String, Properties> models, String v) {
 				this.value = v;
 				this.extractor = e;
 				this.task = e.getTask();
 				this.request = task.getRequest();
 				this.response = task.getResponse();
+				this.source = task.getSource() == null ? null : task.getSource().getRequest();
 				this.seed = task.getSeed();
 				this.put("value", v);
 				this.put("extractor", e);
@@ -115,8 +118,11 @@ public class Field extends Properties {
 			public Downloader.Response getResponse() {
 				return response;
 			}
-			public Downloader.Request getSeed() {
+			public Seed getSeed() {
 				return seed;
+			}
+			public Downloader.Request getSource() {
+				return source;
 			}
 		}
 	}

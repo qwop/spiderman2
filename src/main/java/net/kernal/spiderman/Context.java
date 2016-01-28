@@ -75,7 +75,8 @@ public class Context {
 			final Counter counter = new Counter(limit, 0);
 			final int size = params.getInt("worker.download.size", 1);
 			final Logger consoleLogger = new ConsoleLogger(DownloadManager.class, level);
-			final DownloadManager downloadManager = new DownloadManager(size, queueManager, counter, consoleLogger, downloader);
+			final long delay = K.convertToMillis(params.getString("worker.download.delay", "0")).longValue();
+			final DownloadManager downloadManager = new DownloadManager(size, queueManager, counter, consoleLogger, downloader, delay);
 			logger.debug("构建下载管理器");
 			this.addManager(downloadManager);
 		}

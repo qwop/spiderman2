@@ -31,7 +31,7 @@ public class TestSinglePageUseExtractWorker {
 		final long start = System.currentTimeMillis();//使用微秒即可
 		// 解析, 使用HtmlClean解析器
 		final Extractor.Builder builder = HtmlCleanerExtractor.builder();
-		final ExtractTask task = new ExtractTask(true, request, response);
+		final ExtractTask task = new ExtractTask(response);
 		// 页面抽取配置
 		final Page page = new Page("单篇文章内容分页", builder) {
 			public void config(UrlMatchRules rules, Models models) {

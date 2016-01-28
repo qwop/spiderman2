@@ -43,7 +43,7 @@ public class QueueManager {
 			// 构建ZBus队列
 			final String server = params.getString("queue.zbus.server");
 			if (K.isBlank(server)) {
-				throw new Spiderman.Exception("缺少参数: queue.zbus.server, 参考: conf.set(\"queue.zbus.enabled\")");
+				throw new Spiderman.Exception("缺少参数: queue.zbus.server, 参考: conf.set(\"queue.zbus.server\", \"localhost:155555\")");
 			}
 			final BrokerConfig brokerConfig = new BrokerConfig();
 		    brokerConfig.setServerAddress(server);
@@ -102,19 +102,20 @@ public class QueueManager {
 	}
 	
 	public void append(Task task) {
+		final String source = task.getSource() == null ? null : task.getSource().getRequest().getUrl();
 		if (task instanceof DownloadTask) {
 			this.downloadQueue.append(task);
 			final DownloadTask dtask = (DownloadTask)task;
-			logger.info("添加下载任务: "+ dtask.getRequest().getUrl()+", 所属种子->"+dtask.getSeed().getUrl());
+			logger.info("添加下载任务: "+ dtask.getRequest().getUrl()+", 来源->"+source);
 		} else if (task instanceof ExtractTask) {
 			this.extractQueue.append(task);
 			final ExtractTask etask = (ExtractTask)task;
-			logger.info("添加解析任务: " + etask.getResponse().getRequest().getUrl()+", 所属种子->"+etask.getSeed().getUrl());
+			logger.info("添加解析任务: " + etask.getResponse().getRequest().getUrl()+", 来源->"+source);
 		} else if (task instanceof ResultTask) {
 			this.resultQueue.append(task);
 			final ResultTask rtask = (ResultTask)task;
 			final ExtractResult r = rtask.getResult();
-			logger.info("添加结果任务: [page="+r.getPageName()+"].[model="+r.getModelName()+"], 所属种子->"+rtask.getSeed().getUrl());
+			logger.info("添加结果任务: [page="+r.getPageName()+"].[model="+r.getModelName()+"], 来源->"+source);
 		}
 	}
 	
