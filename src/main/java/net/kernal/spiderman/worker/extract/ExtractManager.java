@@ -40,21 +40,21 @@ public class ExtractManager extends WorkerManager {
 		final Task task = wr.getTask();
 		final Object result = wr.getResult();
 		final Page page = wr.getPage();
-		final boolean isUnique = page == null ? false : page.isUnique();
+		final String group = page.getName();
 		if (result instanceof ExtractResult) {
 			// 计数器加1
 			final long count = getCounter().plus();
 			getLogger().info("解析了第"+count+"个模型");
 			// 将成果放入结果处理队列
 			final ExtractResult extractResult = (ExtractResult)result;
-			getQueueManager().append(new ResultTask((ExtractTask)task, isUnique, extractResult));
+			getQueueManager().append(new ResultTask((ExtractTask)task, extractResult));
 		} else if (result instanceof Downloader.Request) {
 			final Downloader.Request request = (Downloader.Request)result;
-			getQueueManager().append(new DownloadTask((ExtractTask)task, isUnique, request));
+			getQueueManager().append(new DownloadTask((ExtractTask)task, group, request));
 		}
 	}
 
-	protected Task takeTask() {
+	protected Task takeTask() throws InterruptedException {
 		return (Task)getQueueManager().getExtractQueue().take();
 	}
 

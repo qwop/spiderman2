@@ -38,6 +38,7 @@ public class ConsoleLogger implements Logger {
 		}
 		
 		System.err.println("[Spiderman][错误]["+name+"]"+K.formatNow()+"\r\n"+err+"\r\n");
+		e.printStackTrace();
 	}
 
 }

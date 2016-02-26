@@ -2,8 +2,7 @@ package net.kernal.spiderman.worker;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.CountDownLatch;
 
 import net.kernal.spiderman.Counter;
 import net.kernal.spiderman.Spiderman;
@@ -24,8 +23,7 @@ public abstract class WorkerManager implements Runnable {
 	public Logger getLogger() {
 		return this.logger;
 	}
-	
-	private ThreadPoolExecutor threads;
+	private int nWorkers;
 	private List<Worker> workers;
 	private QueueManager queueManager;
 	protected QueueManager getQueueManager() {
@@ -36,6 +34,8 @@ public abstract class WorkerManager implements Runnable {
 	public Counter getCounter() {
 		return this.counter;
 	}
+	
+	private CountDownLatch shutdown;
 	
 	private List<Listener> listeners;
 	public static interface Listener {
@@ -53,17 +53,18 @@ public abstract class WorkerManager implements Runnable {
 	 */
 	public WorkerManager(int nWorkers, QueueManager queueManager, Counter counter, Logger logger) {
 		nWorkers = nWorkers > 0 ? nWorkers : 1;
-		this.threads = (ThreadPoolExecutor)Executors.newFixedThreadPool(nWorkers);
 		this.queueManager = queueManager;
+		this.nWorkers = nWorkers;
 		this.counter = counter;
 		this.listeners = new ArrayList<Listener>();
 		this.logger = logger;
+		this.shutdown = new CountDownLatch(1);
 	}
 	
 	/**
 	 * 获取任务，子类实现
 	 */
-	protected abstract Task takeTask();
+	protected abstract Task takeTask() throws InterruptedException;
 	/**
 	 * 获取工人实例，子类实现
 	 */
@@ -89,7 +90,6 @@ public abstract class WorkerManager implements Runnable {
 		if (this.queueManager == null) {
 			throw new Spiderman.Exception(getClass().getSimpleName()+" 缺少队列管理器");
 		}
-		final int nWorkers = threads.getCorePoolSize();
 		logger.debug("我这有"+nWorkers+"个兄弟上班签到");
 		workers = new ArrayList<Worker>(nWorkers);
 		for (int i = 0; i < nWorkers; i++) {
@@ -97,10 +97,18 @@ public abstract class WorkerManager implements Runnable {
 			workers.add(worker);
 		}
 		
-		this.workers.forEach(w -> threads.execute(w));
+		this.workers.forEach(w -> w.start());
 		this.counter.await();
 		logger.debug("我这有"+nWorkers+"个兄弟下班签退");
 		this.shutdown();
+	}
+	
+	public void shutdownAndWait() {
+		try {
+			this.counter.stop();
+			this.shutdown.await();
+		} catch (InterruptedException e) {
+		}
 	}
 	
 	/**
@@ -108,19 +116,24 @@ public abstract class WorkerManager implements Runnable {
 	 */
 	private void shutdown() {
 		try {
-			this.workers.forEach(w -> w.stop());
-			this.threads.shutdownNow();
+			this.workers.forEach(w -> {
+				logger.warn("等待工人["+w.getName()+"]做收尾工作");
+				w.await();//wait for the worker finished the job
+			});
 		} catch(Throwable e) {
 		} finally {
 			this.clear();
 			logger.debug("退出管理器...");
 			// 统计结果
-			final String fmt = "统计结果 \r\n 耗时:%sms \r\n 计数:%s \r\n 能力:%s/秒 \r\n 工人:总数(%s) 工作中(%s) 已收工(%s) \r\n";
+			final String fmt = "统计结果 \r\n 耗时:%sms \r\n 计数:%s \r\n 能力:%s/秒 \r\n 工人数(%s) \r\n";
 			final long qps = Math.round((counter.get()*1.0/(counter.getCost())*1000));
-			final String msg = String.format(fmt, counter.getCost(), counter.get(), qps, threads.getCorePoolSize(), threads.getActiveCount(), threads.getCompletedTaskCount());
+			final String msg = String.format(fmt, counter.getCost(), counter.get(), qps, nWorkers);
 			logger.debug(msg);
-			listeners.forEach(l -> l.shouldShutdown());
+			listeners.forEach(l -> { 
+				l.shouldShutdown(); 
+			});
 			this.listeners.clear();
+			this.shutdown.countDown();
 		}
 	}
 	

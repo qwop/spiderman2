@@ -8,20 +8,20 @@ public class DownloadTask extends Task {
 
 	private static final long serialVersionUID = 6126003860229810350L;
 	
-	public DownloadTask(Seed seed) {
-		this(seed, false, new Downloader.Request(seed.getUrl()));
+	public DownloadTask(Seed seed, String group) {
+		this(seed, group, new Downloader.Request(seed.getUrl()));
 	}
 	
-	public DownloadTask(Seed seed, boolean isUnique) {
-		this(seed, isUnique, new Downloader.Request(seed.getUrl()));
+	public DownloadTask(ExtractTask task, String group, Downloader.Request request) {
+		super(task.getSeed(), task, group, request);
 	}
 	
-	public DownloadTask(ExtractTask task, boolean isUnique, Downloader.Request request) {
-		super(task.getSeed(), task, isUnique?"download_"+task.getSeed().getUrl()+"#"+request.getUrl():null, request);
+	public DownloadTask(Seed seed, String group, Downloader.Request request) {
+		super(seed, null, group, request);
 	}
 	
-	public DownloadTask(Seed seed, boolean isUnique, Downloader.Request request) {
-		super(seed, null, isUnique?"download_"+seed.getUrl()+"#"+request.getUrl():null, request);
+	public String getKey() {
+		return "download_"+getSeed().getUrl()+"#"+getRequest().getUrl();
 	}
 	
 }

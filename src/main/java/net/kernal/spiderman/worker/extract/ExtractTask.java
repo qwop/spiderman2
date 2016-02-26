@@ -15,13 +15,17 @@ public class ExtractTask extends Task {
 		this.response = response;
 	}
 	
-	public ExtractTask(DownloadTask task, boolean isUnique, Downloader.Response response) {
-		super(task.getSeed(), task.getSource(), isUnique?"extract_"+task.getSeed().getUrl()+"#"+response.getRequest().getUrl():null, response.getRequest());
+	public ExtractTask(DownloadTask task, Downloader.Response response) {
+		super(task.getSeed(), task.getSource(), task.getGroup(), response.getRequest());
 		this.response = response;
 	}
 	
 	public Downloader.Response getResponse() {
 		return this.response;
+	}
+	
+	public String getKey() {
+		return "extract_"+getSeed().getUrl()+"#"+response.getRequest().getUrl();
 	}
 	
 }

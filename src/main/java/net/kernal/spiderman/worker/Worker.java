@@ -1,5 +1,7 @@
 package net.kernal.spiderman.worker;
 
+import java.util.concurrent.CountDownLatch;
+
 import net.kernal.spiderman.logger.ConsoleLogger;
 import net.kernal.spiderman.logger.Logger;
 
@@ -11,14 +13,16 @@ import net.kernal.spiderman.logger.Logger;
  * @author 赖伟威 l.weiwei@163.com 2016-01-16
  *
  */
-public abstract class Worker implements Runnable {
+public abstract class Worker extends Thread {
 
 	private WorkerManager manager;
 	private WorkerResult result;
+	private CountDownLatch countDown;
 	private boolean stop;
 	
 	public Worker(WorkerManager manager) {
 		this.manager = manager;
+		this.countDown = new CountDownLatch(1);
 	}
 	
 	protected Logger getLogger() {
@@ -40,28 +44,42 @@ public abstract class Worker implements Runnable {
 	public abstract void work(Task task);
 	
 	public void run() {
-		final Thread thread = Thread.currentThread();
 		while (true) {
-			if (stop || thread.isInterrupted()) {
-				getLogger().info(thread.getName() + " 退出获取任务的循环");
+			if (this.stop || this.isInterrupted()) {
 				break;
 			}
-			final Task task = manager.takeTask();
+			final Task task;
+			try {
+				task = manager.takeTask();
+			} catch (InterruptedException e) {
+				break;
+			}
 			if (task == null) {
 				continue;
 			}
-			getLogger().info(thread.getName() + " 获取任务: " + task);
-			this.work(task);
-			getLogger().info(thread.getName() + " 结束任务: " + task);
+			getLogger().info(this.getName() + " 获取任务: " + task.getKey());
+			try {
+				this.work(task);
+			} catch (Throwable e) {
+				getLogger().error(this.getName() + " 任务失败: " + task.getKey(), e);
+				continue;
+			}
+			getLogger().info(this.getName() + " 完成任务: " + task.getKey());
 		}
+		countDown.countDown();
+		getLogger().warn("工人["+this.getName() + "]已收工");
 	}
 	
 	/**
 	 * 提供给经理调用，收工啦！！！
 	 */
-	public void stop() {
+	public void await() {
 		this.stop = true;
-		getLogger().info(Thread.currentThread().getName() + " 收工");
+		this.interrupt();
+		try {
+			this.countDown.await();
+		} catch (InterruptedException e) {
+		}
 	}
 	
 }

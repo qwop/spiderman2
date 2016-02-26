@@ -33,7 +33,7 @@ public class CheckableQueue<E extends Element> implements Queue<E> {
 		return this.checker;
 	}
 	
-	public E take() {
+	public E take() throws InterruptedException  {
 		return this.queue.take();
 	}
 
@@ -42,9 +42,15 @@ public class CheckableQueue<E extends Element> implements Queue<E> {
 		this.checker.clear();
 	}
 	
+	public void removeKeys(String group) {
+		this.checker.removeKeys(group);
+		this.queue.removeKeys(group);
+	}
+	
 	public static interface Checker {
 		public boolean check(Element e);
 		public void clear();
+		public void removeKeys(String group);
 	}
 	
 }

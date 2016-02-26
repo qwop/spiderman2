@@ -28,14 +28,13 @@ public class TestListPageUseAPI {
 			public void configPages(Pages pages) {
 				pages.add(new Page("网页内容") {
 					public void config(UrlMatchRules rules, Models models) { 
-						this.setIsUnique(true);
+						this.setIsPersisted(true);
 						this.setExtractorBuilder(TextExtractor.builder());
 						rules.addNegativeContainsRule("baidu"); 
 					}
 				});
 				pages.add(new Page("百度网页搜索") { 
 					public void config(UrlMatchRules rules, Models models) {
-						//this.setIsUnique(true);//列表页一般不用去重复
 						this.setExtractorBuilder(HtmlCleanerExtractor.builder());
 						rules.addRegexRule("(?=http://www\\.baidu\\.com/s\\?wd\\=).[^&]*(&pn\\=\\d+)?");
 						Model model = models.addModel("demo");
@@ -56,6 +55,8 @@ public class TestListPageUseAPI {
 								final String pn = K.findOneByRegex(v, "&pn\\=\\d+");
 								if ("&pn=0".equals(pn) || K.isBlank(pn))
 									return null;
+								final int n = Integer.parseInt(pn.replace("&pn=", ""));
+								if (n > 30) return null;
 								return ctx.getSeed().getUrl()+pn;
 							});
 					}
@@ -66,13 +67,16 @@ public class TestListPageUseAPI {
 			}
 			public void configParams(Properties params) {
 				params.put("logger.level", "DEBUG");
-				params.put("duration", "30s");// 运行时间
-				params.put("worker.download.size", 20);// 下载线程数
-				//params.put("worker.download.delay", "100ms");// 下载延迟时间，降低频率，免得被封
-				params.put("worker.extract.size", 20);// 解析线程数
-				params.put("worker.result.size", 20);// 结果处理线程数
-				params.put("queue.element.repeatable", false);// 队列元素是否允许重复,默认允许。若不允许，需用到重复检查器
-				params.put("queue.checker.bdb.file", "store/checker");// 检查器需用到BDb来存储
+				params.put("duration", "0");// 运行时间
+				params.put("scheduler.period", "5m");// 调度间隔时间，每隔固定时间重新将种子任务放入队列，并清除一些不需要持久化的消息key
+				params.put("worker.result.limit", 50);
+				params.put("worker.download.size", 10);// 下载线程数
+//				params.put("worker.download.delay", "100");// 下载延迟时间，降低频率，免得被封
+				params.put("worker.extract.size", 10);// 解析线程数
+				params.put("worker.result.size", 10);// 结果处理线程数
+				params.put("queue.store.path", "store");
+				params.put("queue.zbus.enabled", false);// ZBus队列,暂时单机版不使用，貌似性能还有些小问题
+				params.put("queue.zbus.broker", "jvm");// 1.jvm(进程内模式) 2.ip:port(单机模式) 3.[ip:port,ip:port](高可用多机模式)
 			}
 		}.build();
 		

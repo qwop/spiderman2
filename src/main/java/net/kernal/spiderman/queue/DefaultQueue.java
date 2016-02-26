@@ -48,4 +48,8 @@ public class DefaultQueue<E> implements Queue<E> {
 		queue.clear();
 	}
 
+	public void removeKeys(String group) {
+		
+	}
+
 }

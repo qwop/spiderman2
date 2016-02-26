@@ -10,13 +10,17 @@ public class ResultTask extends Task {
 	
 	private ExtractResult result;
 	
-	public ResultTask(ExtractTask task, boolean isUnique, ExtractResult result) {
-		super(task.getSeed(), task.getSource(), isUnique?"result_"+result.getPageName()+"#"+result.getModelName()+"#"+task.getSeed().getUrl()+"#"+task.getRequest().getUrl():null, task.getRequest());
+	public ResultTask(ExtractTask task, ExtractResult result) {
+		super(task.getSeed(), task.getSource(), task.getGroup(), task.getRequest());
 		this.result = result;
 	}
 	
 	public ExtractResult getResult() {
 		return result;
+	}
+	
+	public String getKey() {
+		return "result_"+result.getPageName()+"#"+result.getModelName()+"#"+getSeed().getUrl()+"#"+getRequest().getUrl();
 	}
 
 }

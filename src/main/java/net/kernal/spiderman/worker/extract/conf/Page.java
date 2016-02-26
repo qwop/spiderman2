@@ -21,7 +21,8 @@ public abstract class Page {
 	private Extractor.Builder extractorBuilder;
 	private UrlMatchRules rules;
 	private Models models;
-	private boolean isUnique;// 页面是否唯一
+	private boolean isPersisted;// 是否持久化
+	private boolean isClearable;// 持久化后, 重新开始时是否要清空
 	private Field.ValueFilter filter;//全局Filter，所有Model的所有Field都需要执行
 	
 	public Page(String name, Extractor.Builder extractorBuilder) {
@@ -44,13 +45,31 @@ public abstract class Page {
 		return this.filter;
 	}
 	
-	public Page setIsUnique(boolean bool) {
-		this.isUnique = bool;
+//	public Page setIsUnique(boolean bool) {
+//		this.isUnique = bool;
+//		return this;
+//	}
+	
+//	public boolean isUnique() {
+//		return this.isUnique;
+//	}
+	
+	public Page setIsPersisted(boolean bool) {
+		this.isPersisted = bool;
 		return this;
 	}
 	
-	public boolean isUnique() {
-		return this.isUnique;
+	public boolean isPersisted() {
+		return this.isPersisted;
+	}
+	
+	public Page setIsClearable(boolean bool) {
+		this.isClearable = bool;
+		return this;
+	}
+	
+	public boolean isClearable() {
+		return this.isClearable;
 	}
 	
 	public Page setExtractorBuilder(Extractor.Builder builder) {

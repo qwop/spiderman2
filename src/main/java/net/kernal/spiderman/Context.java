@@ -62,9 +62,8 @@ public class Context {
 			level = params.getByte("logger.level", Logger.LEVEL_INFO);
 		}
 		this.logger = new ConsoleLogger(Context.class, level);
-		
 		// 构建队列管理器
-		queueManager = new QueueManager(params, new ConsoleLogger(QueueManager.class, level));
+		queueManager = new QueueManager(conf, new ConsoleLogger(QueueManager.class, level));
 		final int limitOfResult = params.getInt("worker.result.limit", 0);
 		
 		// 构建下载管理器
@@ -155,7 +154,6 @@ public class Context {
 	
 	public void shutdown() {
 		this.queueManager.shutdown();
-		this.managers.clear();
 		logger.debug("退出...");
 	}
 	

@@ -99,7 +99,7 @@ public class ExtractWorker extends Worker {
 					if (fieldForNextPageUrl != null) {
 						final List<String> contents = new ArrayList<String>();
 						// 解析下一页
-						extractNextPage(entry, contents, task, builder, this);
+						extractNextPage(page, entry, contents, task, builder, this);
 						if (K.isNotEmpty(contents) && fieldForNextPageContent != null) {
 							result.getFields().put(fieldForNextPageContent.getName(), contents);
 						}
@@ -176,14 +176,14 @@ public class ExtractWorker extends Worker {
 					if (isSorted) {
 						Collections.sort(finalList);
 					}
-					final Object data = isArray ? finalList : finalList.stream().findFirst().get();
+					final Object data = isArray ? finalList : finalList.stream().findFirst().orElse(null);
 					entry.setData(data);
 				}
 			});
 		});
 	}
 	
-	private void extractNextPage(final ModelEntry entry, final List<String> appender, ExtractTask task, Extractor.Builder builder, Extractor.Callback callback) {
+	private void extractNextPage(final Page page, final ModelEntry entry, final List<String> appender, ExtractTask task, Extractor.Builder builder, Extractor.Callback callback) {
 		final Properties fields = entry.getFields();
 		final Model model = entry.getModel();
 		final Field fieldForNextPageUrl = model.getFieldForNextPageUrl();
@@ -200,8 +200,8 @@ public class ExtractWorker extends Worker {
 		// 下载
 		final Downloader.Request nextRequest = new Downloader.Request(nextPageUrl);
 		final Downloader.Response nextResponse = downloadWorker.download(nextRequest);
-		final DownloadTask downloadTask = new DownloadTask(task, true, nextRequest);
-		final ExtractTask nextTask = new ExtractTask(downloadTask, true, nextResponse);
+		final DownloadTask downloadTask = new DownloadTask(task, page.getName(), nextRequest);
+		final ExtractTask nextTask = new ExtractTask(downloadTask, nextResponse);
 		final Model nextModel = new Model(model.getPage(), model.getName(), Arrays.asList(fieldForNextPageUrl, fieldForNextPageContent));
 		nextModel.putAll(model);
 		final Extractor nextExtractor = builder.build(nextTask, model.getPage(), nextModel);
@@ -209,7 +209,7 @@ public class ExtractWorker extends Worker {
 		nextExtractor.extract(new Extractor.Callback(){
 			public void onModelExtracted(ModelEntry entry) {
 				// 递归
-				extractNextPage(entry, appender, task, builder, callback);
+				extractNextPage(page, entry, appender, task, builder, callback);
 			}
 			public void onFieldExtracted(FieldEntry entry) {
 				callback.onFieldExtracted(entry);

@@ -11,6 +11,7 @@ import org.zbus.net.http.Message;
 
 import net.kernal.spiderman.K;
 import net.kernal.spiderman.Spiderman;
+import net.kernal.spiderman.logger.Logger;
 import net.kernal.spiderman.queue.Queue.Element;
 
 /**
@@ -20,13 +21,12 @@ import net.kernal.spiderman.queue.Queue.Element;
  */
 public class ZBusQueue<E extends Element> implements Queue<E> {
 
-	private int beatPeriod = 5000;
-	private Broker broker;
+	private Logger logger;
 	private Producer producer;
 	private Consumer consumer;
 	
-	public ZBusQueue(Broker broker, String mq) {
-		this.broker = broker;
+	public ZBusQueue(Broker broker, String mq, Logger logger) {
+		this.logger = logger;
 	    final MqConfig cfg = new MqConfig(); 
 	    cfg.setBroker(broker);
 	    cfg.setMq(mq);
@@ -44,16 +44,12 @@ public class ZBusQueue<E extends Element> implements Queue<E> {
 	@SuppressWarnings("unchecked")
 	public E take() {
 		Message msg = null;
-		while(true){
-			try {
-				// 啥时候可以把beatPeriod干掉，这个应该是底层去实现的。
-				msg = consumer.recv(beatPeriod);
-				if(msg != null) {
-					break;
-				}
-			} catch (IOException | InterruptedException e) {
-				throw new Spiderman.Exception("zbus consumer recv error", e);
-			}
+		try {
+			msg = consumer.take();
+		} catch (InterruptedException e) {
+			return null;
+		} catch (IOException e) {
+			throw new Spiderman.Exception("zbus consumer recv error", e);
 		}
 		final byte[] data = msg.getBody();
 		return (E)K.deserialize(data);
@@ -63,13 +59,21 @@ public class ZBusQueue<E extends Element> implements Queue<E> {
 		byte[] data = K.serialize(e);
 		Message msg = new Message();
 		if (e instanceof AbstractElement) {
-			msg.setHead("key", ((AbstractElement)e).getKey());
+			AbstractElement ae = ((AbstractElement)e);
+			final String key = ae.getKey();
+			final String group = ae.getGroup();
+			msg.setKey(key);
+			msg.setKeyGroup(group);
 		}
 		msg.setBody(data);
 		try {
 			producer.sendAsync(msg, new ResultCallback<Message>() {
 				public void onReturn(Message result) {
-					// ignore
+					if (result.isStatus406()) {
+						logger.warn("队列消息重复[group="+msg.getKeyGroup()+", key="+msg.getKey()+"]");
+					} else if (!result.isStatus200()) {
+						logger.warn("队列消息发送失败[group="+msg.getKeyGroup()+", key="+msg.getKey()+"]:"+result.getBodyString());
+					}
 				}
 			});
 		} catch (IOException ex) {
@@ -79,10 +83,20 @@ public class ZBusQueue<E extends Element> implements Queue<E> {
 
 	public void clear() {
 		try {
+			String mq = this.consumer.getMq();
 			this.consumer.close();
-			this.broker.close();
-		} catch (IOException e) {
+			logger.debug("ZBus Queue["+mq+"] 停止");
+		} catch (Throwable e) {
 			throw new Spiderman.Exception("zbus client close error", e);
+		}
+	}
+	
+	public void removeKeys(String group) {
+		try {
+			this.producer.removeGroup(group);
+			logger.warn("删除Keys成功[mq="+this.producer.getMq()+", group="+group+"]");
+		} catch (Throwable e) {
+			logger.error("删除Keys失败[[mq="+this.producer.getMq()+", group="+group+"]", e);
 		}
 	}
 

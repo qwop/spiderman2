@@ -23,8 +23,8 @@ public abstract class Task extends Queue.AbstractElement {
 	/** 当前任务新发现的URL列表 */
 	private Collection<String> links;
 	
-	protected Task(Seed seed, Task source, String key, Downloader.Request request) {
-		super(key);
+	protected Task(Seed seed, Task source, String group, Downloader.Request request) {
+		super(group);
 		this.seed = seed;
 		this.source = source;
 		this.request = request;

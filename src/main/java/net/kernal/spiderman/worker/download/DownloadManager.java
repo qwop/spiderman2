@@ -9,7 +9,6 @@ import net.kernal.spiderman.worker.Worker;
 import net.kernal.spiderman.worker.WorkerManager;
 import net.kernal.spiderman.worker.WorkerResult;
 import net.kernal.spiderman.worker.extract.ExtractTask;
-import net.kernal.spiderman.worker.extract.conf.Page;
 
 /**
  * 下载工人驱动器 
@@ -28,7 +27,7 @@ public class DownloadManager extends WorkerManager {
 	/**
 	 * 从队列里获取任务
 	 */
-	protected Task takeTask() {
+	protected Task takeTask() throws InterruptedException {
 		return (Task)getQueueManager().getDownloadQueue().take();
 	}
 
@@ -45,8 +44,6 @@ public class DownloadManager extends WorkerManager {
 	protected void handleResult(WorkerResult wr) {
 		final Object result = wr.getResult();
 		final Task task = wr.getTask();
-		final Page page = wr.getPage();
-		final boolean isUnique = page == null ? false : page.isUnique();
 		if (!(result instanceof Downloader.Response)) {
 			throw new Spiderman.Exception("只接受Downloader.Response类型的结果");
 		}
@@ -54,7 +51,7 @@ public class DownloadManager extends WorkerManager {
 		long count = getCounter().plus();
 		Downloader.Response response = (Downloader.Response)result;
 		// 放入解析队列
-		getQueueManager().append(new ExtractTask((DownloadTask)task, isUnique, response));
+		getQueueManager().append(new ExtractTask((DownloadTask)task, response));
 		getLogger().info("下载了第"+count+"个网页: "+response);
 	}
 

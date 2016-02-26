@@ -81,6 +81,10 @@ public class Counter {
 		return this.limit;
 	}
 	
+	public boolean isTimeout() {
+		return this.getCost() >= this.timeout;
+	}
+	
 	public long get() {
 		return this.count.get();
 	}

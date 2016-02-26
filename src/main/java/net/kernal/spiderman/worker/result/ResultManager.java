@@ -31,7 +31,7 @@ public class ResultManager extends WorkerManager {
 		}
 	}
 
-	protected Task takeTask() {
+	protected Task takeTask() throws InterruptedException  {
 		return (Task)getQueueManager().getResultQueue().take();
 	}
 
