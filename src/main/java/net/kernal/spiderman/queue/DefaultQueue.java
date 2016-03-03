@@ -52,4 +52,9 @@ public class DefaultQueue<E> implements Queue<E> {
 		
 	}
 
+	@Deprecated
+	public void append(byte[] data) {
+		// reject
+	}
+
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.sleepycat.je.utilint.Timestamp;
 
 import net.kernal.spiderman.Context;
@@ -23,10 +24,6 @@ import net.kernal.spiderman.worker.result.ResultTask;
  */
 public class MyResultHandler implements net.kernal.spiderman.worker.extract.ExtractManager.ResultHandler {
 
-	private static class MapElement extends Properties implements Element {
-		private static final long serialVersionUID = 7024458991944966847L;
-	}
-	
 	/** 结果计数器 */
 	private final AtomicLong counter = new AtomicLong(0);
 	
@@ -63,7 +60,7 @@ public class MyResultHandler implements net.kernal.spiderman.worker.extract.Extr
 		}
 		
 		final String md5Key = K.md5(key);
-		final MapElement map = new MapElement();
+		final JSONObject map = new JSONObject();
 		map.put("title", title);
 		map.put("content", content);
 		map.put("url", url);
@@ -72,8 +69,9 @@ public class MyResultHandler implements net.kernal.spiderman.worker.extract.Extr
 		map.put("create_at", new Timestamp(new Date().getTime()));
 		map.put("update_at", map.get("create_at"));
 		
+		final byte[] body = map.toJSONString().getBytes();
 		// 往队列放最终结果，提供给其他消费者使用
-		queue.append(map);
+		queue.append(body);
 		final long count = counter.incrementAndGet();
 		final String info = String.format("发布第%s个结果[page=%s, model=%s, url=%s]:\r\n %s", count, pageName, modelName, url, JSON.toJSONString(map, true));
 		ctx.getLogger().warn(info);

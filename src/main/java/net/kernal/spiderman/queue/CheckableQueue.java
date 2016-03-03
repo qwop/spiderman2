@@ -52,5 +52,9 @@ public class CheckableQueue<E extends Element> implements Queue<E> {
 		public void clear();
 		public void removeKeys(String group);
 	}
+
+	@Deprecated
+	public void append(byte[] data) {
+	}
 	
 }

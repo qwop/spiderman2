@@ -100,4 +100,22 @@ public class ZBusQueue<E extends Element> implements Queue<E> {
 		}
 	}
 
+
+	@Override
+	public void append(byte[] data) {
+		Message msg = new Message();
+		msg.setBody(data);
+		try {
+			producer.sendAsync(msg, new ResultCallback<Message>() {
+				public void onReturn(Message result) {
+					if (!result.isStatus200()) {
+						logger.warn("队列消息发送失败[group="+msg.getKeyGroup()+", key="+msg.getKey()+"]:"+result.getBodyString());
+					}
+				}
+			});
+		} catch (IOException ex) {
+			throw new Spiderman.Exception("zbus producer invoke error", ex);
+		}
+	}
+
 }
