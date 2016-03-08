@@ -53,6 +53,9 @@ public abstract class Worker extends Thread {
 				task = manager.takeTask();
 			} catch (InterruptedException e) {
 				break;
+			} catch (Throwable e) {
+				getLogger().error("Failed to take task from manager!", e);
+				continue;
 			}
 			if (task == null) {
 				continue;
