@@ -53,8 +53,9 @@ public class BDbStore implements KVStore {
 	}
 	
 	public void removeKeys(String group) {
-		Database db = this.dbs.get(group);
+		Database db = dbs.get(group);
 		db.close();
+		dbs.remove(group);
 		env.removeDatabase(null, group);
 		DatabaseConfig dbCfg = new DatabaseConfig();
 		dbCfg.setAllowCreate(true);

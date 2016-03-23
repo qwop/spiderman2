@@ -39,8 +39,8 @@ public class ExtractManager extends WorkerManager {
 	protected void handleResult(WorkerResult wr) {
 		final Task task = wr.getTask();
 		final Object result = wr.getResult();
-		final Page page = wr.getPage();
-		final String group = page.getName();
+		Page page = wr.getPage();
+		String group = page.getName();
 		if (result instanceof ExtractResult) {
 			// 计数器加1
 			final long count = getCounter().plus();
@@ -50,6 +50,11 @@ public class ExtractManager extends WorkerManager {
 			getQueueManager().append(new ResultTask((ExtractTask)task, extractResult));
 		} else if (result instanceof Downloader.Request) {
 			final Downloader.Request request = (Downloader.Request)result;
+			// group应该是重新匹配Conf里的Pages来获得
+			page = this.pages.parallelStream()//多线程来做
+			.filter(pg -> pg.matches(request))//过滤，只要能匹配request的page
+			.findFirst().orElse(page);
+			group = page.getName();
 			getQueueManager().append(new DownloadTask((ExtractTask)task, group, request));
 		}
 	}

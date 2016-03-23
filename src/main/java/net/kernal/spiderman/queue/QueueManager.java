@@ -79,9 +79,10 @@ public class QueueManager {
 		    	.filter(p -> K.isNotBlank(p.getName()))
 		    	.forEach(p -> groups.add(p.getName()));
 			final RepeatableChecker checker = new RepeatableChecker(groups, storePath, logger);
+			final int capacity = params.getInt("queue.capacity", 5000);
 			queueBuilder = new Queue.Builder() {
 				public Queue<? extends Element> build(String queueName, Properties params, Logger logger) {
-				    return new CheckableQueue<Element>(new DefaultQueue<Element>(5000, logger), checker);
+				    return new CheckableQueue<Element>(new DefaultQueue<Element>(capacity, logger), checker);
 				}
 			};
 		}

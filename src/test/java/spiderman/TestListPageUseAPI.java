@@ -68,12 +68,12 @@ public class TestListPageUseAPI {
 			public void configParams(Properties params) {
 				params.put("logger.level", "DEBUG");
 				params.put("duration", "0");// 运行时间
-				params.put("scheduler.period", "5m");// 调度间隔时间，每隔固定时间重新将种子任务放入队列，并清除一些不需要持久化的消息key
-				params.put("worker.result.limit", 50);
-				params.put("worker.download.size", 10);// 下载线程数
+				params.put("scheduler.period", "1m");// 调度间隔时间，每隔固定时间重新将种子任务放入队列，并清除一些不需要持久化的消息key
+//				params.put("worker.result.limit", 30);
+				params.put("worker.download.size", 5);// 下载线程数
 //				params.put("worker.download.delay", "100");// 下载延迟时间，降低频率，免得被封
-				params.put("worker.extract.size", 10);// 解析线程数
-				params.put("worker.result.size", 10);// 结果处理线程数
+				params.put("worker.extract.size", 5);// 解析线程数
+				params.put("worker.result.size", 5);// 结果处理线程数
 				params.put("queue.store.path", "store");
 				params.put("queue.zbus.enabled", false);// ZBus队列,暂时单机版不使用，貌似性能还有些小问题
 				params.put("queue.zbus.broker", "jvm");// 1.jvm(进程内模式) 2.ip:port(单机模式) 3.[ip:port,ip:port](高可用多机模式)
