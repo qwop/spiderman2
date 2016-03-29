@@ -6,6 +6,7 @@ import java.net.URL;
 import java.util.Date;
 import java.util.List;
 
+import net.kernal.spiderman.K;
 import net.kernal.spiderman.Properties;
 
 /**
@@ -20,6 +21,8 @@ public interface Downloader {
 	public Downloader keepHeader(Downloader.Header header);
 
 	public Downloader keepCookie(Downloader.Cookie cookie);
+	
+	public void close();
 	
 	/**
 	 * HTTP请求
@@ -175,8 +178,8 @@ public interface Downloader {
 		}
 
 		public String getBodyStr() {
-			if (bodyStr == null) {
-				bodyStr = new String(this.body);
+			if (bodyStr == null && body != null) {
+				bodyStr = K.byteToStringForHtml(body, charset);
 			}
 			return bodyStr;
 		}

@@ -56,6 +56,7 @@ public class DownloadManager extends WorkerManager {
 	}
 
 	protected void clear() {
+		this.downloader.close();
 	}
 
 }

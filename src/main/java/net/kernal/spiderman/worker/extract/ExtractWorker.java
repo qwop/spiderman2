@@ -59,8 +59,9 @@ public class ExtractWorker extends Worker {
 	public void work(Task t) {
 		final WorkerManager manager = getManager();
 		this.work(t, (page, result) -> {
-			final WorkerResult extractResult = new WorkerResult(page, t, result);
 			if (manager != null) {
+				//将工作结果呈报给经理
+				final WorkerResult extractResult = new WorkerResult(page, t, result);
 				manager.done(extractResult);
 			}
 		});
@@ -70,6 +71,7 @@ public class ExtractWorker extends Worker {
 		final ExtractTask task = (ExtractTask)t;
 		final Collection<String> links = task.getSourceUrlsAndLinks();
 		final Downloader.Response response = task.getResponse();
+		final String responseBody = response.getBodyStr();
 		final Downloader.Request request = response.getRequest();
 		this.pages.parallelStream()//多线程来做
 		.filter(page -> page.matches(request))//过滤，只要能匹配request的page
@@ -92,7 +94,7 @@ public class ExtractWorker extends Worker {
 					} 
 					final Properties fields = entry.getFields();
 					modelsCtx.put(modelName, fields);
-					final ExtractResult result = new ExtractResult(pageName, modelName, fields);
+					final ExtractResult result = new ExtractResult(pageName, responseBody, modelName, fields);
 					// 处理isForNextPage的field
 					final Field fieldForNextPageUrl = entry.getModel().getFieldForNextPageUrl();
 					final Field fieldForNextPageContent = entry.getModel().getFieldForNextPageContent();

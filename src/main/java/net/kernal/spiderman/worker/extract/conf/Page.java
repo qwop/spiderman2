@@ -22,7 +22,6 @@ public abstract class Page {
 	private UrlMatchRules rules;
 	private Models models;
 	private boolean isPersisted;// 是否持久化
-	private boolean isClearable;// 持久化后, 重新开始时是否要清空
 	private Field.ValueFilter filter;//全局Filter，所有Model的所有Field都需要执行
 	
 	public Page(String name, Extractor.Builder extractorBuilder) {
@@ -45,31 +44,16 @@ public abstract class Page {
 		return this.filter;
 	}
 	
-//	public Page setIsUnique(boolean bool) {
-//		this.isUnique = bool;
-//		return this;
-//	}
-	
-//	public boolean isUnique() {
-//		return this.isUnique;
-//	}
-	
 	public Page setIsPersisted(boolean bool) {
 		this.isPersisted = bool;
 		return this;
 	}
 	
+	/**
+	 * 是否持久化，在每一次重新调度采集任务的时候，持久化的内容是不会被清除的，但是非持久化的页面内容都会被删除掉。
+	 */
 	public boolean isPersisted() {
 		return this.isPersisted;
-	}
-	
-	public Page setIsClearable(boolean bool) {
-		this.isClearable = bool;
-		return this;
-	}
-	
-	public boolean isClearable() {
-		return this.isClearable;
 	}
 	
 	public Page setExtractorBuilder(Extractor.Builder builder) {

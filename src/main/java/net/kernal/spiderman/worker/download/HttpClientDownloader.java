@@ -1,5 +1,6 @@
 package net.kernal.spiderman.worker.download;
 
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -183,6 +184,14 @@ public class HttpClientDownloader implements Downloader {
 		}
 		RequestConfig reqCfg = builder.build();
 		return reqCfg;
+	}
+	
+	public void close() {
+		try {
+			this.httpClient.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 }

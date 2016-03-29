@@ -1,5 +1,6 @@
 package net.kernal.spiderman;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -19,7 +20,6 @@ import net.kernal.spiderman.queue.QueueManager;
 import net.kernal.spiderman.worker.WorkerManager;
 import net.kernal.spiderman.worker.download.DownloadManager;
 import net.kernal.spiderman.worker.download.Downloader;
-import net.kernal.spiderman.worker.download.HttpClientDownloader;
 import net.kernal.spiderman.worker.extract.ExtractManager;
 import net.kernal.spiderman.worker.extract.ExtractManager.ResultHandler;
 import net.kernal.spiderman.worker.extract.conf.Page;
@@ -67,7 +67,19 @@ public class Context {
 		final int limitOfResult = params.getInt("worker.result.limit", 0);
 		
 		// 构建下载管理器
-		final Downloader downloader = new HttpClientDownloader(params);
+		final String downloaderClassName = params.getString("worker.download.class", "net.kernal.spiderman.worker.download.HttpClientDownloader");
+		final Class<Downloader> downloaderClass = K.loadClass(downloaderClassName);
+		final Downloader downloader;
+		try {
+			final Constructor<Downloader> ct = downloaderClass.getConstructor(Properties.class);
+			if (ct != null) {
+				downloader = ct.newInstance(params);
+			} else {
+				downloader = downloaderClass.newInstance();
+			}
+		} catch (Exception e) {
+			throw new Spiderman.Exception("下载器[worker.download.class="+downloaderClassName+"]实例化失败", e);
+		}
 		final boolean enabled1 = params.getBoolean("worker.download.enabled", true);
 		if (enabled1) {
 			final int limit = params.getInt("worker.download.result.limit", limitOfResult);

@@ -73,6 +73,11 @@ public class HtmlUnitDownloader implements Downloader {
 		return this;
 	}
 	
+	@Override
+	public void close() {
+		this.client.close();
+	}
+	
 	public static void main(String[] args) {
 		final String url = "http://www.tianyancha.com/search?base=%E5%B9%BF%E4%B8%9C";
 		Downloader downloader = new HtmlUnitDownloader();

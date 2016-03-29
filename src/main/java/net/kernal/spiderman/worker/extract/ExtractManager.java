@@ -1,5 +1,6 @@
 package net.kernal.spiderman.worker.extract;
 
+import java.io.File;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -71,6 +72,10 @@ public class ExtractManager extends WorkerManager {
 		AtomicReference<Context> context = new AtomicReference<Context>();
 		public default void init(Context ctx){
 			context.set(ctx);
+			final File dir = new File(ctx.getParams().getString("worker.result.store", "store/result"));
+			if (!dir.exists()) {
+				dir.mkdirs();
+			}
 		}
 		public void handle(ResultTask task, Counter c);
 	}
