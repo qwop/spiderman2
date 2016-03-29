@@ -1,124 +1,135 @@
 package net.kernal.spiderman;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.logging.Logger;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
+import net.kernal.spiderman.logger.ConsoleLogger;
+import net.kernal.spiderman.logger.Logger;
 import net.kernal.spiderman.worker.WorkerManager;
+import net.kernal.spiderman.worker.download.DownloadTask;
 
 /**
- * 蜘蛛侠，根据预言之子设定的目标引领蜘蛛大军开展网络世界采集行动。
- * @author 赖伟威 l.weiwei@163.com 2015-12-01
- * @author 赖伟威 l.weiwei@163.com 2015-12-30
- * @author 赖伟威 l.weiwei@163.com 2016-01-04
+ * 客户端类 
  */
 public class Spiderman {
 
-	public static final Logger logger = Logger.getLogger(Spiderman.class.getName());
+	private Logger logger;
 	
-	private ExecutorService threads;
-	private List<WorkerManager> workerManagers;
+	private ScheduledExecutorService scheduler;
+	
 	private Context context;
+	private Collection<WorkerManager> managers;
+	private ExecutorService threads;
+	private Counter counter;
+	private long duration;
 	
 	public Spiderman(Context context) {
 		this.context = context;
-		
-		// 6个包工头
-		this.workerManagers = new ArrayList<WorkerManager>(6);
-		this.threads = Executors.newFixedThreadPool(6);
-		
-		final WorkerManager.Builder builder = new WorkerManager.Builder(context);
-		
-		final int dpts1 = context.getConf().getProperties().getInt("downloader.primary.threadSize", 1);
-		if (dpts1 > 0) {
-			this.workerManagers.add(builder.buildPrimaryDownloadWorkerManager(dpts1));
-		}
-		
-		final int dpts2 = context.getConf().getProperties().getInt("downloader.secondary.threadSize", 1);
-		if (dpts2 > 0) {
-			this.workerManagers.add(builder.buildSecondaryDownloadWorkerManager(dpts2));
-		}
-		
-		final int ppts1 = context.getConf().getProperties().getInt("parser.primary.threadSize", 1);
-		if (ppts1 > 0) {
-			this.workerManagers.add(builder.buildPrimaryParseWorkerManager(ppts1));
-		}
-		
-		final int ppts2 = context.getConf().getProperties().getInt("parser.secondary.threadSize", 1);
-		if (ppts2 > 0) {
-			this.workerManagers.add(builder.buildSecondaryParseWorkerManager(ppts2));
-		}
-		
-		final int rts = context.getConf().getProperties().getInt("result.threadSize", 1);
-		if (rts > 0) {
-			this.workerManagers.add(builder.buildResultWorkerManager(rts));
-		}
+		final Properties params = context.getParams();
+		final byte level = params.getByte("logger.level", Logger.LEVEL_INFO);
+		this.logger = new ConsoleLogger(Spiderman.class, level);
+		this.scheduler = Executors.newSingleThreadScheduledExecutor();
+		this.managers = context.getManagers();
+		this.managers.forEach(m -> {
+			m.addListener(() -> { 
+				counter.plus(); 
+			});
+		});
+		this.threads = Executors.newFixedThreadPool(managers.size());
+		duration = K.convertToMillis(params.getString("duration", "0")).longValue();
+		counter = new Counter(managers.size(), duration);
 	}
 	
-	/**
-	 * 开展行动
-	 */
 	public Spiderman go() {
-		// 将种子添加到队列里
-		this.context.getConf().getSeeds().all().forEach((seed) -> {
-			this.context.getQueueManager().put(seed, 0);
-		}); 
-		// 状态报告: 行动开始了
-		this.context.getConf().getReportings().reportStart();
-		// 让包工头们开始工作了
-		this.workerManagers.forEach(manager -> {
-			this.threads.execute(manager);
+		this.logger.debug("开始行动...");
+		// 启动各个工头
+		this.managers.forEach(m -> threads.execute(m));
+		// 调度, 固定一段时间清除种子和一些中间过程任务，重新将种子放入任务队列
+		final InitialSeeds initSeeds = new InitialSeeds();
+		final long period = K.convertToMillis(context.getParams().getString("scheduler.period", "0")).longValue();
+		if (period > 0) {
+			this.scheduler.scheduleAtFixedRate(initSeeds, 5000, period, TimeUnit.MILLISECONDS);
+		} else {
+			initSeeds.execute();
+		}
+
+		Thread thread = new Thread(() -> {
+			// 阻塞等待计数器归0
+			try {
+				this.counter.await();
+			} finally {
+				if (this.counter.isTimeout()) {
+					// 若是超时退出，先关闭manager
+					logger.warn("运行时间["+this.counter.getCost()+"]已经达到或超过设置的最大运行时间[duration="+this.duration+"],将强行停止行动");
+					this.stop();
+				} else {
+					logger.warn("当前采集的结果数["+this.counter.get()+"]已经达到或超过设置的最大数量[worker.result.limit="+this.counter.getLimit()+"],将强行停止行动");
+				}
+				this._stop();
+			}
 		});
-		// 坐下来喝杯茶，耐心等待工人们的结果
-		this._holding();
-		return this;
-	}
-	
-	public Spiderman stop() {
-		this.threads.shutdownNow();
-		this.workerManagers.forEach(w -> {
-			w.shutdown();
-		});
-		this.context.getConf().getReportings().reportStop(this.context.getCounter());
+		thread.start();
 		
 		return this;
 	}
 	
-	private void _holding() {
-		if (this.context.getCounter().getCountDown() != null) {
+	public void stop() {
+		this.managers.forEach(m -> m.shutdownAndWait());
+	}
+	
+	private void _stop() {
+		this.scheduler.shutdownNow();
+		logger.debug("调度器关闭...");
+		this.threads.shutdownNow();
+		logger.debug("工头线程池关闭...");
+		this.context.shutdown();
+	}
+	
+	// 初始化种子
+	private class InitialSeeds implements Runnable {
+		public void run() {
+			logger.debug("调度...");
+			// 清除掉一些消息
 			try {
-				this.context.getCounter().getCountDown().await();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+				logger.warn("开始清除Keys");
+				context.getQueueManager().removeKeys("seeds");
+				logger.warn("清除Keys成功[group=seeds]");
+				context.getConf().getPages().all().parallelStream()
+					.filter(p -> !p.isPersisted())
+					.map(p -> p.getName())
+					.forEach(group -> {
+						context.getQueueManager().removeKeys(group);
+						logger.warn("清除Keys成功[group="+group+"]");
+					});
+			} catch (Throwable e) {
+				logger.error("清除Keys失败", e);
 			}
-			stop();
-			System.exit(-1);
-			return;
-		} else {
-			Long l = null;
-			String duration = this.context.getConf().getProperties().getString("duration");
-			if (K.isNotBlank(duration)) {
-				try {
-					long t = K.convertToSeconds(duration).longValue()*1000L;
-					l = new Long(t);
-				} catch (Throwable e){}
-			}
-			
+			this.execute();
+		}
+		public void execute() {
+			logger.debug("准备初始化种子...");
 			try {
-				if (l == null) {
-					Thread.currentThread().join();
-				} else {
-					Thread.currentThread().join(l);
-					System.err.println("[Spiderman][由于配置了duration="+this.context.getConf().getProperties().get("duration")+",现在到时间了需要强制退出,若出现异常请以平常心对待]"+K.formatNow());
-				}
-				stop();
-				System.exit(-1);
-			} catch (InterruptedException e) {
-				stop();
-				System.exit(-1);
+				// 往队列里添加种子
+				context.getSeeds().all().parallelStream()
+					.map(seed -> new DownloadTask(seed, "seeds"))
+					.forEach(task -> context.getQueueManager().append(task));
+				logger.debug("初始化种子成功...");
+			} catch (Throwable e) {
+				logger.error("初始化种子失败", e);
 			}
+		}
+	}
+	
+	public static class Exception extends RuntimeException {
+		private static final long serialVersionUID = 2703000025276351774L;
+		public Exception(String msg) {
+			super(msg);
+		}
+		public Exception(String msg, Throwable cause) {
+			super(msg, cause);
 		}
 	}
 	

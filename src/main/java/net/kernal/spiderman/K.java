@@ -1,15 +1,22 @@
 package net.kernal.spiderman;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -133,33 +140,43 @@ public class K {
 	 * @param strTime 比如 1h 1h1m1s
 	 * @return
 	 */
-	public static BigDecimal convertToSeconds(String strTime) {
+	public static BigDecimal convertToMillis(String strTime) {
 		BigDecimal time = new BigDecimal("0");
         for (String s : strTime.split(" ")) {
-        	BigDecimal _time = _convertToSeconds(s);
+        	BigDecimal _time = _convertToMillis(s);
         	time = time.add(_time);
         }
 
         return time;
     }
 
-    private static BigDecimal _convertToSeconds(String strTime) {
-        float time = 0F;
+    private static BigDecimal _convertToMillis(String strTime) {
+    	if (isBlank(strTime)) {
+    		return null;
+    	}
+    	
         try {
-            if (strTime.endsWith("s")) {
-                time = Float.parseFloat(strTime.replace("s", "")) * 1;
+        	Float time;
+        	if (strTime.endsWith("ms")) {
+                time = Float.parseFloat(strTime.replace("ms", "")) * 1;
+            } else if (strTime.endsWith("s")) {
+                time = Float.parseFloat(strTime.replace("s", "")) * 1000;
             } else if (strTime.endsWith("m")) {
-                time = Float.parseFloat(strTime.replace("m", "")) * 60;
+                time = Float.parseFloat(strTime.replace("m", "")) * 60 * 1000;
             } else if (strTime.endsWith("h")) {
-                time = Float.parseFloat(strTime.replace("h", "")) * 60 * 60;
+                time = Float.parseFloat(strTime.replace("h", "")) * 60 * 60 * 1000;
             } else if (strTime.endsWith("d")) {
-                time = Float.parseFloat(strTime.replace("d", "")) * 60 * 60 * 24;
-            } else time = Float.parseFloat(strTime);
+                time = Float.parseFloat(strTime.replace("d", "")) * 60 * 60 * 24 * 1000;
+            } else if (strTime.endsWith("y")) {
+                time = Float.parseFloat(strTime.replace("y", "")) * 60 * 60 * 24 * 365 * 1000;
+            } else {
+            	time = Float.parseFloat(strTime);
+            }
+        	return new BigDecimal(String.valueOf(time));
         } catch (Throwable e) {
-
+        	e.printStackTrace();
+        	return null;
         }
-
-        return new BigDecimal(String.valueOf(time));
     }
     
     /**
@@ -312,7 +329,13 @@ public class K {
     public final static String byteToStringForHtml(byte[] htmlData, String charsetName) {
     	if (htmlData == null || htmlData.length == 0) 
     		return null;
-    	Charset charset = Charset.forName(charsetName);
+    	Charset charset = null;
+    	if (K.isNotBlank(charsetName)) {
+	    	try {
+	    		charset = Charset.forName(charsetName);
+	    	} catch (Throwable e) {
+	    	}
+    	}
     	if (charset == null) {
 	    	String input = byteToString(htmlData);
 			String html = input.trim().toLowerCase();
@@ -346,15 +369,73 @@ public class K {
     	SimpleDateFormat sdf = new SimpleDateFormat(format);
     	return sdf.format(time);
     }
-    public static List<String> readLine(File f) {
-		return readLine(f, "utf-8");
+    
+    public static File loadFile(String resource) {
+		ClassLoader classLoader = null;
+		try {
+			Method method = Thread.class.getMethod("getContextClassLoader");
+			classLoader = (ClassLoader) method.invoke(Thread.currentThread());
+		} catch (Exception e) {
+		}
+		if (classLoader == null) {
+			classLoader = K.class.getClassLoader();
+		}
+		try {
+			if (classLoader != null) {
+				URL url = classLoader.getResource(resource);
+				if (url == null) {
+					return null;
+				}
+				return new File(url.toURI());
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		return null;
+	} 
+    
+    public static InputStream asStream(String resource) {
+		ClassLoader classLoader = null;
+		try {
+			Method method = Thread.class.getMethod("getContextClassLoader");
+			classLoader = (ClassLoader) method.invoke(Thread.currentThread());
+		} catch (Exception e) {
+		}
+		if (classLoader == null) {
+			classLoader = K.class.getClassLoader();
+		}
+		try {
+			if (classLoader != null) {
+				URL url = classLoader.getResource(resource);
+				if (url == null) {
+					throw new FileNotFoundException(resource);
+				}
+				if (url.toString().startsWith("jar:file:")) { 
+					return K.class.getResourceAsStream(resource.startsWith("/") ? resource : "/" + resource);
+				} 
+				
+				return new FileInputStream(new File(url.toURI()));
+			}
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		return null;
+	} 
+    
+    public static List<String> readLine(String path) {
+    	final InputStream is = K.asStream(path);
+		return readLine(is);
+	}
+    
+    public static List<String> readLine(InputStream is) {
+		return readLine(is, "utf-8");
 	}
 	
-	public static List<String> readLine(File f, String charset) {
+	private static List<String> readLine(InputStream is, String charset) {
 		List<String> result = new ArrayList<String>();
 		BufferedReader reader = null;
 		try {
-			reader = new BufferedReader(new InputStreamReader(new FileInputStream(f), charset));
+			reader = new BufferedReader(new InputStreamReader(is, charset));
 			String line = null;
 			while ((line = reader.readLine()) != null)
 				result.add(line);
@@ -373,29 +454,49 @@ public class K {
 		return result;
 	}
 	
-	public static String readFile(File f) {
-		return readFile(f, null);
+	public static String readFile(InputStream is) {
+		return readFile(is, null);
 	}
 	
-	public static String readFile(File file,String charset) {
+	public static String readFile(InputStream is,String charset) {
 		StringBuilder lines = new StringBuilder();
-		K.readLine(file, charset).forEach(line -> {
+		K.readLine(is, charset).forEach(line -> {
 			if (lines.length() > 0) lines.append("\r\n");
 			lines.append(line);
 		});
 		return lines.toString();
 	}
 	
+	 public static void writeFile(File f, String content) throws IOException {
+	        writeFile(f, content, "utf-8");
+	    }
+	    public static void writeFile(File f, String content,String charset) throws IOException {
+	        BufferedWriter writer = null;
+	        try {
+	            writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), charset));
+	            writer.write(content);
+	        } finally {
+	            if (writer != null) {
+	                try {
+	                    writer.flush();
+	                    writer.close();
+	                } catch (IOException e) {
+	                    e.printStackTrace();
+	                }
+	            }
+	        }
+	    }
+	
 	@SuppressWarnings("unchecked")
 	public final static <T> Class<T> loadClass(final String className) {
 		try {
 			return (Class<T>) Thread.currentThread().getContextClassLoader().loadClass(className);
 		} catch (ClassNotFoundException e) {
-			return null;
+			throw new RuntimeException(e);
 		}
 	}
 	
-	public final static byte[] serialize(Object object) {
+	public final static byte[] serialize(Serializable object) {
 		ObjectOutputStream oos = null;
 		ByteArrayOutputStream bos = null;
 		try {
@@ -453,5 +554,15 @@ public class K {
         return input;
     }
 	
+	public final static String join(Collection<String> collection, String connect) {
+		final StringBuilder sb = new StringBuilder();
+		collection.forEach(line -> {
+			if (sb.length() > 0) {
+				sb.append(connect);
+			}
+			sb.append(line);
+		});
+		return sb.toString();
+	}
 	
 }
