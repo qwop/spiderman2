@@ -17,6 +17,10 @@ public interface Downloader {
 
 	public Response download(Request request);
 	
+	public Downloader keepHeader(Downloader.Header header);
+
+	public Downloader keepCookie(Downloader.Cookie cookie);
+	
 	/**
 	 * HTTP请求
 	 * @author 赖伟威 l.weiwei@163.com 2015-12-10

@@ -52,7 +52,7 @@ public class DownloadManager extends WorkerManager {
 		Downloader.Response response = (Downloader.Response)result;
 		// 放入解析队列
 		getQueueManager().append(new ExtractTask((DownloadTask)task, response));
-		getLogger().info("下载了第"+count+"个网页: "+response);
+		getLogger().info("下载了第"+count+"个网页: "+response.getBodyStr());
 	}
 
 	protected void clear() {
