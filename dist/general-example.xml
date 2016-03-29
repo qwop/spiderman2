@@ -9,8 +9,6 @@
     <!-- <property key="worker.result.handler" value="net.kernal.spiderman.Bootstrap$ConsoleResultHandler" /> -->
 	<!-- <property key="worker.result.handler" value="net.kernal.spiderman.Bootstrap$FileBodyResultHandler" /> -->
     <property key="worker.result.handler" value="net.kernal.spiderman.Bootstrap$FileJsonResultHandler" />
-    <property key="queue.element.repeatable" value="false" /><!-- 队列元素是否允许重复，默认允许，若不允许，则使用重复检查器在元素入队列前进行检查 -->
-    <property key="queue.checker.bdb.file" value="store/checker" /><!-- 检查器需要用到BDb存储 -->
     <seed url="http://news.163.com/domestic/" /><!-- 写死种子入口的方式 -->
     <extract><!-- 页面抽取规则 -->
         <extractor name="Text" class="net.kernal.spiderman.worker.extract.TextExtractor" isDefault="1" /><!-- 正文抽取器,默认 -->
