@@ -43,7 +43,7 @@ public class Bootstrap {
 			final String content = er.getResponseBody();
 			final Context ctx = context.get();
 			final String validName = url.replace("\\", "_").replace("/", "_").replace(":", "_").replace("*", "_").replace("?", "_").replace("\"", "_").replace("<", "_").replace(">", "_").replace("|", "_");
-			final String fileName = String.format("/body_result_%s_%s_%s_%s.txt", c, er.getPageName(), er.getModelName(), validName);
+			final String fileName = String.format("/body_result_%s_%s_%s_%s.txt", c.get(), er.getPageName(), er.getModelName(), validName);
 			final String path = ctx.getParams().getString("worker.result.store", "store/result") + fileName;
 			File file = new File(path);
 			try {
@@ -63,7 +63,7 @@ public class Bootstrap {
 			final String json =  JSON.toJSONString(er.getFields(), true);
 			final Context ctx = context.get();
 			final String validName = url.replace("\\", "_").replace("/", "_").replace(":", "_").replace("*", "_").replace("?", "_").replace("\"", "_").replace("<", "_").replace(">", "_").replace("|", "_");
-			final String fileName = String.format("/json_result_%s_%s_%s_%s.json", c, er.getPageName(), er.getModelName(), validName);
+			final String fileName = String.format("/json_result_%s_%s_%s_%s.json", c.get(), er.getPageName(), er.getModelName(), validName);
 			final String path = ctx.getParams().getString("worker.result.store", "store/result") + fileName;
 			File file = new File(path);
 			try {
