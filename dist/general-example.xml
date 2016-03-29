@@ -2,9 +2,9 @@
 <spiderman name="网易国内新闻采集">
     <property key="duration" value="60s" /><!-- 运行时间 0 表示永久，可以给 {n}s {n}m {n}h {n}d -->
     <property key="logger.level" value="INFO" /><!-- 日志级别 INFO DEBUG WARN ERROR OFF -->
-    <property key="worker.download.size" value="10" /><!-- 下载线程数 -->
-    <property key="worker.extract.size" value="10" /><!-- 页面抽取线程数 -->
-    <property key="worker.result.size" value="10" /><!-- 结果处理线程数 -->
+    <property key="worker.download.size" value="20" /><!-- 下载线程数 -->
+    <property key="worker.extract.size" value="20" /><!-- 页面抽取线程数 -->
+    <property key="worker.result.size" value="20" /><!-- 结果处理线程数 -->
 	<property key="worker.result.limit" value="100" /><!-- 限制采集的结果数量 -->
     <!-- <property key="worker.result.handler" value="net.kernal.spiderman.Bootstrap$ConsoleResultHandler" /> -->
 	<!-- <property key="worker.result.handler" value="net.kernal.spiderman.Bootstrap$FileBodyResultHandler" /> -->
