@@ -6,7 +6,7 @@
     <property key="worker.download.size" value="1" /><!-- 下载线程数 -->
     <property key="worker.extract.size" value="1" /><!-- 页面抽取线程数 -->
     <property key="worker.result.size" value="1" /><!-- 结果处理线程数 -->
-    <property key="worker.result.handler" value="net.kernal.spiderman.Bootstrap$ResultHandler" />
+    <property key="worker.result.handler" value="net.kernal.spiderman.Bootstrap$ConsoleResultHandler" />
     <property key="queue.store.path" value="store" /><!-- 检查器需要用到BDb存储 -->
     <seed url="http://localhost:1989/items" /><!-- 写死种子入口的方式 -->
     <extract><!-- 页面抽取规则 -->

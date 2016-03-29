@@ -6,7 +6,7 @@
     <property key="worker.download.size" value="10" /><!-- 下载线程数 -->
     <property key="worker.extract.size" value="10" /><!-- 页面抽取线程数 -->
     <property key="worker.result.size" value="10" /><!-- 结果处理线程数 -->
-    <property key="worker.result.handler" value="net.kernal.spiderman.Bootstrap$ResultHandler" />
+    <property key="worker.result.handler" value="net.kernal.spiderman.Bootstrap$ConsoleResultHandler" />
     <property key="queue.store.path" value="store" /><!-- 存储文件的路径 -->
     <property key="queue.zbus.enabled" value="0" /><!-- 是否使用ZBus队列，暂时单机版不用，貌似性能还有问题 -->
     <property key="queue.zbus.broker" value="jvm" /><!-- ZBus服务地址,三种模式：1.jvm(本地模式) 2.ip:port(single模式) 3.[ip:port,ip:port](ha模式) -->
@@ -14,10 +14,10 @@
     <extract><!-- 页面抽取规则 -->
         <extractor name="Text" class="net.kernal.spiderman.worker.extract.TextExtractor" isDefault="1" /><!-- 正文抽取器 -->
         <extractor name="Links" class="net.kernal.spiderman.worker.extract.LinksExtractor" /><!-- 链接抽取器 -->
-        <page name="内容页" isUnique="1" extractor="Text"><!-- 如果不配置extractor属性，则使用默认的 -->
+        <page name="内容页" isPersisted="1" extractor="Text"><!-- 如果不配置extractor属性，则使用默认的 -->
 			<url-match-rule type="regex" value="^http://news\.163\.com/\d+/\d+/\d+/.*\.html#f\=dlist$" />
 		</page>
-		<page name="列表页" isUnique="1" extractor="Links">
+		<page name="列表页" extractor="Links">
 			<url-match-rule type="regex">
 			^http://news\.163\.com/((domestic/)|(special/0001124J/guoneinews_\d+\.html#headList))$
 			</url-match-rule>

@@ -20,15 +20,24 @@ public class ExtractResult implements Serializable {
 	 * 字段值
 	 */
 	private Properties fields;
+	/**
+	 * 响应内容体
+	 */
+	private String responseBody;
 	
-	public ExtractResult(String pageName, String modelName, Properties fields) {
+	public ExtractResult(String pageName, String responseBody, String modelName, Properties fields) {
 		this.pageName = pageName;
+		this.responseBody = responseBody;
 		this.modelName = modelName;
 		this.fields = fields;
 	}
 
 	public String getPageName() {
 		return this.pageName;
+	}
+	
+	public String getResponseBody() {
+		return this.responseBody;
 	}
 	
 	public String getModelName() {

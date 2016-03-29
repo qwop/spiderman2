@@ -57,7 +57,8 @@ public class DownloadWorker extends Worker {
 		// 处理响应体文本编码问题
 		String charsetName = K.getCharsetName(response.getCharset());
 		if (K.isBlank(charsetName)) {
-			charsetName = getCharsetFromBodyStr(response.getBodyStr());
+			// 获取HTML里面的charset
+			charsetName = getCharsetFromBodyStr(new String(response.getBody()));
 		}
 		if (K.isNotBlank(charsetName)) {
 			response.setCharset(charsetName);

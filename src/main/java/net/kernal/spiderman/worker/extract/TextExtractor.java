@@ -38,6 +38,7 @@ public class TextExtractor extends Extractor {
 		fields.put("url", response.getRequest().getUrl());
 		fields.put("title", K.trim(title));
 		fields.put("text", K.trim(text));
+		fields.put("html", html);
 		Model model = new Model(getPage(), "text");
 		callback.onModelExtracted(new ModelEntry(model, fields));
 	}

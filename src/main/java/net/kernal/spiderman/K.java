@@ -1,16 +1,19 @@
 package net.kernal.spiderman;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStreamWriter;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
@@ -326,7 +329,13 @@ public class K {
     public final static String byteToStringForHtml(byte[] htmlData, String charsetName) {
     	if (htmlData == null || htmlData.length == 0) 
     		return null;
-    	Charset charset = Charset.forName(charsetName);
+    	Charset charset = null;
+    	if (K.isNotBlank(charsetName)) {
+	    	try {
+	    		charset = Charset.forName(charsetName);
+	    	} catch (Throwable e) {
+	    	}
+    	}
     	if (charset == null) {
 	    	String input = byteToString(htmlData);
 			String html = input.trim().toLowerCase();
@@ -457,6 +466,26 @@ public class K {
 		});
 		return lines.toString();
 	}
+	
+	 public static void writeFile(File f, String content) throws IOException {
+	        writeFile(f, content, "utf-8");
+	    }
+	    public static void writeFile(File f, String content,String charset) throws IOException {
+	        BufferedWriter writer = null;
+	        try {
+	            writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(f), charset));
+	            writer.write(content);
+	        } finally {
+	            if (writer != null) {
+	                try {
+	                    writer.flush();
+	                    writer.close();
+	                } catch (IOException e) {
+	                    e.printStackTrace();
+	                }
+	            }
+	        }
+	    }
 	
 	@SuppressWarnings("unchecked")
 	public final static <T> Class<T> loadClass(final String className) {

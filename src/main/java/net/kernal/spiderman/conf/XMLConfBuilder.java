@@ -185,7 +185,7 @@ public class XMLConfBuilder extends DefaultConfBuilder {
 					final String extractorName = fields.getString("extractor", defaultExtractorNames.get());
 			    	handleExtractor(page, extractorName);
 					
-			    	// 处理scope＝page的filter
+			    	// 处理<page filter="">
 			    	final String filterName = fields.getString("filter");
 			    	if (K.isNotBlank(filterName)) {
 			    		Field.ValueFilter ft = conf.getFilters().all().get(filterName);
