@@ -1,4 +1,4 @@
-package spiderman;
+package test;
 
 import java.util.Arrays;
 

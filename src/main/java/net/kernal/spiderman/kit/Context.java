@@ -35,7 +35,6 @@ public class Context {
 	private TaskManager taskManager;
 	private List<WorkerManager> workerManagers;
 	private ScriptEngine scriptEngine;
-	private Downloader.Listener downloadListener;
 	private Downloader downloader;
 	
 	public Context(Config conf) {
@@ -70,6 +69,7 @@ public class Context {
 			// 设置Cookie给Downloader
 			conf.getCookies().all().parallelStream().forEach(c -> downloader.keepCookie(c));
 			// 处理Download监听器
+			final Downloader.Listener downloadListener;
 			final String downloadListenerClassName = params.getString("worker.download.listener");
 			if (K.isNotBlank(downloadListenerClassName)) {
 				final Class<Downloader.Listener> downloadListenerClass = K.loadClass(downloadListenerClassName);
@@ -82,11 +82,10 @@ public class Context {
 				downloadListener = conf.getDownloadListener();
 			}
 			downloader.setListener(downloadListener);
-			if (downloadListener != null) {
+			if (downloader.getListener() != null) {
 				// 通知监听器初始化
 				// 另外开启一个线程去做这个事情，等待监听器完成它的工作后才继续
-				
-				Thread t = new Thread(()->downloadListener.init(Context.this));
+				Thread t = new Thread(()->downloader.getListener().init(Context.this));
 				t.start();
 				t.join();
 			}
@@ -204,9 +203,6 @@ public class Context {
 		});
 	}
 	
-	public Downloader.Listener getDownloadListener() {
-		return this.downloadListener;
-	}
 	public Downloader getDownloader() {
 		return this.downloader;
 	}

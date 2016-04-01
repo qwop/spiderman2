@@ -1,4 +1,4 @@
-package spiderman;
+package test;
 
 import net.kernal.spiderman.kit.K;
 import net.kernal.spiderman.worker.extract.schema.Field.ValueFilter;

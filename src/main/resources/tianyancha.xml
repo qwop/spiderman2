@@ -10,7 +10,7 @@
     <property key="worker.download.size" value="1" /><!-- 下载线程数 -->
     <property key="worker.extract.size" value="2" /><!-- 页面抽取线程数 -->
     <property key="worker.result.size" value="2" /><!-- 结果处理线程数 -->
-    <property key="worker.result.handler" value="net.kernal.spiderman.result.handler.impl.FileJsonResultHandler" />
+    <property key="worker.result.handler" value="net.kernal.spiderman.worker.result.handler.impl.FileJsonResultHandler" />
     <property key="worker.result.store" value="store/result" />
     <property key="queue.store.path" value="store" /><!-- 检查器需要用到BDb存储 -->
     <cookie name="myid" value="myval" />

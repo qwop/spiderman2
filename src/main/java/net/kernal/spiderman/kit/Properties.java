@@ -43,7 +43,7 @@ public class Properties extends HashMap<String, Object> {
 	    	for (Object key : props.keySet()) {
 	    		r.put((String)key, props.get(key));
 	    	}
-		} catch (IOException e) {
+		} catch (Throwable e) {
 		} finally {
 			if (in != null) {
 				try {

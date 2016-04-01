@@ -9,6 +9,7 @@ import java.util.List;
 import net.kernal.spiderman.kit.Context;
 import net.kernal.spiderman.kit.K;
 import net.kernal.spiderman.kit.Properties;
+import net.kernal.spiderman.kit.Seed;
 
 /**
  * 下载器抽象
@@ -17,13 +18,35 @@ import net.kernal.spiderman.kit.Properties;
  */
 public abstract class Downloader {
 
-	protected Listener listener = new Listener(){
-		public void init(Context context) {}
+	protected Listener listener = new DelayListener(){public void dobiz(Context ctx){}};
+	
+	public abstract static class DelayListener implements Listener {
+		public abstract void dobiz(Context ctx);
+		public void init(Context context) {
+			final Downloader downloader = context.getDownloader();
+			final Seed seed = context.getSeeds().all().get(0);
+			final Downloader.Request request = new Downloader.Request(seed.getUrl());
+			downloader.download(request);
+			this.dobiz(context);
+			final Long delay = K.convertToMillis(context.getParams().getString("worker.download.listener.delay", "0")).longValue();
+			if (delay > 0) {
+				try {
+					Thread.sleep(delay);
+				} catch (InterruptedException e) {
+				}
+			}
+		}
 		public void beforeDownload(Downloader downloader, Request request) {}
 		public void afterDownload(Downloader downloader, Response response) {}
-	};
+	}
 	public void setListener(Listener listener) {
-		this.listener = listener;
+		if (listener != null) {
+			this.listener = listener;
+		}
+	}
+	
+	public Listener getListener() {
+		return this.listener;
 	}
 	
 	/**
