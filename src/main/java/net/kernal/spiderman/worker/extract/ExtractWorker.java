@@ -11,9 +11,9 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import net.kernal.spiderman.K;
-import net.kernal.spiderman.Properties;
 import net.kernal.spiderman.Spiderman;
+import net.kernal.spiderman.kit.K;
+import net.kernal.spiderman.kit.Properties;
 import net.kernal.spiderman.worker.Task;
 import net.kernal.spiderman.worker.Worker;
 import net.kernal.spiderman.worker.WorkerManager;
@@ -21,13 +21,14 @@ import net.kernal.spiderman.worker.WorkerResult;
 import net.kernal.spiderman.worker.download.DownloadTask;
 import net.kernal.spiderman.worker.download.DownloadWorker;
 import net.kernal.spiderman.worker.download.Downloader;
-import net.kernal.spiderman.worker.extract.Extractor.Callback.ModelEntry;
-import net.kernal.spiderman.worker.extract.conf.Field;
-import net.kernal.spiderman.worker.extract.conf.Field.ValueFilter;
-import net.kernal.spiderman.worker.extract.conf.Model;
-import net.kernal.spiderman.worker.extract.conf.Page;
-import net.kernal.spiderman.worker.extract.conf.Page.Models;
-import net.kernal.spiderman.worker.extract.conf.filter.TrimFilter;
+import net.kernal.spiderman.worker.extract.extractor.Extractor;
+import net.kernal.spiderman.worker.extract.extractor.Extractor.Callback.ModelEntry;
+import net.kernal.spiderman.worker.extract.schema.Field;
+import net.kernal.spiderman.worker.extract.schema.Model;
+import net.kernal.spiderman.worker.extract.schema.Page;
+import net.kernal.spiderman.worker.extract.schema.Field.ValueFilter;
+import net.kernal.spiderman.worker.extract.schema.Page.Models;
+import net.kernal.spiderman.worker.extract.schema.filter.TrimFilter;
 
 /**
  * 页面抽取工人

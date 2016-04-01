@@ -6,13 +6,13 @@ import com.alibaba.fastjson.JSON;
 
 import net.kernal.spiderman.worker.download.DownloadWorker;
 import net.kernal.spiderman.worker.download.Downloader;
-import net.kernal.spiderman.worker.download.HttpClientDownloader;
+import net.kernal.spiderman.worker.download.impl.HttpClientDownloader;
 import net.kernal.spiderman.worker.extract.ExtractTask;
 import net.kernal.spiderman.worker.extract.ExtractWorker;
-import net.kernal.spiderman.worker.extract.Extractor;
-import net.kernal.spiderman.worker.extract.HtmlCleanerExtractor;
-import net.kernal.spiderman.worker.extract.conf.Model;
-import net.kernal.spiderman.worker.extract.conf.Page;
+import net.kernal.spiderman.worker.extract.extractor.Extractor;
+import net.kernal.spiderman.worker.extract.extractor.impl.HtmlCleanerExtractor;
+import net.kernal.spiderman.worker.extract.schema.Model;
+import net.kernal.spiderman.worker.extract.schema.Page;
 
 /**
  * 测试单篇文章分页, 单篇文章内容分页之后是需要严格恢复它原来的顺序的，因此使用线程内递归抽取的模式，效率会慢许多

@@ -3,8 +3,9 @@ package net.kernal.spiderman.queue;
 import java.io.File;
 import java.util.List;
 
-import net.kernal.spiderman.K;
+import net.kernal.spiderman.kit.K;
 import net.kernal.spiderman.logger.Logger;
+import net.kernal.spiderman.logger.Loggers;
 import net.kernal.spiderman.queue.Queue.AbstractElement;
 import net.kernal.spiderman.queue.Queue.Element;
 import net.kernal.spiderman.store.BDbStore;
@@ -12,12 +13,11 @@ import net.kernal.spiderman.store.KVStore;
 
 public class RepeatableChecker implements CheckableQueue.Checker {
 
-	private Logger logger;
+	private final static Logger logger = Loggers.getLogger(RepeatableChecker.class);
 	/** 去重需要用到存储 */
 	private KVStore store;
 	
-	public RepeatableChecker(List<String> groups, String storePath, Logger logger) {
-		this.logger = logger;
+	public RepeatableChecker(List<String> groups, String storePath) {
 		final File file = new File(storePath);
 		file.mkdirs();
 		this.store = new BDbStore(file, groups.toArray(new String[]{}));

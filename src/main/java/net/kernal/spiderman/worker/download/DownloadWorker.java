@@ -3,8 +3,8 @@ package net.kernal.spiderman.worker.download;
 import java.util.HashSet;
 import java.util.Set;
 
-import net.kernal.spiderman.K;
 import net.kernal.spiderman.Spiderman;
+import net.kernal.spiderman.kit.K;
 import net.kernal.spiderman.worker.Task;
 import net.kernal.spiderman.worker.Worker;
 import net.kernal.spiderman.worker.WorkerManager;
@@ -36,7 +36,7 @@ public class DownloadWorker extends Worker {
 			} catch (InterruptedException e) {
 			}
 		}
-		final Downloader.Response response = this.downloader.download(request);
+		final Downloader.Response response = this.downloader.doDownload(request);
 		if (response == null) {
 			return null;
 		}

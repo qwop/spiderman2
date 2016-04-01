@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<spiderman name="天眼查">
+    <property key="duration" value="0" /><!-- 运行时间 0 表示永久，可以给 {n}s {n}m {n}h {n}d -->
+    <property key="scheduler.period" value="24h" /><!-- 调度间隔时间 -->
+    <property key="logger.level" value="DEBUG" /><!-- 日志级别 INFO DEBUG WARN ERROR OFF -->
+    <property key="worker.download.class" value="net.kernal.spiderman.worker.download.impl.WebDriverDownloader" />
+    <property key="worker.download.listener" value="spiderman.MyDownloadListener" />
+    <property key="worker.download.chrome.driver" value="dist/chromedriver.exe" />
+    <property key="worker.download.listener.delay" value="30s" />
+    <property key="worker.download.selector.delay" value="1s" />
+    <property key="worker.download.size" value="1" /><!-- 下载线程数 -->
+    <property key="worker.extract.size" value="1" /><!-- 页面抽取线程数 -->
+    <property key="worker.result.size" value="1" /><!-- 结果处理线程数 -->
+    <property key="worker.result.handler" value="net.kernal.spiderman.result.handler.impl.FileJsonResultHandler" />
+    <property key="worker.result.store" value="store/result" />
+    <property key="queue.store.path" value="store" /><!-- 检查器需要用到BDb存储 -->
+    <cookie name="myid" value="myval" />
+    <seed url="http://oa.qhee.com/oanode" /><!-- 写死种子入口的方式 -->
+    <extract><!-- 页面抽取规则 -->
+        <extractor name="HtmlCleaner" class="net.kernal.spiderman.worker.extract.extractor.impl.HtmlCleanerExtractor" isDefault="1" />
+		<page name="公告列表" extractor="HtmlCleaner">
+			<url-match-rule type="equals">http://oa.qhee.com/oanode</url-match-rule>
+			<model>
+				<field name="公告URl" isForNewTask="1" isArray="1" xpath="//div[@class='item-content']//a[@href]" attr="href">
+					<filter type="script">'http://oa.qhee.com/'+$this</filter>
+				</field> 
+			</model>
+		</page>
+	</extract>
+</spiderman>

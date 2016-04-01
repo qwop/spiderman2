@@ -1,7 +1,7 @@
 package spiderman;
 
-import net.kernal.spiderman.K;
-import net.kernal.spiderman.worker.extract.conf.Field.ValueFilter;
+import net.kernal.spiderman.kit.K;
+import net.kernal.spiderman.worker.extract.schema.Field.ValueFilter;
 
 public class MyFilter implements ValueFilter {
 

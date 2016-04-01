@@ -31,8 +31,8 @@
     <!-- 页面抽取规则 -->
     <extract>
     	<!-- 注册解析器 -->
-        <extractor name="HtmlCleaner" class="net.kernal.spiderman.worker.extract.HtmlCleanerExtractor" isDefault="1" />
-        <extractor name="Text" class="net.kernal.spiderman.worker.extract.TextExtractor" />
+        <extractor name="HtmlCleaner" class="net.kernal.spiderman.worker.extract.extractor.impl.HtmlCleanerExtractor" isDefault="1" />
+        <extractor name="Text" class="net.kernal.spiderman.worker.extract.extractor.impl.TextExtractor" />
         <!-- 注册过滤器 -->
         <filter name="MyFilter" class="spiderman.MyFilter" />
         <!-- 要抽取的页面 -->

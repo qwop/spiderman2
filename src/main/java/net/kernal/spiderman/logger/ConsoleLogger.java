@@ -1,6 +1,6 @@
 package net.kernal.spiderman.logger;
 
-import net.kernal.spiderman.K;
+import net.kernal.spiderman.kit.K;
 
 public class ConsoleLogger implements Logger {
 

@@ -2,17 +2,18 @@ package net.kernal.spiderman.queue;
 
 import java.io.IOException;
 
-import net.kernal.spiderman.K;
-import net.kernal.spiderman.Spiderman;
-import net.kernal.spiderman.logger.Logger;
-import net.kernal.spiderman.queue.Queue.Element;
-
 import org.zbus.broker.Broker;
 import org.zbus.mq.Consumer;
 import org.zbus.mq.MqConfig;
 import org.zbus.mq.Producer;
 import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.http.Message;
+
+import net.kernal.spiderman.Spiderman;
+import net.kernal.spiderman.kit.K;
+import net.kernal.spiderman.logger.Logger;
+import net.kernal.spiderman.logger.Loggers;
+import net.kernal.spiderman.queue.Queue.Element;
 
 /**
  * PS:由于ZBus支持队列元素的重复检查，所以此类不需要继承CheckableQueue
@@ -21,15 +22,14 @@ import org.zbus.net.http.Message;
  */
 public class ZBusQueue<E extends Element> implements Queue<E> {
 
-	private Logger logger;
+	private static final Logger logger = Loggers.getLogger(ZBusQueue.class);
 	private final MqConfig cfg;
 	private Producer producer;
 	private Consumer consumer;
 	private boolean isConsumerAlive;
 	private boolean isBeingRepaired;
 	
-	public ZBusQueue(Broker broker, String mq, Logger logger) {
-		this.logger = logger;
+	public ZBusQueue(Broker broker, String mq) {
 	    this.cfg = new MqConfig(); 
 	    this.cfg.setBroker(broker);
 	    this.cfg.setMq(mq);

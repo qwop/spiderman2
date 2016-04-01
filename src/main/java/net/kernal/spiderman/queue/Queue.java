@@ -4,8 +4,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.kernal.spiderman.Properties;
-import net.kernal.spiderman.logger.Logger;
+import net.kernal.spiderman.kit.Properties;
 
 public interface Queue<E> {
 
@@ -58,7 +57,7 @@ public interface Queue<E> {
 	}
 	
 	public static interface Builder {
-		public Queue<? extends Element> build(String queueName, Properties params, Logger logger);
+		public <T extends Element> Queue<T> build(String queueName, Properties params);
 	}
 	
 }

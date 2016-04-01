@@ -2,8 +2,8 @@ package net.kernal.spiderman.worker;
 
 import java.util.concurrent.CountDownLatch;
 
-import net.kernal.spiderman.logger.ConsoleLogger;
 import net.kernal.spiderman.logger.Logger;
+import net.kernal.spiderman.logger.Loggers;
 
 /**
  * 我们可爱的工人们.
@@ -15,6 +15,8 @@ import net.kernal.spiderman.logger.Logger;
  */
 public abstract class Worker extends Thread {
 
+	private final String childClassName;
+	private final static Logger logger = Loggers.getLogger(Worker.class);
 	private WorkerManager manager;
 	private WorkerResult result;
 	private CountDownLatch countDown;
@@ -23,10 +25,7 @@ public abstract class Worker extends Thread {
 	public Worker(WorkerManager manager) {
 		this.manager = manager;
 		this.countDown = new CountDownLatch(1);
-	}
-	
-	protected Logger getLogger() {
-		return manager != null ? manager.getLogger() : new ConsoleLogger(getClass(), Logger.LEVEL_DEBUG);
+		this.childClassName = getClass().getName();
 	}
 	
 	protected WorkerManager getManager() {
@@ -54,23 +53,23 @@ public abstract class Worker extends Thread {
 			} catch (InterruptedException e) {
 				break;
 			} catch (Throwable e) {
-				getLogger().error("Failed to take task from manager!", e);
+				logger.error("["+this.childClassName+"]Failed to take task from manager!", e);
 				continue;
 			}
 			if (task == null) {
 				continue;
 			}
-			getLogger().info(this.getName() + " 获取任务: " + task.getKey());
+			logger.info("["+this.childClassName+"]"+this.getName() + " 获取任务: " + task.getKey());
 			try {
 				this.work(task);
 			} catch (Throwable e) {
-				getLogger().error(this.getName() + " 任务失败: " + task.getKey(), e);
+				logger.error("["+this.childClassName+"]"+this.getName() + " 任务失败: " + task.getKey(), e);
 				continue;
 			}
-			getLogger().info(this.getName() + " 完成任务: " + task.getKey());
+			logger.info("["+this.childClassName+"]"+this.getName() + " 完成任务: " + task.getKey());
 		}
 		countDown.countDown();
-		getLogger().warn("工人["+this.getName() + "]已收工");
+		logger.warn("["+this.childClassName+"]工人["+this.getName() + "]已收工");
 	}
 	
 	/**

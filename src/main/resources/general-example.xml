@@ -10,8 +10,8 @@
     <property key="queue.store.path" value="store" /><!-- 检查器需要用到BDb存储 -->
     <seed url="http://localhost:1989/items" /><!-- 写死种子入口的方式 -->
     <extract><!-- 页面抽取规则 -->
-        <extractor name="Text" class="net.kernal.spiderman.worker.extract.TextExtractor" /><!-- 正文抽取器,默认 -->
-        <extractor name="Links" class="net.kernal.spiderman.worker.extract.LinksExtractor" /><!-- 链接抽取器 -->
+        <extractor name="Text" class="net.kernal.spiderman.worker.extract.extractor.impl.TextExtractor" /><!-- 正文抽取器,默认 -->
+        <extractor name="Links" class="net.kernal.spiderman.worker.extract.extractor.impl.LinksExtractor" /><!-- 链接抽取器 -->
         <page name="内容页" isPersisted="1" extractor="Text"><!-- 此处不配置extractor也行，因为Text抽取器是默认的 -->
 			<url-match-rule type="startsWith" value="http://localhost:1989/items/" />
 		</page>

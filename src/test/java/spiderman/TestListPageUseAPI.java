@@ -2,20 +2,19 @@ package spiderman;
 
 import com.alibaba.fastjson.JSON;
 
-import net.kernal.spiderman.Context;
-import net.kernal.spiderman.K;
-import net.kernal.spiderman.Properties;
-import net.kernal.spiderman.Seed;
+import net.kernal.spiderman.Config;
+import net.kernal.spiderman.Config.Pages;
+import net.kernal.spiderman.Config.Seeds;
 import net.kernal.spiderman.Spiderman;
-import net.kernal.spiderman.conf.Conf;
-import net.kernal.spiderman.conf.Conf.Pages;
-import net.kernal.spiderman.conf.Conf.Seeds;
-import net.kernal.spiderman.conf.DefaultConfBuilder;
+import net.kernal.spiderman.kit.DefaultConfBuilder;
+import net.kernal.spiderman.kit.K;
+import net.kernal.spiderman.kit.Properties;
+import net.kernal.spiderman.kit.Seed;
 import net.kernal.spiderman.worker.extract.ExtractResult;
-import net.kernal.spiderman.worker.extract.HtmlCleanerExtractor;
-import net.kernal.spiderman.worker.extract.TextExtractor;
-import net.kernal.spiderman.worker.extract.conf.Model;
-import net.kernal.spiderman.worker.extract.conf.Page;
+import net.kernal.spiderman.worker.extract.extractor.impl.HtmlCleanerExtractor;
+import net.kernal.spiderman.worker.extract.extractor.impl.TextExtractor;
+import net.kernal.spiderman.worker.extract.schema.Model;
+import net.kernal.spiderman.worker.extract.schema.Page;
 
 /**
  * 这个测试代码完全使用Java代码的方式来配置抽取规则，可以看到配置躲起来之后代码不太好看，至少是比较繁杂的。
@@ -24,7 +23,7 @@ import net.kernal.spiderman.worker.extract.conf.Page;
 public class TestListPageUseAPI {
 	
 	public static void main(String[] args) {
-		final Conf conf = new DefaultConfBuilder() {
+		final Config conf = new DefaultConfBuilder() {
 			public void configPages(Pages pages) {
 				pages.add(new Page("网页内容") {
 					public void config(UrlMatchRules rules, Models models) { 
@@ -78,15 +77,16 @@ public class TestListPageUseAPI {
 				params.put("queue.zbus.enabled", false);// ZBus队列,暂时单机版不使用，貌似性能还有些小问题
 				params.put("queue.zbus.broker", "jvm");// 1.jvm(进程内模式) 2.ip:port(单机模式) 3.[ip:port,ip:port](高可用多机模式)
 			}
-		}.build();
-		
-		final Context ctx = new Context(conf, (task, c) -> {
+		}
+		.setResultHandler((task, c) -> {
 			final ExtractResult er = task.getResult();
 			final String json =  JSON.toJSONString(er.getFields(), true);
 			final String fmt = "获取第%s个[seed=%s, page=%s, model=%s]结果: \r\n url=%s, \r\n source=%s\r\n%s";
 			System.err.println(String.format(fmt, c, task.getSeed().getName(), er.getPageName(), er.getModelName(), task.getRequest().getUrl(), task.getSourceUrl() , json));
-		}); 
-		new Spiderman(ctx).go();//别忘记看控制台信息哦，结束之后会有统计信息的
+		})
+		.build();
+		
+		new Spiderman(conf).go();//别忘记看控制台信息哦，结束之后会有统计信息的
 	}
 	
 }

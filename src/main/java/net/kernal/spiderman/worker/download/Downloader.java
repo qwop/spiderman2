@@ -6,23 +6,55 @@ import java.net.URL;
 import java.util.Date;
 import java.util.List;
 
-import net.kernal.spiderman.K;
-import net.kernal.spiderman.Properties;
+import net.kernal.spiderman.kit.Context;
+import net.kernal.spiderman.kit.K;
+import net.kernal.spiderman.kit.Properties;
 
 /**
  * 下载器抽象
  * @author 赖伟威 l.weiwei@163.com 2016-01-16
  *
  */
-public interface Downloader {
+public abstract class Downloader {
 
-	public Response download(Request request);
+	protected Listener listener = new Listener(){
+		public void init(Context context) {}
+		public void beforeDownload(Downloader downloader, Request request) {}
+		public void afterDownload(Downloader downloader, Response response) {}
+	};
+	public void setListener(Listener listener) {
+		this.listener = listener;
+	}
 	
-	public Downloader keepHeader(Downloader.Header header);
+	/**
+	 * 不允许覆盖，不允许包外访问此方法
+	 */
+	final Response doDownload(Request request) {
+		this.listener.beforeDownload(this, request);
+		final Response response = this.download(request);
+		this.listener.afterDownload(this, response);
+		return response;
+	}
+	
+	public abstract Response download(Request request);
+	
+	public abstract Downloader keepHeader(Downloader.Header header);
 
-	public Downloader keepCookie(Downloader.Cookie cookie);
+	public abstract Downloader keepCookie(Downloader.Cookie cookie);
 	
-	public void close();
+	public abstract void close();
+	
+	/**
+	 * 监听器，提供给开发者个性化处理能力
+	 * @author 赖伟威 l.weiwei@163.com 2016-04-01
+	 */
+	public static interface Listener {
+		
+		public void init(Context context);
+		public void beforeDownload(Downloader downloader, Downloader.Request request);
+		public void afterDownload(Downloader downloader, Downloader.Response response);
+		
+	}
 	
 	/**
 	 * HTTP请求

@@ -8,22 +8,26 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.sleepycat.je.utilint.Timestamp;
 
-import net.kernal.spiderman.Context;
-import net.kernal.spiderman.Counter;
-import net.kernal.spiderman.K;
-import net.kernal.spiderman.Properties;
+import net.kernal.spiderman.kit.Context;
+import net.kernal.spiderman.kit.Counter;
+import net.kernal.spiderman.kit.K;
+import net.kernal.spiderman.kit.Properties;
+import net.kernal.spiderman.logger.Logger;
+import net.kernal.spiderman.logger.Loggers;
 import net.kernal.spiderman.queue.Queue;
 import net.kernal.spiderman.queue.Queue.Element;
 import net.kernal.spiderman.worker.extract.ExtractResult;
 import net.kernal.spiderman.worker.result.ResultTask;
+import net.kernal.spiderman.worker.result.handler.ResultHandler;
 
 /**
  * 结果处理器
  * @author 赖伟威 l.weiwei@163.com 2016-01-19
  *
  */
-public class MyResultHandler implements net.kernal.spiderman.worker.extract.ExtractManager.ResultHandler {
+public class MyResultHandler implements ResultHandler {
 
+	private final static Logger logger = Loggers.getLogger(MyResultHandler.class);
 	/** 结果计数器 */
 	private final AtomicLong counter = new AtomicLong(0);
 	
@@ -31,7 +35,7 @@ public class MyResultHandler implements net.kernal.spiderman.worker.extract.Extr
 		// context对象利用了接口默认实现方法初始化获得
 		final Context ctx = context.get();
 		// 获取队列对象，我们要往该队列放结果
-		final Queue<Element> queue = ctx.getQueueManager().getQueue("SPIDERMAN_JSON_RESULT");
+		final Queue<Element> queue = ctx.getTaskManager().getQueue("SPIDERMAN_JSON_RESULT");
 		
 		final String key = task.getKey();
 		final String url = task.getRequest().getUrl();
@@ -74,7 +78,7 @@ public class MyResultHandler implements net.kernal.spiderman.worker.extract.Extr
 		queue.append(body);
 		final long count = counter.incrementAndGet();
 		final String info = String.format("发布第%s个结果[page=%s, model=%s, url=%s]:\r\n %s", count, pageName, modelName, url, JSON.toJSONString(map, true));
-		ctx.getLogger().warn(info);
+		logger.warn(info);
 	} 
 
 }

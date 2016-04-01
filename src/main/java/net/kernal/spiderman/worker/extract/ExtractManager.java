@@ -1,31 +1,30 @@
 package net.kernal.spiderman.worker.extract;
 
-import java.io.File;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
-import net.kernal.spiderman.Context;
-import net.kernal.spiderman.Counter;
-import net.kernal.spiderman.K;
 import net.kernal.spiderman.Spiderman;
+import net.kernal.spiderman.kit.Counter;
+import net.kernal.spiderman.kit.K;
 import net.kernal.spiderman.logger.Logger;
-import net.kernal.spiderman.queue.QueueManager;
+import net.kernal.spiderman.logger.Loggers;
 import net.kernal.spiderman.worker.Task;
+import net.kernal.spiderman.worker.TaskManager;
 import net.kernal.spiderman.worker.Worker;
 import net.kernal.spiderman.worker.WorkerManager;
 import net.kernal.spiderman.worker.WorkerResult;
 import net.kernal.spiderman.worker.download.DownloadTask;
 import net.kernal.spiderman.worker.download.Downloader;
-import net.kernal.spiderman.worker.extract.conf.Page;
+import net.kernal.spiderman.worker.extract.schema.Page;
 import net.kernal.spiderman.worker.result.ResultTask;
 
 public class ExtractManager extends WorkerManager {
 	
+	private final static Logger logger = Loggers.getLogger(ExtractManager.class);
 	private List<Page> pages;
 	private Downloader downloader;
 	
-	public ExtractManager(int nWorkers, QueueManager queueManager, Counter counter, Logger logger, List<Page> pages, Downloader downloader) {
-		super(nWorkers, queueManager, counter, logger);
+	public ExtractManager(int nWorkers, TaskManager queueManager, Counter counter, List<Page> pages, Downloader downloader) {
+		super(nWorkers, queueManager, counter);
 		this.pages = pages;
 		if (K.isEmpty(pages)) {
 			throw new Spiderman.Exception("缺少页面抽取配置");
@@ -45,7 +44,7 @@ public class ExtractManager extends WorkerManager {
 		if (result instanceof ExtractResult) {
 			// 计数器加1
 			final long count = getCounter().plus();
-			getLogger().info("解析了第"+count+"个模型");
+			logger.info("解析了第"+count+"个模型");
 			// 将成果放入结果处理队列
 			final ExtractResult extractResult = (ExtractResult)result;
 			getQueueManager().append(new ResultTask((ExtractTask)task, extractResult));
@@ -68,18 +67,6 @@ public class ExtractManager extends WorkerManager {
 		return new ExtractWorker(pages, this, downloader);
 	}
 	
-	public static interface ResultHandler { 
-		AtomicReference<Context> context = new AtomicReference<Context>();
-		public default void init(Context ctx){
-			context.set(ctx);
-			final File dir = new File(ctx.getParams().getString("worker.result.store", "store/result"));
-			if (!dir.exists()) {
-				dir.mkdirs();
-			}
-		}
-		public void handle(ResultTask task, Counter c);
-	}
-
 	protected void clear() {
 	}
 
