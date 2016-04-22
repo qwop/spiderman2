@@ -21,9 +21,9 @@ public class Bootstrap {
 	
 	public static class Bindings implements Config.ScriptBindings {
 		public void config(javax.script.Bindings bindings, Context ctx) {
-			bindings.put("$ctx", ctx);
-			bindings.put("$conf", ctx.getConf());
-			bindings.put("$seeds", ctx.getConf().getSeeds());
+			bindings.put("$ctx", ctx);// 上下文
+			bindings.put("$conf", ctx.getConf());// 配置对象
+			bindings.put("$seeds", ctx.getConf().getSeeds());// 种子列表
 		}
 	}
 	

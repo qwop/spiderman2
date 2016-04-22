@@ -58,7 +58,7 @@ public class Context {
 		final int limitOfResult = params.getInt("worker.result.limit", 0);
 		
 		// 构建下载管理器
-		final String downloaderClassName = params.getString("worker.download.class", "net.kernal.spiderman.worker.download.HttpClientDownloader");
+		final String downloaderClassName = params.getString("worker.download.class", "net.kernal.spiderman.worker.download.impl.HttpClientDownloader");
 		final Class<Downloader> downloaderClass = K.loadClass(downloaderClassName);
 		try {
 			final Constructor<Downloader> ct = downloaderClass.getConstructor(Properties.class);
