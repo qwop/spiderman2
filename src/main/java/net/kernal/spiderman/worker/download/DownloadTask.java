@@ -1,6 +1,6 @@
 package net.kernal.spiderman.worker.download;
 
-import net.kernal.spiderman.Seed;
+import net.kernal.spiderman.kit.Seed;
 import net.kernal.spiderman.worker.Task;
 import net.kernal.spiderman.worker.extract.ExtractTask;
 

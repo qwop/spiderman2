@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
-import net.kernal.spiderman.Counter;
 import net.kernal.spiderman.Spiderman;
+import net.kernal.spiderman.kit.Counter;
 import net.kernal.spiderman.logger.Logger;
-import net.kernal.spiderman.queue.QueueManager;
+import net.kernal.spiderman.logger.Loggers;
 
 /**
  * 工人经理，俗称包工头。
@@ -19,14 +19,12 @@ import net.kernal.spiderman.queue.QueueManager;
  */
 public abstract class WorkerManager implements Runnable {
 
-	private Logger logger;
-	public Logger getLogger() {
-		return this.logger;
-	}
+	private final static Logger logger = Loggers.getLogger(WorkerManager.class);
+	private final String childClassName;
 	private int nWorkers;
 	private List<Worker> workers;
-	private QueueManager queueManager;
-	protected QueueManager getQueueManager() {
+	private TaskManager queueManager;
+	protected TaskManager getQueueManager() {
 		return queueManager;
 	}
 	
@@ -51,14 +49,14 @@ public abstract class WorkerManager implements Runnable {
 	 * @param nWorkers
 	 * @param taskQueue
 	 */
-	public WorkerManager(int nWorkers, QueueManager queueManager, Counter counter, Logger logger) {
+	public WorkerManager(int nWorkers, TaskManager queueManager, Counter counter) {
 		nWorkers = nWorkers > 0 ? nWorkers : 1;
 		this.queueManager = queueManager;
 		this.nWorkers = nWorkers;
 		this.counter = counter;
 		this.listeners = new ArrayList<Listener>();
-		this.logger = logger;
 		this.shutdown = new CountDownLatch(1);
+		this.childClassName = getClass().getName();
 	}
 	
 	/**
@@ -88,9 +86,9 @@ public abstract class WorkerManager implements Runnable {
 	 */
 	public void run() {
 		if (this.queueManager == null) {
-			throw new Spiderman.Exception(getClass().getSimpleName()+" 缺少队列管理器");
+			throw new Spiderman.Exception(this.childClassName+" 缺少队列管理器");
 		}
-		logger.debug("我这有"+nWorkers+"个兄弟上班签到");
+		logger.debug("["+this.childClassName+"]我这有"+nWorkers+"个兄弟上班签到");
 		workers = new ArrayList<Worker>(nWorkers);
 		for (int i = 0; i < nWorkers; i++) {
 			final Worker worker = this.buildWorker();
@@ -99,7 +97,7 @@ public abstract class WorkerManager implements Runnable {
 		
 		this.workers.forEach(w -> w.start());
 		this.counter.await();
-		logger.debug("我这有"+nWorkers+"个兄弟下班签退");
+		logger.debug("["+this.childClassName+"]我这有"+nWorkers+"个兄弟下班签退");
 		this.shutdown();
 	}
 	
@@ -117,15 +115,15 @@ public abstract class WorkerManager implements Runnable {
 	private void shutdown() {
 		try {
 			this.workers.forEach(w -> {
-				logger.warn("等待工人["+w.getName()+"]做收尾工作");
+				logger.warn("["+this.childClassName+"]等待工人["+w.getName()+"]做收尾工作");
 				w.await();//wait for the worker finished the job
 			});
 		} catch(Throwable e) {
 		} finally {
 			this.clear();
-			logger.debug("退出管理器...");
+			logger.debug("["+this.childClassName+"]退出管理器...");
 			// 统计结果
-			final String fmt = "统计结果 \r\n 耗时:%sms \r\n 计数:%s \r\n 能力:%s/秒 \r\n 工人数(%s) \r\n";
+			final String fmt = "["+this.childClassName+"]统计结果 \r\n 耗时:%sms \r\n 计数:%s \r\n 能力:%s/秒 \r\n 工人数(%s) \r\n";
 			final long qps = Math.round((counter.get()*1.0/(counter.getCost())*1000));
 			final String msg = String.format(fmt, counter.getCost(), counter.get(), qps, nWorkers);
 			logger.debug(msg);

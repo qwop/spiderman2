@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import net.kernal.spiderman.Seed;
+import net.kernal.spiderman.kit.Seed;
 import net.kernal.spiderman.queue.Queue;
 import net.kernal.spiderman.worker.download.Downloader;
 

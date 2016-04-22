@@ -5,6 +5,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedTransferQueue;
 
 import net.kernal.spiderman.logger.Logger;
+import net.kernal.spiderman.logger.Loggers;
 
 /**
  * 默认的任务队列实现
@@ -14,11 +15,10 @@ import net.kernal.spiderman.logger.Logger;
  */
 public class DefaultQueue<E> implements Queue<E> {
 	
-	private Logger logger;
+	private final static Logger logger = Loggers.getLogger(DefaultQueue.class);
 	private BlockingQueue<E> queue;
 	
-	public DefaultQueue(int capacity, Logger logger) {
-		this.logger = logger;
+	public DefaultQueue(int capacity) {
 		if (capacity <= 0) {
 			queue = new LinkedTransferQueue<E>();
 			logger.debug(getClass().getName()+" 使用无边界LinkedEransferQueue");

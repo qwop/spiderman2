@@ -1,21 +1,23 @@
 package net.kernal.spiderman.worker.result;
 
-import net.kernal.spiderman.Counter;
+import net.kernal.spiderman.kit.Counter;
 import net.kernal.spiderman.logger.Logger;
-import net.kernal.spiderman.queue.QueueManager;
+import net.kernal.spiderman.logger.Loggers;
 import net.kernal.spiderman.worker.Task;
+import net.kernal.spiderman.worker.TaskManager;
 import net.kernal.spiderman.worker.Worker;
 import net.kernal.spiderman.worker.WorkerManager;
 import net.kernal.spiderman.worker.WorkerResult;
-import net.kernal.spiderman.worker.extract.ExtractManager.ResultHandler;
 import net.kernal.spiderman.worker.extract.ExtractResult;
+import net.kernal.spiderman.worker.result.handler.ResultHandler;
 
 public class ResultManager extends WorkerManager {
 
+	private Logger logger = Loggers.getLogger(ResultManager.class);
 	private ResultHandler handler;
 	
-	public ResultManager(int nWorkers, QueueManager queueManager, Counter counter, Logger logger, ResultHandler handler) {
-		super(nWorkers, queueManager, counter, logger);
+	public ResultManager(int nWorkers, TaskManager queueManager, Counter counter, ResultHandler handler) {
+		super(nWorkers, queueManager, counter);
 		this.handler = handler;
 	}
 
@@ -25,7 +27,7 @@ public class ResultManager extends WorkerManager {
 		final long count = counter.plus();
 		final ResultTask rtask = (ResultTask)wr.getTask();
 		final ExtractResult result = rtask.getResult();
-		getLogger().info("消费了第"+count+"个结果[seed="+rtask.getSeed().getName()+",page="+result.getPageName()+", model="+result.getModelName()+", url="+rtask.getRequest().getUrl()+", source="+rtask.getSourceUrl()+"]");
+		logger.info("消费了第"+count+"个结果[seed="+rtask.getSeed().getName()+",page="+result.getPageName()+", model="+result.getModelName()+", url="+rtask.getRequest().getUrl()+", source="+rtask.getSourceUrl()+"]");
 		if (this.handler != null) {
 			this.handler.handle(rtask, counter);
 		}
@@ -36,11 +38,7 @@ public class ResultManager extends WorkerManager {
 	}
 
 	protected Worker buildWorker() {
-		return new Worker(this) {
-			public void work(Task task) {
-				getManager().done(new WorkerResult(null, (ResultTask)task, null));
-			}
-		};
+		return new ResultWorker(this);
 	}
 
 	protected void clear() {

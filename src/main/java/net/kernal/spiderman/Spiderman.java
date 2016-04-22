@@ -6,8 +6,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import net.kernal.spiderman.logger.ConsoleLogger;
+import net.kernal.spiderman.kit.Context;
+import net.kernal.spiderman.kit.Counter;
+import net.kernal.spiderman.kit.K;
+import net.kernal.spiderman.kit.Properties;
 import net.kernal.spiderman.logger.Logger;
+import net.kernal.spiderman.logger.Loggers;
 import net.kernal.spiderman.worker.WorkerManager;
 import net.kernal.spiderman.worker.download.DownloadTask;
 
@@ -16,7 +20,7 @@ import net.kernal.spiderman.worker.download.DownloadTask;
  */
 public class Spiderman {
 
-	private Logger logger;
+	private final static Logger logger = Loggers.getLogger(Spiderman.class);
 	
 	private ScheduledExecutorService scheduler;
 	
@@ -26,11 +30,9 @@ public class Spiderman {
 	private Counter counter;
 	private long duration;
 	
-	public Spiderman(Context context) {
-		this.context = context;
+	public Spiderman(Config config) {
+		this.context = new Context(config);
 		final Properties params = context.getParams();
-		final byte level = params.getByte("logger.level", Logger.LEVEL_INFO);
-		this.logger = new ConsoleLogger(Spiderman.class, level);
 		this.scheduler = Executors.newSingleThreadScheduledExecutor();
 		this.managers = context.getManagers();
 		this.managers.forEach(m -> {
@@ -43,8 +45,12 @@ public class Spiderman {
 		counter = new Counter(managers.size(), duration);
 	}
 	
+	public Context getContext() {
+		return this.context;
+	}
+	
 	public Spiderman go() {
-		this.logger.debug("开始行动...");
+		logger.debug("开始行动...");
 		// 启动各个工头
 		this.managers.forEach(m -> threads.execute(m));
 		// 调度, 固定一段时间清除种子和一些中间过程任务，重新将种子放入任务队列
@@ -95,13 +101,13 @@ public class Spiderman {
 			// 清除掉一些消息
 			try {
 				logger.warn("开始清除Keys");
-				context.getQueueManager().removeKeys("seeds");
+				context.getTaskManager().removeKeys("seeds");
 				logger.warn("清除Keys成功[group=seeds]");
 				context.getConf().getPages().all().parallelStream()
 					.filter(p -> !p.isPersisted())
 					.map(p -> p.getName())
 					.forEach(group -> {
-						context.getQueueManager().removeKeys(group);
+						context.getTaskManager().removeKeys(group);
 						logger.warn("清除Keys成功[group="+group+"]");
 					});
 			} catch (Throwable e) {
@@ -115,7 +121,7 @@ public class Spiderman {
 				// 往队列里添加种子
 				context.getSeeds().all().parallelStream()
 					.map(seed -> new DownloadTask(seed, "seeds"))
-					.forEach(task -> context.getQueueManager().append(task));
+					.forEach(task -> context.getTaskManager().append(task));
 				logger.debug("初始化种子成功...");
 			} catch (Throwable e) {
 				logger.error("初始化种子失败", e);

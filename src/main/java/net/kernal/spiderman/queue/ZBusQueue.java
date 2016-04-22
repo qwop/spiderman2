@@ -2,17 +2,18 @@ package net.kernal.spiderman.queue;
 
 import java.io.IOException;
 
-import net.kernal.spiderman.K;
-import net.kernal.spiderman.Spiderman;
-import net.kernal.spiderman.logger.Logger;
-import net.kernal.spiderman.queue.Queue.Element;
-
 import org.zbus.broker.Broker;
 import org.zbus.mq.Consumer;
 import org.zbus.mq.MqConfig;
 import org.zbus.mq.Producer;
 import org.zbus.net.Sync.ResultCallback;
 import org.zbus.net.http.Message;
+
+import net.kernal.spiderman.Spiderman;
+import net.kernal.spiderman.kit.K;
+import net.kernal.spiderman.logger.Logger;
+import net.kernal.spiderman.logger.Loggers;
+import net.kernal.spiderman.queue.Queue.Element;
 
 /**
  * PS:由于ZBus支持队列元素的重复检查，所以此类不需要继承CheckableQueue
@@ -21,15 +22,14 @@ import org.zbus.net.http.Message;
  */
 public class ZBusQueue<E extends Element> implements Queue<E> {
 
-	private Logger logger;
+	private static final Logger logger = Loggers.getLogger(ZBusQueue.class);
 	private final MqConfig cfg;
 	private Producer producer;
 	private Consumer consumer;
-	private boolean isConsumerAlive;
-	private boolean isBeingRepaired;
+//	private boolean isConsumerAlive;
+//	private boolean isBeingRepaired;
 	
-	public ZBusQueue(Broker broker, String mq, Logger logger) {
-		this.logger = logger;
+	public ZBusQueue(Broker broker, String mq) {
 	    this.cfg = new MqConfig(); 
 	    this.cfg.setBroker(broker);
 	    this.cfg.setMq(mq);
@@ -52,29 +52,29 @@ public class ZBusQueue<E extends Element> implements Queue<E> {
 		} catch (InterruptedException e) {
 			return null;
 		} catch (IOException e) {
-			// 若没有其他线程正在处理，则当前线程负责挂上“Consumer不可用”的牌子
-			if (!this.isBeingRepaired) {
-				// 告诉其他线程，当前已经有一个线程正在修复consumer
-				this.isConsumerAlive = false;
-			} else {
-				// 若已经有线程正在处理，那么排队等待就行了
-			}
-			// 大家排好队等待第一个进去的线程负责把consumer修复好
-			synchronized (this) {
-				// 排队进来后，首先要看看consumer是否已经被修复好了
-				if (!this.isConsumerAlive) {
-					this.isBeingRepaired = true;
-					try {
-						consumer.close();
-						consumer = null;
-						consumer = new Consumer(cfg); 
-						this.isConsumerAlive = true;
-					} catch (IOException e1) {
-					} finally {
-						this.isBeingRepaired = false;
-					}
-				}
-			}
+//			// 若没有其他线程正在处理，则当前线程负责挂上“Consumer不可用”的牌子
+//			if (!this.isBeingRepaired) {
+//				// 告诉其他线程，当前已经有一个线程正在修复consumer
+//				this.isConsumerAlive = false;
+//			} else {
+//				// 若已经有线程正在处理，那么排队等待就行了
+//			}
+//			// 大家排好队等待第一个进去的线程负责把consumer修复好
+//			synchronized (this) {
+//				// 排队进来后，首先要看看consumer是否已经被修复好了
+//				if (!this.isConsumerAlive) {
+//					this.isBeingRepaired = true;
+//					try {
+//						consumer.close();
+//						consumer = null;
+//						consumer = new Consumer(cfg); 
+//						this.isConsumerAlive = true;
+//					} catch (IOException e1) {
+//					} finally {
+//						this.isBeingRepaired = false;
+//					}
+//				}
+//			}
 			
 			throw new Spiderman.Exception("zbus consumer recv error", e);
 		}

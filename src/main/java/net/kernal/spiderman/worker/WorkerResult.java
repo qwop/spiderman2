@@ -2,7 +2,7 @@ package net.kernal.spiderman.worker;
 
 import java.io.Serializable;
 
-import net.kernal.spiderman.worker.extract.conf.Page;
+import net.kernal.spiderman.worker.extract.schema.Page;
 
 public class WorkerResult implements Serializable {
 	

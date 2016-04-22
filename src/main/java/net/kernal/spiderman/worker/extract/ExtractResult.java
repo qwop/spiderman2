@@ -2,7 +2,7 @@ package net.kernal.spiderman.worker.extract;
 
 import java.io.Serializable;
 
-import net.kernal.spiderman.Properties;
+import net.kernal.spiderman.kit.Properties;
 
 public class ExtractResult implements Serializable {
 	
