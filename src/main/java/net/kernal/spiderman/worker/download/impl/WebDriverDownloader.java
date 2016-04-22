@@ -56,7 +56,7 @@ public class WebDriverDownloader extends Downloader {
 		final Downloader.Response response = new Downloader.Response(request);
 		try {
 			// 让浏览器打开页面
-			this.client.get(request.getUrl());
+			this.client.navigate().to(request.getUrl());
 			// TODO 执行一段脚本，控制浏览器行为
 			// delay 一段时间再来select元素
 			Thread.sleep(this.delay);
@@ -65,6 +65,7 @@ public class WebDriverDownloader extends Downloader {
 			response.setBodyStr(bodyStr);
 			response.setBody(bodyStr.getBytes());
 		} catch (Throwable e) {
+			e.printStackTrace();
 			response.setException(e);
 		} finally {
 		}

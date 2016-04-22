@@ -23,6 +23,7 @@ public class Config {
 	
 	public Config() {
 		seeds = new Seeds();
+		cookies = new Cookies();
 		extractors = new Extractors();
 		filters = new Filters();
 		pages = new Pages();

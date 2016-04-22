@@ -7,7 +7,7 @@
     <property key="worker.extract.size" value="1" /><!-- 页面抽取线程数 -->
     <property key="worker.result.size" value="1" /><!-- 结果处理线程数 -->
     <property key="worker.result.limit" value="1" />
-    <property key="worker.result.handler" value="net.kernal.spiderman.result.handler.impl.ConsoleResultHandler" />
+    <property key="worker.result.handler" value="net.kernal.spiderman.worker.result.handler.impl.ConsoleResultHandler" />
     <property key="queue.store.path" value="store" /><!-- 存储文件的路径 -->
     <property key="queue.zbus.enabled" value="0" /><!-- 是否使用ZBus队列，单机版暂时不用，貌似性能还有问题 -->
     <property key="queue.zbus.broker" value="jvm" /><!-- ZBus服务地址,三种模式：1.jvm(本地模式) 2.ip:port(single模式) 3.[ip:port,ip:port](ha模式) -->
