@@ -16,7 +16,7 @@
     <!-- <seed>URL地址</seed> --><!-- 写死种子入口的方式 -->
     <script bindings="net.kernal.spiderman.Bootstrap$Bindings"><!-- 使用脚本动态创建方式 -->
     <![CDATA[
-    	var K = Java.type("net.kernal.spiderman.K");
+    	var K = Java.type("net.kernal.spiderman.kit.K");
     	var kws = K.readLine("keywords.txt");
     	for (var i = 0; i < kws.length; i++) {
     		var kw = kws[i].trim();
@@ -34,7 +34,7 @@
         <extractor name="HtmlCleaner" class="net.kernal.spiderman.worker.extract.extractor.impl.HtmlCleanerExtractor" isDefault="1" />
         <extractor name="Text" class="net.kernal.spiderman.worker.extract.extractor.impl.TextExtractor" />
         <!-- 注册过滤器 -->
-        <filter name="MyFilter" class="spiderman.MyFilter" />
+        <filter name="MyFilter" class="test.MyFilter" />
         <!-- 要抽取的页面 -->
         <page name="网页内容" extractor="Text" isPersisted="1">
 			<url-match-rule type="!contains" value="baidu" />
