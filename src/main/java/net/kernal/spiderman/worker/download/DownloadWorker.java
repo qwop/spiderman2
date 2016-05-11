@@ -40,6 +40,10 @@ public class DownloadWorker extends Worker {
 		if (response == null) {
 			return null;
 		}
+		// 处理异常
+		if (response.getException() != null) {
+			throw new Spiderman.Exception("下载["+request.getUrl()+"]失败", response.getException());
+		}
 		// 处理重定向
 		final int statusCode = response.getStatusCode();
 		final String location = response.getLocation();

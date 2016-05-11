@@ -203,6 +203,9 @@ public class ExtractWorker extends Worker {
 		// 下载
 		final Downloader.Request nextRequest = new Downloader.Request(nextPageUrl);
 		final Downloader.Response nextResponse = downloadWorker.download(nextRequest);
+		if (nextResponse == null) {
+			return;
+		}
 		final DownloadTask downloadTask = new DownloadTask(task, page.getName(), nextRequest);
 		final ExtractTask nextTask = new ExtractTask(downloadTask, nextResponse);
 		final Model nextModel = new Model(model.getPage(), model.getName(), Arrays.asList(fieldForNextPageUrl, fieldForNextPageContent));
