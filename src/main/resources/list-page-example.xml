@@ -17,7 +17,7 @@
     <!-- <property key="worker.result.handler" value="net.kernal.spiderman.worker.result.handler.impl.FileBodyResultHandler" /> -->
     <!-- <property key="worker.result.handler" value="net.kernal.spiderman.worker.result.handler.impl.FileJsonResultHandler" /> -->
     <property key="queue.store.path" value="store" /><!-- 存储文件的路径 -->
-    <property key="queue.zbus.enabled" value="1" /><!-- 是否使用ZBus队列 -->
+    <property key="queue.zbus.enabled" value="0" /><!-- 是否使用ZBus队列 -->
     <property key="queue.zbus.broker" value="10.8.60.181:15555" /><!-- ZBus服务地址,三种模式：1.jvm(本地模式) 2.ip:port(single模式) 3.[ip:port,ip:port](ha模式) -->
     <seed url="http://news.163.com/domestic/" /><!-- 写死种子入口的方式 -->
     <extract><!-- 页面抽取规则 -->
