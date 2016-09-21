@@ -15,7 +15,7 @@
     <property key="worker.result.limit" value="0" />
     <property key="worker.result.handler" value="test.MyResultHandler" /><!-- 自定义结果回调处理类 -->
     <property key="queue.store.path" value="store" /><!-- 存储文件的路径 -->
-    <property key="queue.zbus.enabled" value="1" /><!-- 是否使用ZBus队列，单机版暂时不使用，貌似性能还有问题 -->
+    <property key="queue.zbus.enabled" value="0" /><!-- 是否使用ZBus队列，单机版暂时不使用，貌似性能还有问题 -->
     <property key="queue.zbus.broker" value="10.8.60.8:15555" /><!-- ZBus服务地址,三种模式：1.jvm(本地模式) 2.ip:port(single模式) 3.[ip:port,ip:port](ha模式) -->
     <property key="queue.other.names" value="SPIDERMAN_JSON_RESULT" /><!-- 注册创建其他队列备用 -->
     <!-- <seed>URL地址</seed> --><!-- 写死种子入口的方式 -->
