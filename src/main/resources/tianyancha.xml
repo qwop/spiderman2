@@ -10,20 +10,22 @@
     
     <property key="worker.download.class" value="net.kernal.spiderman.worker.download.impl.WebDriverDownloader" />
     <property key="worker.download.chrome.driver" value="dist/chromedriver.exe" />
-    <property key="worker.download.listener.delay" value="30s" />
+    <property key="worker.download.listener.delay" value="10s" />
     <property key="worker.download.selector.delay" value="1s" />
     <property key="worker.download.size" value="1" /><!-- 下载线程数 -->
     <property key="worker.extract.size" value="2" /><!-- 页面抽取线程数 -->
     <property key="worker.result.size" value="2" /><!-- 结果处理线程数 -->
+    
+    <property key="worker.result.limit" value="10" /><!-- 只采集10个结果就停止爬虫程序 -->
     <property key="worker.result.handler" value="net.kernal.spiderman.worker.result.handler.impl.FileJsonResultHandler" />
     <property key="worker.result.store" value="store/result" />
     <property key="queue.store.path" value="store" /><!-- 检查器需要用到BDb存储 -->
     <cookie name="myid" value="myval" />
-    <seed url="http://tianyancha.com/search/page/1?base=%E5%B9%BF%E4%B8%9C" /><!-- 写死种子入口的方式 -->
+    <seed url="http://gd.tianyancha.com/search/p1" /><!-- 写死种子入口的方式 -->
     <extract><!-- 页面抽取规则 -->
         <extractor name="HtmlCleaner" class="net.kernal.spiderman.worker.extract.extractor.impl.HtmlCleanerExtractor" isDefault="1" />
         <page name="企业信息" isPersisted="1" extractor="HtmlCleaner">
-			<url-match-rule type="regex" value="^http://tianyancha\.com/company/\d+$" />
+			<url-match-rule type="regex" value="^.*\.tianyancha\.com/company/\d+$" />
 			<model>
 			    <field name="fullname" xpath="//div[@class='company_info_text']/p/text()" />
 			    <field name="phone" xpath="//span[@ng-if='company.baseInfo.phoneNumber']/text()" />
@@ -45,13 +47,13 @@
 			</model>
 		</page> 
 		<page name="列表页" extractor="HtmlCleaner">
-			<url-match-rule type="regex">^http://tianyancha\.com/search/page/\d+\?base\=%E5%B9%BF%E4%B8%9C$</url-match-rule>
+			<url-match-rule type="regex">^http://gd\.tianyancha\.com/search/p\d+$</url-match-rule>
 			<model>
 				<field name="详情URl" isForNewTask="1" isArray="1" xpath="//a[@class='query_name']" attr="href">
-					<filter type="script">'http://tianyancha.com'+$this</filter>
+					<!-- filter type="script">'http://tianyancha.com'+$this</filter -->
 				</field> 
 				<field name="分页URL" isForNewTask="1" isArray="1" isDistinct="1" xpath="//li[@class='pagination-page ng-scope']//a[@href]/text()">
-				    <filter type="script">if($this != '...'){'http://tianyancha.com/search/page/'+$this+'?base=%E5%B9%BF%E4%B8%9C';}</filter>
+				    <filter type="script">if($this != '...'){'http://gd.tianyancha.com/search/p'+$this}</filter>
 				</field>
 			</model>
 		</page>

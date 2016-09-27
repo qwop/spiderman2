@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <spiderman name="网易国内新闻采集">
-    <property key="duration" value="10s" /><!-- 运行时间 0 表示永久，可以给 {n}s {n}m {n}h {n}d -->
+    <property key="duration" value="30s" /><!-- 运行时间 0 表示永久，可以给 {n}s {n}m {n}h {n}d -->
     <property key="scheduler.period" value="0" /><!-- 调度间隔时间 -->
     <property key="logger.level" value="INFO" /><!-- 日志级别 INFO DEBUG WARN ERROR OFF -->
     <property key="worker.download.size" value="10" /><!-- 下载线程数 -->

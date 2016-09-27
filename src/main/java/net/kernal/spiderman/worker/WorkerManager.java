@@ -120,16 +120,23 @@ public abstract class WorkerManager implements Runnable {
 			});
 		} catch(Throwable e) {
 		} finally {
-			this.clear();
+			try {
+				this.clear();
+			} catch (Throwable e2) {
+				e2.printStackTrace();
+			}
+			
 			logger.debug("["+this.childClassName+"]退出管理器...");
 			// 统计结果
 			final String fmt = "["+this.childClassName+"]统计结果 \r\n 耗时:%sms \r\n 计数:%s \r\n 能力:%s/秒 \r\n 工人数(%s) \r\n";
 			final long qps = Math.round((counter.get()*1.0/(counter.getCost())*1000));
 			final String msg = String.format(fmt, counter.getCost(), counter.get(), qps, nWorkers);
 			logger.debug(msg);
+			
 			listeners.forEach(l -> { 
 				l.shouldShutdown(); 
 			});
+			
 			this.listeners.clear();
 			this.shutdown.countDown();
 		}
