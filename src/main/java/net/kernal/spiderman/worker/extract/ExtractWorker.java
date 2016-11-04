@@ -127,7 +127,7 @@ public class ExtractWorker extends Worker {
 					filters.addAll(field.getFilters());// 添加多个子元素配置的过滤器
 					
 					// 执行过滤, 得到过滤后的新值
-					final Collection<String> newValues = (isForNewTask||isDistinct) ? new HashSet<String>(values.size()) : new ArrayList<String>(values.size());
+					final Collection<String> newValues = new ArrayList<String>(values.size());
 					values.stream()// 此处要保证顺序，因此不能用多线程
 						.filter(v -> v instanceof String).map(v -> (String)v)// 保证值是String类型
 						.forEach(v -> {
@@ -138,6 +138,11 @@ public class ExtractWorker extends Worker {
 							});
 							final String nv = v2.get();
 							if (K.isNotBlank(nv)) {
+								if ((isForNewTask || isDistinct) && newValues.contains(nv)) {
+									// 不能重复
+									return;
+								}
+								
 								newValues.add(nv);
 							}
 						});
