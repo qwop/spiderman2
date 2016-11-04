@@ -3,6 +3,7 @@
     <property key="duration" value="30s" /><!-- 运行时间 0 表示永久，可以给 {n}s {n}m {n}h {n}d -->
     <property key="scheduler.period" value="60s" /><!-- 调度间隔时间 -->
     <property key="logger.level" value="INFO" /><!-- 日志级别 INFO DEBUG WARN ERROR OFF -->
+    <!--property key="downloader.proxy" value="172.20.0.1:8086" /--><!-- 代理 -->
     
     <property key="worker.download.enabled" value="1" /><!-- 是否开启下载工人 -->
     <property key="worker.extract.enabled" value="1" /><!-- 是否开启解析工人 -->
@@ -14,7 +15,7 @@
     <property key="worker.result.limit" value="0" />
     <property key="worker.result.handler" value="net.kernal.spiderman.worker.result.handler.impl.ConsoleResultHandler" />
     <property key="queue.store.path" value="store" /><!-- 存储文件的路径 -->
-    <property key="queue.zbus.enabled" value="0" /><!-- 是否使用ZBus队列，单机版暂时不用，貌似性能还有问题 -->
+    <property key="queue.zbus.enabled" value="0" /><!-- 分布式采集时要开启 -->
     <property key="queue.zbus.broker" value="jvm" /><!-- ZBus服务地址,三种模式：1.jvm(本地模式) 2.ip:port(single模式) 3.[ip:port,ip:port](ha模式) -->
     <seed url="http://travel.163.com/14/0313/17/9N8002ON00063KE8.html" />
     <extract><!-- 页面抽取规则 -->

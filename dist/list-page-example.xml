@@ -3,6 +3,7 @@
     <property key="duration" value="30s" /><!-- 运行时间 0 表示永久，可以给 {n}s {n}m {n}h {n}d -->
     <property key="scheduler.period" value="0" /><!-- 调度间隔时间 -->
     <property key="logger.level" value="INFO" /><!-- 日志级别 INFO DEBUG WARN ERROR OFF -->
+    <!--property key="downloader.proxy"  value="172.20.0.1:8086" /--><!-- 代理 -->
     <property key="worker.download.size" value="10" /><!-- 下载线程数 -->
     <property key="worker.extract.size" value="10" /><!-- 页面抽取线程数 -->
     <property key="worker.result.size" value="10" /><!-- 结果处理线程数 -->
@@ -11,7 +12,7 @@
     <!-- <property key="worker.result.handler" value="net.kernal.spiderman.worker.result.handler.impl.FileBodyResultHandler" /> -->
     <!-- <property key="worker.result.handler" value="net.kernal.spiderman.worker.result.handler.impl.FileJsonResultHandler" /> -->
     <property key="queue.store.path" value="store" /><!-- 存储文件的路径 -->
-    <property key="queue.zbus.enabled" value="0" /><!-- 是否使用ZBus队列，暂时单机版不用，貌似性能还有问题 -->
+    <property key="queue.zbus.enabled" value="0" /><!-- 分布式采集时要开启 -->
     <property key="queue.zbus.broker" value="jvm" /><!-- ZBus服务地址,三种模式：1.jvm(本地模式) 2.ip:port(single模式) 3.[ip:port,ip:port](ha模式) -->
     <seed url="http://news.163.com/domestic/" /><!-- 写死种子入口的方式 -->
     <extract><!-- 页面抽取规则 -->

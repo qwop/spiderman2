@@ -32,6 +32,9 @@ public class TestQFang {
 						this.setExtractorBuilder(HtmlCleanerExtractor.builder());
 						rules.addEqualsRule("http://hangzhou.qfang.com/garden/desc/1758");
 						Model model = models.addModel("demo");
+						model.addField("all")
+							.set("isArray", true)
+							.set("xpath", "//div[@class='head-info-list']//li/p/text()");
 						model.addField("标题")
 							.set("xpath", "//title/text");
 						model.addField("建筑年代")
@@ -67,7 +70,7 @@ public class TestQFang {
 				params.put("worker.extract.size", 1);// 解析线程数
 				params.put("worker.result.size", 1);// 结果处理线程数
 				params.put("queue.store.path", "store");
-				params.put("queue.zbus.enabled", false);// ZBus队列,暂时单机版不使用，貌似性能还有些小问题
+				params.put("queue.zbus.enabled", false);// 分布式采集时要开启
 				params.put("queue.zbus.broker", "jvm");// 1.jvm(进程内模式) 2.ip:port(单机模式) 3.[ip:port,ip:port](高可用多机模式)
 			}
 		}
