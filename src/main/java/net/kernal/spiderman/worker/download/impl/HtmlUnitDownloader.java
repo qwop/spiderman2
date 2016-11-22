@@ -79,13 +79,6 @@ public class HtmlUnitDownloader extends Downloader {
 		this.client.close();
 	}
 	
-	public static void main(String[] args) {
-		final String url = "http://www.tianyancha.com/search?base=%E5%B9%BF%E4%B8%9C";
-		Downloader downloader = new HtmlUnitDownloader();
-		Downloader.Request req = new Downloader.Request(url);
-		Downloader.Response resp = downloader.download(req);
-		final String body = resp.getBodyStr();
-		System.out.println(body);
-	}
+
 
 }
