@@ -1,15 +1,14 @@
 package net.kernal.spiderman.worker.download.impl;
 
-import java.util.concurrent.TimeUnit;
-
+import net.kernal.spiderman.kit.K;
+import net.kernal.spiderman.kit.Properties;
+import net.kernal.spiderman.worker.download.Downloader;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 
-import net.kernal.spiderman.kit.K;
-import net.kernal.spiderman.kit.Properties;
-import net.kernal.spiderman.worker.download.Downloader;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 最后的绝招
@@ -18,17 +17,7 @@ import net.kernal.spiderman.worker.download.Downloader;
  */
 public class WebDriverDownloader extends Downloader {
 
-	public static void main(String[] args) {
-		final String url = "http://tianyancha.com/search/page/1?base=%E5%B9%BF%E4%B8%9C";
-		final Properties opts = new Properties();
-		opts.put("worker.download.chrome.driver", "D:/projects/spiderman/spiderman-webapp/dist/chromedriver.exe");
-		Downloader downloader = new WebDriverDownloader(opts);
-		Downloader.Request request = new Downloader.Request(url);
-		Downloader.Response response = downloader.download(request);
-		final String body = response.getBodyStr();
-		System.out.println(body);
-	}
-	
+
 	private ChromeDriver client;
 	private long delay;
 	

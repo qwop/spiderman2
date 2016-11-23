@@ -10,7 +10,7 @@
     <property key="worker.result.enabled" value="1" /><!-- 是否开启结果处理工人 -->
     
     <property key="worker.download.class" value="net.kernal.spiderman.worker.download.impl.WebDriverDownloader" />
-	<property key="worker.download.chrome.driver" value="dist/chromedriver.exe" /><!-- WebDriver下载器的Chrome驱动 -->
+	<property key="worker.download.chrome.driver" value="dist/chromedriver" /><!-- WebDriver下载器的Chrome驱动 -->
     <property key="worker.download.selector.delay" value="1s" /><!-- WebDriver下载器的延时时间 -->
 	<!--第一种方式，设置一个持续时间，手动输入登录账号密码 -->
 	<property key="worker.download.listener.delay" value="30s" /><!-- DelayListener监听器持续时间 -->

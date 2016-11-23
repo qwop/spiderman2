@@ -1,33 +1,25 @@
 package net.kernal.spiderman.worker;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
-import org.zbus.broker.Broker;
-import org.zbus.broker.BrokerConfig;
-import org.zbus.broker.ZbusBroker;
-import org.zbus.mq.server.MqServerConfig;
-
 import net.kernal.spiderman.Config;
 import net.kernal.spiderman.Spiderman;
 import net.kernal.spiderman.kit.K;
 import net.kernal.spiderman.kit.Properties;
 import net.kernal.spiderman.logger.Logger;
 import net.kernal.spiderman.logger.Loggers;
-import net.kernal.spiderman.queue.CheckableQueue;
-import net.kernal.spiderman.queue.DefaultQueue;
+import net.kernal.spiderman.queue.*;
 import net.kernal.spiderman.queue.Queue;
 import net.kernal.spiderman.queue.Queue.Element;
-import net.kernal.spiderman.queue.RepeatableChecker;
-import net.kernal.spiderman.queue.ZBusQueue;
 import net.kernal.spiderman.worker.download.DownloadTask;
 import net.kernal.spiderman.worker.extract.ExtractTask;
 import net.kernal.spiderman.worker.extract.schema.Page;
 import net.kernal.spiderman.worker.result.ResultTask;
+import org.zbus.broker.Broker;
+import org.zbus.broker.BrokerConfig;
+import org.zbus.broker.ZbusBroker;
+import org.zbus.mq.server.MqServerConfig;
+
+import java.io.IOException;
+import java.util.*;
 
 /**
  * 任务管理器，负责任务的存取，此外还可以获取队列对象
@@ -51,7 +43,7 @@ public class TaskManager {
 		final Properties params = conf.getParams();
 		final List<Page> pages = conf.getPages().all();
 		
-		this.queues = new HashMap<String, Queue<Element>>();
+		this.queues = new HashMap<>();
 		
 		// 队列构建器
 		final Queue.Builder queueBuilder;

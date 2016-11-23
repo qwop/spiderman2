@@ -1,17 +1,5 @@
 package net.kernal.spiderman.kit;
 
-import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-
-import javax.script.Bindings;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-import javax.script.ScriptException;
-import javax.script.SimpleBindings;
-
 import net.kernal.spiderman.Config;
 import net.kernal.spiderman.Config.Seeds;
 import net.kernal.spiderman.Spiderman;
@@ -26,6 +14,13 @@ import net.kernal.spiderman.worker.extract.schema.Page;
 import net.kernal.spiderman.worker.extract.schema.filter.ScriptableFilter;
 import net.kernal.spiderman.worker.result.ResultManager;
 import net.kernal.spiderman.worker.result.handler.ResultHandler;
+
+import javax.script.*;
+import java.lang.reflect.Constructor;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 public class Context {
 	
@@ -51,7 +46,7 @@ public class Context {
 		this.processScript();
 		
 		// build manager
-		this.workerManagers = new ArrayList<WorkerManager>();
+		this.workerManagers = new ArrayList<>();
 		// 构建任务管理器
 		taskManager = new TaskManager(conf);
 		final int limitOfResult = params.getInt("worker.result.limit", 0);
@@ -206,16 +201,5 @@ public class Context {
 	public Downloader getDownloader() {
 		return this.downloader;
 	}
-	
-	public static void main(String[] args) throws ScriptException {
-		ScriptEngine e = new ScriptEngineManager().getEngineByName("nashorn");
-		Bindings bind = new SimpleBindings();
-		Config conf = new Config();
-		bind.put("$seeds", conf.getSeeds());
-		final String script = "var kws = Java.type('net.kernal.spiderman.K').readLine('src/main/resources/keywords.txt'); for(var i=0; i<kws.length; i++) { $seeds.add(kws[i]); }";
-		Object v = e.eval(script, bind);
-		System.out.println("v->"+v);
-		System.out.println("seeds->"+conf.getSeeds().all());
-	}
-	
+
 }

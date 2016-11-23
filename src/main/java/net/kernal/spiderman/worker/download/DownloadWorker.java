@@ -1,14 +1,14 @@
 package net.kernal.spiderman.worker.download;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import net.kernal.spiderman.Spiderman;
 import net.kernal.spiderman.kit.K;
 import net.kernal.spiderman.worker.Task;
 import net.kernal.spiderman.worker.Worker;
 import net.kernal.spiderman.worker.WorkerManager;
 import net.kernal.spiderman.worker.WorkerResult;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class DownloadWorker extends Worker {
 
@@ -25,7 +25,7 @@ public class DownloadWorker extends Worker {
 	public DownloadWorker(WorkerManager manager, Downloader downloader, long delay) {
 		super(manager);
 		this.downloader = downloader;
-		this.redirectedLocations = new HashSet<String>();
+		this.redirectedLocations = new HashSet<>();
 		this.delay = delay;
 	}
 	
@@ -76,7 +76,8 @@ public class DownloadWorker extends Worker {
 		response.setBodyStr(bodyStr);
 		return response;
 	}
-	
+
+	@Override
 	public void work(Task t) {
 		if (this.downloader == null) {
 			throw new Spiderman.Exception("缺少下载器");
