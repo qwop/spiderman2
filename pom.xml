@@ -22,7 +22,7 @@
 			<groupId>net.sourceforge.htmlcleaner</groupId>
 			<artifactId>htmlcleaner</artifactId>
 			<version>2.2</version>
-			<scope>compile</scope>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.alibaba</groupId>
@@ -33,25 +33,25 @@
 			<groupId>org.zbus</groupId>
 			<artifactId>zbus</artifactId>
 			<version>6.3.0</version>
-			<scope>compile</scope>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.sleepycat</groupId>
 			<artifactId>je</artifactId>
 			<version>5.0.73</version>
-			<scope>compile</scope>
+			<scope>provided</scope>
 		</dependency>		
 		<dependency>  
             <groupId>org.seleniumhq.selenium</groupId>  
             <artifactId>selenium-java</artifactId>  
             <version>3.0.1</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>  
         <dependency>
 			<groupId>net.sourceforge.htmlunit</groupId>
 			<artifactId>htmlunit</artifactId>
 			<version>2.20</version>
-			<scope>compile</scope>
+			<scope>provided</scope>
 		</dependency>
 	</dependencies>
 	<build>

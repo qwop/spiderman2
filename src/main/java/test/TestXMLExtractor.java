@@ -1,11 +1,13 @@
 package test;
 
+import java.io.FileNotFoundException;
+
+import com.alibaba.fastjson.JSON;
+
 import net.kernal.spiderman.worker.extract.extractor.Extractor;
 import net.kernal.spiderman.worker.extract.extractor.impl.XMLExtractor;
 import net.kernal.spiderman.worker.extract.schema.Field;
 import net.kernal.spiderman.worker.extract.schema.Model;
-
-import java.io.FileNotFoundException;
 
 /**
  * @author 赖伟威 l.weiwei@163.com
@@ -73,11 +75,11 @@ public class TestXMLExtractor {
         extractor.addModel(page);
         extractor.extract(new Extractor.Callback() {
             public void onModelExtracted(ModelEntry entry) {
-                //System.out.println("[model]" + entry.getModel().getName() + "->\r\n" + JSON.toJSONString(entry.getFields(), true) + "\r\n\r\n");
+                System.out.println("[model]" + entry.getModel().getName() + "->\r\n" + JSON.toJSONString(entry.getFields(), true) + "\r\n\r\n");
             }
 
             public void onFieldExtracted(FieldEntry entry) {
-                //System.out.println("[field]"+entry.getField().getName() + "->\n\n" + JSON.toJSONString(entry.getValues(), true) + "\r\n\r\n");
+//                System.out.println("[field]"+entry.getField().getName() + "->\n\n" + JSON.toJSONString(entry.getValues(), true) + "\r\n\r\n");
             }
         });
     }

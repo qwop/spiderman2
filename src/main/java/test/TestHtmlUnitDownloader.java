@@ -15,6 +15,11 @@ public class TestHtmlUnitDownloader {
         Downloader downloader = new HtmlUnitDownloader();
         Downloader.Request req = new Downloader.Request(url);
         Downloader.Response resp = downloader.download(req);
+        final Throwable err = resp.getException();
+        if (err != null) {
+        	err.printStackTrace();
+        	return;
+        }
         final String body = resp.getBodyStr();
         System.out.println(body);
     }
