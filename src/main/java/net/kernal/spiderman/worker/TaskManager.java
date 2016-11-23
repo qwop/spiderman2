@@ -101,10 +101,10 @@ public class TaskManager {
 		final String downloadQueueName = params.getString("queue.download.name", "SPIDERMAN_DOWNLOAD_TASK");
 		this.downloadQueue = queueBuilder.build(downloadQueueName, params);
 		logger.debug("创建下载队列(默认)"); 
-		final String extractQueueName = params.getString("queue.download.name", "SPIDERMAN_EXTRACT_TASK");
+		final String extractQueueName = params.getString("queue.extract.name", "SPIDERMAN_EXTRACT_TASK");
 		this.extractQueue = queueBuilder.build(extractQueueName, params);
-		logger.debug("创建下载队列(默认)");
-		final String resultQueueName = params.getString("queue.download.name", "SPIDERMAN_RESULT_TASK");
+		logger.debug("创建解析队列(默认)");
+		final String resultQueueName = params.getString("queue.result.name", "SPIDERMAN_RESULT_TASK");
 		this.resultQueue = queueBuilder.build(resultQueueName, params);
 		logger.debug("创建结果队列(默认)");
 		// 创建其他队列

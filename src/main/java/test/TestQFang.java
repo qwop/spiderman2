@@ -21,12 +21,6 @@ public class TestQFang {
 	public static void main(String[] args) {
 		final Config conf = new DefaultConfBuilder() {
 			public void configPages(Pages pages) {
-//				pages.add(new Page("网页内容") {
-//					public void config(UrlMatchRules rules, Models models) { 
-//						this.setExtractorBuilder(TextExtractor.builder());
-//						rules.addRegexRule(".*");
-//					}
-//				});
 				pages.add(new Page("详情") { 
 					public void config(UrlMatchRules rules, Models models) {
 						this.setExtractorBuilder(HtmlCleanerExtractor.builder());
@@ -61,7 +55,7 @@ public class TestQFang {
 			}
 			public void configParams(Properties params) {
 				params.put("logger.level", "DEBUG");
-//				params.put("downloader.proxy", "172.20.0.1:8086");
+//				params.put("downloader.proxy", "172.20.0.2:8086");
 //				params.put("duration", "10s");// 运行时间
 //				params.put("scheduler.period", "1m");// 调度间隔时间，每隔固定时间重新将种子任务放入队列，并清除一些不需要持久化的消息key
 				params.put("worker.result.limit", 2);
