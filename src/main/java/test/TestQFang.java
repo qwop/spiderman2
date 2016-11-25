@@ -55,7 +55,7 @@ public class TestQFang {
 			}
 			public void configParams(Properties params) {
 				params.put("logger.level", "DEBUG");
-				params.put("downloader.proxy", "172.20.0.2:8086");
+//				params.put("downloader.proxy", "172.20.0.2:8086");// 代理，如果你所在公司需要代理才能上网记得要设置成你们公司的代理IP哦
 //				params.put("duration", "10s");// 运行时间
 //				params.put("scheduler.period", "1m");// 调度间隔时间，每隔固定时间重新将种子任务放入队列，并清除一些不需要持久化的消息key
 				params.put("worker.result.limit", 2);
