@@ -91,7 +91,8 @@ public class ExtractWorker extends Worker {
                             }
                             final Properties fields = entry.getFields();
                             modelsCtx.put(modelName, fields);
-                            final ExtractResult result = new ExtractResult(pageName, responseBody, modelName, fields);
+                            final String key = entry.getModel().getString("key");
+                            final ExtractResult result = new ExtractResult(pageName, responseBody, modelName, key, fields);
                             // 处理isForNextPage的field
                             final Field fieldForNextPageUrl = entry.getModel().getFieldForNextPageUrl();
                             final Field fieldForNextPageContent = entry.getModel().getFieldForNextPageContent();

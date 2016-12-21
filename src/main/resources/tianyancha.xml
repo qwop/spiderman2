@@ -9,7 +9,7 @@
     <property key="worker.result.enabled" value="1" /><!-- 是否开启结果处理工人 -->
     
     <property key="worker.download.class" value="net.kernal.spiderman.worker.download.impl.WebDriverDownloader" />
-    <property key="worker.download.chrome.driver" value="dist/chromedriver" />
+    <property key="worker.download.chrome.driver" value="dist/chromedriver.exe" />
     <property key="worker.download.listener.delay" value="10s" />
     <property key="worker.download.selector.delay" value="1s" />
     <property key="worker.download.size" value="1" /><!-- 下载线程数 -->

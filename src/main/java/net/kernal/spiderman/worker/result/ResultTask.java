@@ -20,7 +20,8 @@ public class ResultTask extends Task {
 	}
 	
 	public String getKey() {
-		return "result_"+result.getPageName()+"#"+result.getModelName()+"#"+getSeed().getUrl()+"#"+getRequest().getUrl();
+		final String keyValue = result.getFields().getString(result.getKeyFieldName());
+		return "result_"+result.getPageName()+"#"+result.getModelName()+"#"+keyValue+"#"+getSeed().getUrl()+"#"+getRequest().getUrl();
 	}
 
 }

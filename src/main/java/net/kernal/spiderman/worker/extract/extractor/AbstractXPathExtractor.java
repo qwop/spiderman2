@@ -1,5 +1,9 @@
 package net.kernal.spiderman.worker.extract.extractor;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import net.kernal.spiderman.Spiderman;
 import net.kernal.spiderman.kit.K;
 import net.kernal.spiderman.kit.Properties;
@@ -9,19 +13,12 @@ import net.kernal.spiderman.worker.extract.extractor.Extractor.Callback.ModelEnt
 import net.kernal.spiderman.worker.extract.schema.Field;
 import net.kernal.spiderman.worker.extract.schema.Model;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Logger;
-
 /**
  * 抽象XPath解析 , 所有支持XPath的解析 都要继承此类
  *
  * @author 赖伟  l.weiwei@163.com 2016-01-12
  */
 public abstract class AbstractXPathExtractor extends Extractor {
-
-    private final Logger logger = Logger.getLogger(AbstractXPathExtractor.class.getName());
 
     protected AbstractXPathExtractor(ExtractTask task, String page, Model... models) {
         super(task, page, models);
