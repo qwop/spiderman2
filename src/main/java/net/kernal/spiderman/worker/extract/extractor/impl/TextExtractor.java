@@ -31,9 +31,9 @@ public class TextExtractor extends Extractor {
 	
 	public void extract(Extractor.Callback callback){
 		final Downloader.Response response = getTask().getResponse();
-		String html = response.getBodyStr();
+		final String html = response.getBodyStr();
 		final Properties fields = new Properties();
-		_TextExtractor te = new _TextExtractor();
+		final _TextExtractor te = new _TextExtractor();
 		te.extractHTML(html);
 		final String title = te.getTitle();
 		final String text = te.getText();
@@ -41,7 +41,7 @@ public class TextExtractor extends Extractor {
 		fields.put("title", K.trim(title));
 		fields.put("text", K.trim(text));
 		fields.put("html", html);
-		Model model = new Model(getPage(), "text");
+		final Model model = new Model(getPage(), "text");
 		callback.onModelExtracted(new ModelEntry(model, fields));
 	}
 	

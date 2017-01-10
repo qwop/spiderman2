@@ -19,7 +19,7 @@ import net.kernal.spiderman.worker.download.Downloader;
 public final class URLKit {
 
 	public static Collection<String> links(final Downloader.Response response) {
-		return links(response.getBodyStr(), response.getRequest().getBaseUrl());
+		return links(response.getBodyStr(), response.getRequest().getUrl());
 	}
 
 	public static Collection<String> links(String html, String baseUrl) {

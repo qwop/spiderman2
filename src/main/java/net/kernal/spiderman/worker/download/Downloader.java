@@ -104,7 +104,7 @@ public abstract class Downloader {
 				final URL u = new URL(url);
 				StringBuilder sb = new StringBuilder(u.getProtocol());
 				sb.append("://").append(u.getHost());
-				if (u.getPort() > 0) {
+				if (u.getPort() > 0 && u.getPort() != 80) {
 					sb.append(":").append(u.getPort()+"");
 				}
 				baseUrl = sb.append("/").toString();
@@ -136,9 +136,11 @@ public abstract class Downloader {
 		public String getUrl() {
 			return url;
 		}
+		
 		public String getBaseUrl() {
 			return this.baseUrl;
 		}
+		
 		public String getMethod() {
 			return method;
 		}

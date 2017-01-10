@@ -63,7 +63,8 @@ public class Properties extends HashMap<String, Object> {
     public Properties getProperties(String key) {
         Object v = this.get(key);
         if (v instanceof Map) {
-            Map<String, Object> map = (Map<String, Object>) v;
+            @SuppressWarnings("unchecked")
+			Map<String, Object> map = (Map<String, Object>) v;
             Properties props = new Properties();
             props.putAll(map);
             return props;
@@ -74,11 +75,13 @@ public class Properties extends HashMap<String, Object> {
     public List<Properties> getListProperties(String key) {
         Object vs = this.get(key);
         if (vs instanceof List) {
-            List<Object> list = (List<Object>) vs;
+            @SuppressWarnings("unchecked")
+			List<Object> list = (List<Object>) vs;
             final List<Properties> r = new ArrayList<>();
             list.forEach(v -> {
                 if (v instanceof Map) {
-                    Map<String, Object> map = (Map<String, Object>) v;
+                    @SuppressWarnings("unchecked")
+					Map<String, Object> map = (Map<String, Object>) v;
                     Properties props = new Properties();
                     props.putAll(map);
                     r.add(props);

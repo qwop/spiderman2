@@ -7,7 +7,7 @@ public class URLNormalizer implements ValueFilter {
 
 	public String filter(Context ctx) {
 		final String url = ctx.getValue();
-		return URLKit.normalize(ctx.getRequest().getBaseUrl(), url);
+		return URLKit.normalize(ctx.getRequest().getUrl(), url);
 	}
 
 }

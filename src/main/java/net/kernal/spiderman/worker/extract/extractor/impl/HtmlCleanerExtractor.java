@@ -48,37 +48,37 @@ public class HtmlCleanerExtractor extends AbstractXPathExtractor {
     @Override
     protected List<Object> extractModel(Object aDoc, String modelXpath) {
         TagNode doc = (TagNode) aDoc;
-        Object[] nodeList = new TagNode[]{doc};
+        Object[] nodeArray = new TagNode[]{doc};
         if (K.isNotBlank(modelXpath)) {
             try {
-                nodeList = doc.evaluateXPath(modelXpath);
+            	nodeArray = doc.evaluateXPath(modelXpath);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        if (nodeList == null || nodeList.length == 0) {
+        if (nodeArray == null || nodeArray.length == 0) {
             return null;
         }
 
-        return Arrays.asList(nodeList);
+        return Arrays.asList(nodeArray);
     }
 
     protected List<Object> extractField(Object model, Field field, String aXpath, String attr, boolean isSerialize) {
         final List<Object> values = new ArrayList<>();
         TagNode mNode = (TagNode) model;
-        Object[] nodeList = null;
+        Object[] nodeArray = null;
         String xpath = aXpath.replace("/text()", "");
         try {
-            nodeList = mNode.evaluateXPath(xpath);
+        	nodeArray = mNode.evaluateXPath(xpath);
         } catch (Throwable e) {
             e.printStackTrace();
         }
-        if (nodeList == null || nodeList.length == 0) {
+        if (nodeArray == null || nodeArray.length == 0) {
             return null;
         }
 
-        for (int i = 0; i < nodeList.length; i++) {
-            TagNode tagNode = (TagNode) nodeList[i];
+        for (int i = 0; i < nodeArray.length; i++) {
+            TagNode tagNode = (TagNode) nodeArray[i];
             if (aXpath.endsWith("/text()")) {
                 values.add(tagNode.getText().toString());
                 continue;
