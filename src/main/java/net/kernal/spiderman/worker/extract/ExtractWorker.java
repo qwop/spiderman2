@@ -93,7 +93,7 @@ public class ExtractWorker extends Worker {
                             modelsCtx.put(modelName, fields);
                             final String key = entry.getModel().getString("key");
                             final ExtractResult result = new ExtractResult(pageName, responseBody, modelName, key, fields);
-                            // 处理isForNextPage的field
+                            // 处理详细页分页的情况[不是列表页，是详情页，这种分页是把详细内容分成了好几页，所以采集的时候要求要保持顺序才能合并成完整的内容]
                             final Field fieldForNextPageUrl = entry.getModel().getFieldForNextPageUrl();
                             final Field fieldForNextPageContent = entry.getModel().getFieldForNextPageContent();
                             if (fieldForNextPageUrl != null) {

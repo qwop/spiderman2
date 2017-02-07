@@ -31,6 +31,7 @@ public class Config {
 
     private Seeds seeds;
     private Cookies cookies;
+    private Headers headers;
     private Extractors extractors;
     private Filters filters;
     private Pages pages;
@@ -89,6 +90,28 @@ public class Config {
 
         public List<Downloader.Cookie> all() {
             return this.cookies;
+        }
+    }
+    
+    public static class Headers {
+        private List<Downloader.Header> headers;
+
+        public Headers() {
+            this.headers = new ArrayList<>();
+        }
+
+        public Headers add(Downloader.Header header) {
+            this.headers.add(header);
+            logger.info("添加Header: " + header);
+            return this;
+        }
+
+        public Headers add(String name, String value) {
+            return this.add(new Downloader.Header(name, value));
+        }
+
+        public List<Downloader.Header> all() {
+            return this.headers;
         }
     }
 
@@ -172,6 +195,16 @@ public class Config {
         cookies.add(cookie);
         return this;
     }
+    
+    public Config addHeader(String name, String value) {
+        headers.add(name, value);
+        return this;
+    }
+
+    public Config addHeader(Downloader.Header header) {
+        headers.add(header);
+        return this;
+    }
 
     public Config registerExtractor(String name, Class<Extractor> extractor) {
         extractors.register(name, extractor);
@@ -203,6 +236,10 @@ public class Config {
 
     public Cookies getCookies() {
         return cookies;
+    }
+    
+    public Headers getHeaders() {
+    	return headers;
     }
 
     public Extractors getExtractors() {

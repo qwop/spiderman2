@@ -9,11 +9,12 @@ import net.kernal.spiderman.worker.result.ResultTask;
 
 public interface ResultHandler {
 	
-	AtomicReference<Context> context = new AtomicReference<Context>();
+	final AtomicReference<Context> context = new AtomicReference<Context>();
 
 	public default void init(Context ctx) {
 		context.set(ctx);
-		final File dir = new File(ctx.getParams().getString("worker.result.store", "store/result"));
+		final String savePath = ctx.getParams().getString("worker.result.store", "store/result");
+		final File dir = new File(savePath);
 		if (!dir.exists()) {
 			dir.mkdirs();
 		}

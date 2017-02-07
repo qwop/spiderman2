@@ -61,8 +61,11 @@ public class Context {
 			} else {
 				downloader = downloaderClass.newInstance();
 			}
+			// 设置Header给Downloader
+			conf.getHeaders().all().parallelStream().forEach(h -> downloader.keepHeader(h));
 			// 设置Cookie给Downloader
 			conf.getCookies().all().parallelStream().forEach(c -> downloader.keepCookie(c));
+			
 			// 处理Download监听器
 			final Downloader.Listener downloadListener;
 			final String downloadListenerClassName = params.getString("worker.download.listener");

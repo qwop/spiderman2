@@ -4,7 +4,7 @@
     <property key="scheduler.period" value="10h" /><!-- 调度间隔时间 -->
     <property key="logger.level" value="DEBUG" /><!-- 日志级别 INFO DEBUG WARN ERROR OFF -->
     <!--<property key="worker.download.delay" value="100" />  下载延迟，免得被封 -->
-    
+    <!--<property key="downloader.proxy" value="172.20.0.2:8086" />  下载代理 -->
     <property key="worker.download.enabled" value="1" /><!-- 是否开启下载工人 -->
     <property key="worker.extract.enabled" value="1" /><!-- 是否开启解析工人 -->
     <property key="worker.result.enabled" value="1" /><!-- 是否开启结果处理工人 -->

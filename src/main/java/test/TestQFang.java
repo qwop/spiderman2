@@ -26,6 +26,9 @@ public class TestQFang {
 						this.setExtractorBuilder(HtmlCleanerExtractor.builder());
 						rules.addEqualsRule("http://hangzhou.qfang.com/garden/desc/1758");
 						Model model = models.addModel("demo");
+						model.addField("xml")
+							.set("isSerialize", true)
+							.set("xpath", "//div[@class='head-info-list']");
 						model.addField("all")
 							.set("isArray", true)
 							.set("xpath", "//div[@class='head-info-list']//li/p/text()");
