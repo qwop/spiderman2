@@ -27,6 +27,7 @@ public class Config {
         filters = new Filters();
         pages = new Pages();
         params = new Properties();
+        headers = new Headers();
     }
 
     private Seeds seeds;
