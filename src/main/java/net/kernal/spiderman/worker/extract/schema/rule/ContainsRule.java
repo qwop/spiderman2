@@ -7,11 +7,14 @@ public class ContainsRule extends UrlMatchRule {
 	private String chars;
 
 	public ContainsRule(String chars) {
-		this.chars = chars;
+		if (chars == null) {
+			throw new RuntimeException("chars can not be null");
+		}
+		this.chars = chars.trim();
 	}
 
 	public boolean doMatches(Downloader.Request request) {
-		return request.getUrl().contains(chars);
+		return request.getUrl().trim().contains(chars);
 	}
 	
 }

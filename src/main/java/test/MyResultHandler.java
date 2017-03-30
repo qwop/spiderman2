@@ -36,7 +36,6 @@ public class MyResultHandler implements ResultHandler {
 		final Context ctx = context.get();
 		// 获取队列对象，我们要往该队列放结果
 		final Queue<Element> queue = ctx.getTaskManager().getQueue("SPIDERMAN_JSON_RESULT");
-		
 		final String key = task.getKey();
 		final String url = task.getRequest().getUrl();
 		final ExtractResult result = task.getResult();

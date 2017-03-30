@@ -68,6 +68,7 @@ public class TestListPageUseAPI {
 				params.put("logger.level", "DEBUG");
 				params.put("duration", "0");// 运行时间
 				params.put("scheduler.period", "1m");// 调度间隔时间，每隔固定时间重新将种子任务放入队列，并清除一些不需要持久化的消息key
+//				params.put("downloader.proxy", "172.20.0.2:8086");// 代理
 //				params.put("worker.result.limit", 30);
 				params.put("worker.download.size", 5);// 下载线程数
 //				params.put("worker.download.delay", "100");// 下载延迟时间，降低频率，免得被封
