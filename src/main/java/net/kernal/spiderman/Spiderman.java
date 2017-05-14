@@ -19,17 +19,38 @@ import net.kernal.spiderman.worker.download.DownloadTask;
  * 客户端类 
  */
 public class Spiderman {
-
+    /**
+     * 日志工具
+     */
 	private final static Logger logger = Loggers.getLogger(Spiderman.class);
-	
+	/**
+	 * 定时周期执行指定的任务服务
+	 */
 	private ScheduledExecutorService scheduler;
-	
+	/**
+	 * 执行上下文
+	 */
 	private Context context;
+    /**
+     * 工人经理、包工头集合
+     */
 	private Collection<WorkerManager> managers;
+    /**
+     * 异步执行的机制,让任务在后台执行
+     */
 	private ExecutorService threads;
+    /**
+     * 计数器
+     */
 	private Counter counter;
+    /**
+     * 执行时长
+     */
 	private long duration;
 	
+	/**
+	 * 通过加载配置，构造客户端类
+	 */
 	public Spiderman(Config config) {
 		this.context = new Context(config);
 		final Properties params = context.getParams();
@@ -49,6 +70,18 @@ public class Spiderman {
 		return this.context;
 	}
 	
+	/**
+	 * 开始执行
+	 * 1. 启动工头
+	 * 2. 调度, 固定一段时间清除种子和一些中间过程任务，重新将种子放入任务队列
+	 * 3.
+	 * <Short overview of features>  
+	 * <Feature details> 
+	 * @return 
+	 * @author	qwop
+	 * @date	May 13, 2017
+	 * @see [Class、Class#Method、Class#Field]
+	 */
 	public Spiderman go() {
 		logger.debug("开始行动...");
 		// 启动各个工头
@@ -61,7 +94,8 @@ public class Spiderman {
 		} else {
 			initSeeds.execute();
 		}
-
+		
+		// 启动一个线程、控制控制超时；
 		Thread thread = new Thread(() -> {
 			// 阻塞等待计数器归0
 			try {

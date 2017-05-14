@@ -21,7 +21,18 @@ public class Bootstrap {
         new Spiderman(conf).go();//启动，别忘记看控制台信息哦，结束之后会有统计信息的
 
     }
-
+    
+   /**
+    * 静态内部类实现绑定参数
+    * <Short overview of features> 
+    * <Features detail> 
+    * 
+    * @author		qwop
+    * @date 		May 13, 2017 
+    * @version		[The version number, May 13, 2017] 
+    * @see			[Related classes/methods] 
+    * @since		[Products/Module version]
+    */
     public static class Bindings implements Config.ScriptBindings {
         public void config(javax.script.Bindings bindings, Context ctx) {
             bindings.put("$ctx", ctx);// 上下文

@@ -15,11 +15,36 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
-
+/**
+ * 配置信息包括
+ *  <ol>
+ *      <li>种子</li>
+ *      <li>Cookie</li>
+ *      <li>解析器</li>
+ *      <li>过滤器</li>
+ *      <li>页面配置</li>
+ *      <li>HashMap Help类</li>
+ *      <li>头信息</li>
+ *  </ol>
+ * <Short overview of features> 
+ * <Features detail> 
+ * 
+ * @author		qwop
+ * @date 		May 13, 2017 
+ * @version		[The version number, May 13, 2017] 
+ * @see			[Related classes/methods] 
+ * @since		[Products/Module version]
+ */
 public class Config {
-
+    
+    /**
+     * 日志工具
+     */
     private static final Logger logger = Logger.getLogger(Config.class.getName());
-
+    
+    /**
+     * 构造方法，默认初始化 种子、cookie、解析器、过滤器、页面配置、hashmap helper、头信息
+     */
     public Config() {
         seeds = new Seeds();
         cookies = new Cookies();
@@ -29,7 +54,10 @@ public class Config {
         params = new Properties();
         headers = new Headers();
     }
-
+    
+    /**
+     * 种子（抽象类）
+     */
     private Seeds seeds;
     private Cookies cookies;
     private Headers headers;
