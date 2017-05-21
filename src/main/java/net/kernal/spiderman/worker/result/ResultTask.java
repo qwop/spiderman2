@@ -3,7 +3,17 @@ package net.kernal.spiderman.worker.result;
 import net.kernal.spiderman.worker.Task;
 import net.kernal.spiderman.worker.extract.ExtractResult;
 import net.kernal.spiderman.worker.extract.ExtractTask;
-
+/**
+ * 结果任务
+ * <Short overview of features> 
+ * <Features detail> 
+ * 
+ * @author		qwop
+ * @date 		May 21, 2017 
+ * @version		[The version number, May 21, 2017] 
+ * @see			[Related classes/methods] 
+ * @since		[Products/Module version]
+ */
 public class ResultTask extends Task {
 
 	private static final long serialVersionUID = -7531379852428467887L;
