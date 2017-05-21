@@ -4,7 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+/**
+ * 查找html中的frame
+ * <Short overview of features> 
+ * <Features detail> 
+ * 
+ * @author		qwop
+ * @date 		May 21, 2017 
+ * @version		[The version number, May 21, 2017] 
+ * @see			[Related classes/methods] 
+ * @since		[Products/Module version]
+ */
 public class FrameLinkFinder implements LinksFinder {
 
 	private final String content;

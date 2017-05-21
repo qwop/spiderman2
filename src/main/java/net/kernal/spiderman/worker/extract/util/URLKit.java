@@ -7,6 +7,8 @@ import java.util.stream.Collectors;
 import net.kernal.spiderman.worker.download.Downloader;
 
 /**
+ * HtmlUnit 对URL的工具类
+ * 提供了url的转换和判断
  * Code copied from HtmlUnit
  * (src/main/java/com/gargoylesoftware/htmlunit/util/UrlUtils.java)
  * (https://htmlunit.svn.sourceforge.net/svnroot/htmlunit/trunk/htmlunit -

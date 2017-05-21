@@ -9,7 +9,17 @@ import javax.script.SimpleBindings;
 
 import net.kernal.spiderman.Spiderman;
 import net.kernal.spiderman.worker.extract.schema.Field;
-
+/**
+ * 可执行脚本过滤器
+ * <Short overview of features> 
+ * <Features detail> 
+ * 
+ * @author		qwop
+ * @date 		May 21, 2017 
+ * @version		[The version number, May 21, 2017] 
+ * @see			[Related classes/methods] 
+ * @since		[Products/Module version]
+ */
 public class ScriptableFilter implements Field.ValueFilter {
 
 	private ScriptEngine scriptEngine;
