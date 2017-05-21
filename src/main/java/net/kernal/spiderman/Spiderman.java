@@ -24,7 +24,7 @@ public class Spiderman {
      */
 	private final static Logger logger = Loggers.getLogger(Spiderman.class);
 	/**
-	 * 定时周期执行指定的任务服务
+	 * ScheduledExecutorService定时周期执行指定的任务
 	 */
 	private ScheduledExecutorService scheduler;
 	/**
@@ -49,7 +49,14 @@ public class Spiderman {
 	private long duration;
 	
 	/**
-	 * 通过加载配置，构造客户端类
+	 * 加载配置文件构造方法
+	 * 1. 上下文初始化
+	 * 2. 定时周期执行服务初始化
+	 * 3. 设置包工头集合
+	 * 4. 包工头集合对应的计数器增加
+	 * 5. 【调度器】异步线程池初始化，包工头集合的数量
+	 * 6. 初试花费时间设置为0
+	 * 7. 计数器 最大限制  和 超时时间设置
 	 */
 	public Spiderman(Config config) {
 		this.context = new Context(config);
@@ -115,7 +122,12 @@ public class Spiderman {
 		
 		return this;
 	}
-	
+	/**
+	 * 关闭包工头
+	 * @author	qwop
+	 * @date	May 21, 2017
+	 * @see [Class、Class#Method、Class#Field]
+	 */
 	public void stop() {
 		this.managers.forEach(m -> m.shutdownAndWait());
 	}
@@ -162,7 +174,15 @@ public class Spiderman {
 			}
 		}
 	}
-	
+	/**
+	 * 静态内部类继承 运行时异常
+	 * 
+	 * @author		qwop
+	 * @date 		May 21, 2017 
+	 * @version		[The version number, May 21, 2017] 
+	 * @see			[Related classes/methods] 
+	 * @since		[Products/Module version]
+	 */
 	public static class Exception extends RuntimeException {
 		private static final long serialVersionUID = 2703000025276351774L;
 		public Exception(String msg) {
